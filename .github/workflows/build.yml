@@ -1,0 +1,132 @@
+name: Build
+on:
+  push:
+    branches: [mane]
+  pull_request:
+    branches: [mane]
+  workflow_dispatch:
+    # nothing here
+
+env:
+  BUILD_DIR: '${{github.workspace}}/build'
+
+jobs:
+  build-windows:
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+        compiler: [msvc]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          spectre: true
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64" -DMARETF_USE_LTO=ON
+
+      - name: Build Binaries
+        working-directory: '${{env.BUILD_DIR}}'
+        run: cmake --build . --config ${{matrix.build_type}} -t maretf -- -j%NUMBER_OF_PROCESSORS%
+
+      - name: Upload Standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Windows-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/maretf.exe
+          retention-days: 7
+
+      - name: Upload Standalone PDBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Windows-PDBs-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/maretf.pdb
+          retention-days: 7
+
+  build-linux:
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+        compiler: [gcc]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Necessary Packages
+        run: sudo apt update && sudo apt install -y cmake build-essential ninja-build chrpath
+
+      - name: Install GCC [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 11
+          platform: x64
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64" -DMARETF_USE_LTO=ON
+
+      - name: Build Binaries
+        working-directory: '${{env.BUILD_DIR}}'
+        run: cmake --build . --config ${{matrix.build_type}} -t maretf -- -j$(nproc)
+
+      - name: Upload Standalone [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/maretf
+          retention-days: 7
+
+  deploy:
+    needs:
+      - build-windows
+      - build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = (await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{github.run_id}},
+            })).data.artifacts;
+            const filteredArtifacts = artifacts.filter(artifact => artifact.name.includes("Release"));
+            console.log(`Found ${artifacts.length} artifacts - ${filteredArtifacts.length} qualify for upload.`);
+            for (const artifact of filteredArtifacts) {
+              console.log(`Downloading "${artifact.name}.zip"...`);
+              let download = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+                archive_format: 'zip',
+              });
+              let fs = require('fs');
+              fs.writeFileSync(`${{github.workspace}}/${artifact.name}.zip`, Buffer.from(download.data));
+            }
+            console.log("Artifact download complete!");
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release-Artifacts
+          path: |
+            ${{github.workspace}}/*.zip
+          retention-days: 7

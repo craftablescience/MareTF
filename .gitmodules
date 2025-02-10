@@ -1,0 +1,6 @@
+[submodule "ext/sourcepp"]
+	path = ext/sourcepp
+	url = https://github.com/craftablescience/sourcepp
+[submodule "ext/argparse"]
+	path = ext/argparse
+	url = https://github.com/p-ranav/argparse
