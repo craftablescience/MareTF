@@ -19,6 +19,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+include(CheckIPOSupported)
 option(MARETF_USE_LTO "Compile ${PROJECT_NAME_PRETTY} with LTO/IPO" OFF)
 if(MARETF_USE_LTO)
     check_ipo_supported(RESULT MARETF_USE_LTO)
