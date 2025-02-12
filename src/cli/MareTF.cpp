@@ -491,7 +491,7 @@ int main(int argc, const char* const argv[]) {
 
 	static constexpr std::string_view PROGRAM_DETAILS{
 		"Program details:\n\n"
-		PROJECT_NAME_PRETTY " — version v" PROJECT_VERSION " — created by craftablescience — licensed under MIT\n\n"
+		PROJECT_NAME_PRETTY " — version v" PROJECT_VERSION " — created by " PROJECT_ORGANIZATION_NAME " — licensed under MIT\n\n"
 		"Sample usage:\n"
 		" •\033[32m" " maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER " "\033[0m\n"
 		" •\033[32m" " maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips " "\033[0m"

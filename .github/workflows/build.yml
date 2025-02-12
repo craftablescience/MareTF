@@ -47,6 +47,18 @@ jobs:
             ${{env.BUILD_DIR}}/maretf.exe
           retention-days: 7
 
+      - name: Create Installer
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/MareTF-*-win64.exe
+          retention-days: 7
+
       - name: Upload Standalone PDBs
         uses: actions/upload-artifact@v4
         with:
@@ -91,6 +103,20 @@ jobs:
           name: 'MareTF-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/maretf
+          retention-days: 7
+
+      - name: Create Installer [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Installer [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/MareTF-*-Linux.deb
           retention-days: 7
 
   deploy:
