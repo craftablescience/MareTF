@@ -103,10 +103,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::vtfpp
 # installer
 option(MARETF_BUILD_INSTALLER "Build installer" OFF)
 if(MARETF_BUILD_INSTALLER)
-    # install rules
-    install(TARGETS ${PROJECT_NAME})
-
-    # cpack stuff
     set(CPACK_PACKAGE_NAME ${PROJECT_NAME_PRETTY})
     set(CPACK_PACKAGE_VENDOR ${PROJECT_ORGANIZATION_NAME})
     set(CPACK_PACKAGE_CONTACT "lauralewisdev@gmail.com")
@@ -118,6 +114,8 @@ if(MARETF_BUILD_INSTALLER)
     set(CPACK_MONOLITHIC_INSTALL ON)
     set(CPACK_PACKAGE_EXECUTABLES ${PROJECT_NAME} ${PROJECT_NAME_PRETTY})
     if(WIN32)
+        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
+
         if(NOT (CPACK_GENERATOR STREQUAL "NSIS"))
             message(AUTHOR_WARNING "CPack generator must be NSIS! Setting generator to NSIS...")
             set(CPACK_GENERATOR "NSIS" CACHE INTERNAL "" FORCE)
@@ -132,11 +130,12 @@ if(MARETF_BUILD_INSTALLER)
         set(CPACK_NSIS_URL_INFO_ABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
         set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
     else()
+        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
         if(NOT (CPACK_GENERATOR STREQUAL "DEB"))
             message(AUTHOR_WARNING "CPack generator must be DEB! Setting generator to DEB...")
             set(CPACK_GENERATOR "DEB" CACHE INTERNAL "" FORCE)
         endif()
-        include()
         set(CPACK_STRIP_FILES ON)
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
         set(CPACK_DEBIAN_COMPRESSION_TYPE "zstd")
