@@ -21,7 +21,33 @@ A work in progress command-line utility to work with VTF files.
   - Supports new Strata Source VTF version
     - New formats (BC7/BC6H)
     - New CPU compression (Deflate/Zstandard)
+- Editing Features
+  - Edit existing VTFs
+  - Change VTF version, format, platform, etc.
+  - Recompute mipmaps, thumbnail, reflectivity vector
+  - Add, overwrite, or remove resources
 - More to come!
+
+## Example Usage
+
+```shell
+maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER
+```
+- Creates a new VTF from `input.png`...
+- ...with version 7.4 (supported by most Source engine games)...
+- ...with the same format as the input file...
+- ...and mipmaps will be computed with the Kaiser filtering algorithm.
+
+---
+
+```shell
+maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips
+```
+- Edits an existing VTF at `input.360.vtf`...
+- ...sets the output file to `input.vtf`...
+- ...sets the VTF platform to PC...
+- ...changes the version to 7.6 (supported by Strata Source engine games)...
+- ...and mipmaps will be recomputed with the default filtering algorithm (Kaiser).
 
 ## Backend
 

@@ -5,6 +5,7 @@
 #include <random>
 
 #include <argparse/argparse.hpp>
+#include <sourcepp/FS.h>
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
@@ -18,11 +19,23 @@ extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
 
 namespace {
 
-int randomInt(int from, int to) {
+std::string_view randomDeviantArtMLPTFTrope() {
+	static constexpr std::array<std::string_view, 10> DEVIANTART_MLP_TF_TROPES{
+		"Splicing DNA",
+		"Drinking a potion stolen from a wizard neighbor",
+		"Tampering with a sacred equine relic",
+		"Downloading a mysterious app",
+		"Irritating a farmhand who's secretly a witch",
+		"Getting isekai'd into Ponyville",
+		"Falling into the contraption",
+		"Entering the light of the full moon on Nightmare Night",
+		"Wearing a saddle on a dare",
+		"Doodling a pony with a magic marker",
+	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
-	std::uniform_int_distribution<int> dist{from, to};
-	return dist(generator);
+	std::uniform_int_distribution<int> dist{0, DEVIANTART_MLP_TF_TROPES.size()};
+	return DEVIANTART_MLP_TF_TROPES[dist(generator)];
 }
 
 template<typename duration = std::chrono::milliseconds>
@@ -56,12 +69,14 @@ int main(int argc, const char* const argv[]) {
 	cli.set_assign_chars("=:");
 #endif
 
+	//region General Arguments
+
 	std::string mode;
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help("The mode to run the program in.")
-		.choices("create")
+		.help("The mode to run the program in. This determines what arguments are processed.")
+		.choices("create", "edit")
 		.required()
 		.store_into(mode);
 
@@ -73,6 +88,13 @@ int main(int argc, const char* const argv[]) {
 		.required()
 		.store_into(inputPath);
 
+	std::string outputPath;
+	cli
+		.add_argument("-o", "--output")
+		.metavar("PATH")
+		.help("The path to the output file, if the current mode outputs a file.")
+		.store_into(outputPath);
+
 	bool overwrite;
 	cli
 		.add_argument("-y")
@@ -80,15 +102,11 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(overwrite);
 
-	auto& createCLI = cli.add_group(R"("create" mode)");
+	//endregion
 
-	std::string outputPath;
-	createCLI
-		.add_argument("-o", "--output")
-		.metavar("PATH")
-		.help("The path to the output VTF.")
-		.default_value<std::string>("")
-		.store_into(outputPath);
+	//region Create Mode Arguments
+
+	auto& createCLI = cli.add_group(R"("create" mode)");
 
 	std::string version;
 	createCLI
@@ -125,7 +143,7 @@ int main(int argc, const char* const argv[]) {
 	auto& flagsArg = createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
-		.help("Extra flags to apply to the VTF. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied automatically based on the VTF properties.")
+		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied automatically based on the VTF properties.")
 		.append();
 	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
 		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
@@ -152,7 +170,7 @@ int main(int argc, const char* const argv[]) {
 	auto& platformArg = createCLI
 		.add_argument("-p", "--platform")
 		.metavar("PLATFORM")
-		.help("Set the platform (PC/console) the VTF will be built for.");
+		.help("Set the platform (PC/console) to build for.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::VTF::Platform>()) {
 		platformArg.add_choice(name);
 	}
@@ -175,6 +193,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("-c", "--compression-level")
 		.metavar("LEVEL")
 		.help("Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for Zstd.")
+		.scan<'d', int>()
 		.default_value<int>(6)
 		.store_into(compressionLevel);
 
@@ -183,6 +202,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--start-frame")
 		.metavar("FRAME_INDEX")
 		.help("The start frame used in animations, counting from zero. Ignored when creating console VTFs.")
+		.scan<'d', int>()
 		.default_value<int>(0)
 		.store_into(startFrame);
 
@@ -191,6 +211,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--bumpmap-scale")
 		.metavar("SCALE")
 		.help("The bumpmap scale. It can have a decimal point.")
+		.scan<'g', float>()
 		.default_value<float>(1.f)
 		.store_into(bumpMapScale);
 
@@ -216,6 +237,240 @@ int main(int argc, const char* const argv[]) {
 	heightResizeMethodArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)});
 	heightResizeMethodArg.store_into(heightResizeMethod);
 
+	//endregion
+
+	//region Edit Mode Arguments
+
+	auto& editCLI = cli.add_group(R"("edit" mode)");
+
+	std::string setVersion;
+	editCLI
+		.add_argument("--set-version")
+		.metavar("X.Y")
+		.help("Set the version.")
+		.choices("7.0", "7.1", "7.2", "7.3", "7.4", "7.5", "7.6")
+		.store_into(setVersion);
+
+	std::string setFormat;
+	auto& setFormatArg = editCLI
+		.add_argument("--set-format")
+		.metavar("IMAGE_FORMAT")
+		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information.");
+	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
+		setFormatArg.add_choice(name);
+	}
+	setFormatArg.store_into(setFormat);
+
+	int setWidth = 0;
+	editCLI
+		.add_argument("--set-width")
+		.metavar("WIDTH")
+		.help("Set the lowest mip's width. Ignores power of two resize rule.")
+		.scan<'d', int>()
+		.store_into(setWidth);
+
+	int setHeight = 0;
+	editCLI
+		.add_argument("--set-height")
+		.metavar("HEIGHT")
+		.help("Set the lowest mip's height. Ignores power of two resize rule.")
+		.scan<'d', int>()
+		.store_into(setHeight);
+
+	std::string editFilter;
+	auto& editFilterArg = editCLI
+		.add_argument("--edit-filter")
+		.metavar("RESIZE_FILTER")
+		.help("Use this resize filter for all resizing operations that accept a filter parameter, including mipmap generation.");
+	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
+		editFilterArg.add_choice(name);
+	}
+	editFilterArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)});
+	editFilterArg.store_into(editFilter);
+
+	std::vector<std::string> addFlags;
+	auto& addFlagsArg = editCLI
+		.add_argument("--add-flag")
+		.metavar("FLAG")
+		.help("Flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are ignored.")
+		.append();
+	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
+		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
+			addFlagsArg.add_choice(name);
+		}
+	}
+	addFlagsArg.store_into(addFlags);
+
+	std::vector<std::string> removeFlags;
+	auto& removeFlagsArg = editCLI
+		.add_argument("--remove-flag")
+		.metavar("FLAG")
+		.help("Flags to remove. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are ignored.")
+		.append();
+	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
+		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
+			removeFlagsArg.add_choice(name);
+		}
+	}
+	removeFlagsArg.store_into(removeFlags);
+
+	bool recomputeMips;
+	editCLI
+		.add_argument("--recompute-mips")
+		.help("Recomputes mipmaps with the specified edit resize filter.")
+		.flag()
+		.store_into(recomputeMips);
+
+	bool removeMips;
+	editCLI
+		.add_argument("--remove-mips")
+		.help("Remove mipmaps. If recompute mips is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeMips);
+
+	// todo: add/remove/set for frame, face, slice
+
+	bool recomputeThumbnail;
+	editCLI
+		.add_argument("--recompute-thumbnail")
+		.help("Recompute the thumbnail.")
+		.flag()
+		.store_into(recomputeThumbnail);
+
+	bool removeThumbnail;
+	editCLI
+		.add_argument("--remove-thumbnail")
+		.help("Remove the thumbnail. If recompute thumbnail is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeThumbnail);
+
+	bool recomputeReflectivity;
+	editCLI
+		.add_argument("--recompute-reflectivity")
+		.help("Recompute the reflectivity vector.")
+		.flag()
+		.store_into(recomputeReflectivity);
+
+	std::string setPlatform;
+	auto& setPlatformArg = editCLI
+		.add_argument("--set-platform")
+		.metavar("PLATFORM")
+		.help("Set the VTF platform.");
+	for (auto name : not_magic_enum::enum_names<vtfpp::VTF::Platform>()) {
+		setPlatformArg.add_choice(name);
+	}
+	setPlatformArg.store_into(setPlatform);
+
+	std::string setCompressionMethod;
+	auto& setCompressionMethodArg = editCLI
+		.add_argument("--set-compression-method")
+		.metavar("COMPRESSION_METHOD")
+		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6. Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.");
+	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
+		setCompressionMethodArg.add_choice(name);
+	}
+	setCompressionMethodArg.store_into(compressionMethod);
+
+	int setCompressionLevel;
+	editCLI
+		.add_argument("--set-compression-level")
+		.metavar("LEVEL")
+		.help("Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for Zstd.")
+		.scan<'d', int>()
+		.store_into(setCompressionLevel);
+
+	int setStartFrame;
+	editCLI
+		.add_argument("--set-start-frame")
+		.metavar("FRAME_INDEX")
+		.help("Set the start frame.")
+		.scan<'d', int>()
+		.store_into(setStartFrame);
+
+	float setBumpMapScale;
+	editCLI
+		.add_argument("--set-bumpmap-scale")
+		.metavar("SCALE")
+		.help("Set the bumpmap scale. It can have a decimal point.")
+		.scan<'g', float>()
+		.store_into(setBumpMapScale);
+
+	std::string setParticleSheetResource;
+	editCLI
+		.add_argument("--set-particle-sheet-resource")
+		.metavar("PATH")
+		.help("Set the particle sheet resource. Path should point to a valid particle sheet file.")
+		.store_into(setParticleSheetResource);
+
+	bool removeParticleSheetResource;
+	editCLI
+		.add_argument("--remove-particle-sheet-resource")
+		.help("Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeParticleSheetResource);
+
+	int setCRCResource;
+	editCLI
+		.add_argument("--set-crc-resource")
+		.metavar("CRC")
+		.help("Set the CRC resource.")
+		.scan<'d', int>()
+		.store_into(setCRCResource);
+
+	bool removeCRCResource;
+	editCLI
+		.add_argument("--remove-crc-resource")
+		.help("Remove the CRC resource. If set CRC resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeCRCResource);
+
+	std::string setLODResource;
+	editCLI
+		.add_argument("--set-lod-resource")
+		.metavar("U.V")
+		.help("Set the LOD resource. U and V values should be separated by a period.")
+		.store_into(setLODResource);
+
+	bool removeLODResource;
+	editCLI
+		.add_argument("--remove-lod-resource")
+		.help("Remove the LOD resource. If set LOD resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeLODResource);
+
+	int setTSOResource;
+	editCLI
+		.add_argument("--set-tso-resource")
+		.metavar("COMBINED_FLAGS")
+		.help("Set the TSO (extended flags) resource. You'll have to do the math to combine the flags into one integer yourself.")
+		.scan<'d', int>()
+		.store_into(setTSOResource);
+
+	bool removeTSOResource;
+	editCLI
+		.add_argument("--remove-tso-resource")
+		.help("Remove the TSO (extended flags) resource. If set TSO resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeTSOResource);
+
+	std::string setKVDResource;
+	editCLI
+		.add_argument("--set-kvd-resource")
+		.metavar("PATH")
+		.help("Set the nonstandard KVD (KeyValues Data) resource. Path should point to a text file.")
+		.store_into(setKVDResource);
+
+	bool removeKVDResource;
+	editCLI
+		.add_argument("--remove-kvd-resource")
+		.help("Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeKVDResource);
+
+	//endregion
+
+	//region Program Info
+
 	std::string enumInfo = "Enumerations:\n\n";
 	const auto addEnumInfo = [&enumInfo]<typename E>(std::string_view enumName) {
 		enumInfo += enumName;
@@ -238,10 +493,13 @@ int main(int argc, const char* const argv[]) {
 		"Program details:\n\n"
 		PROJECT_NAME_PRETTY " — version v" PROJECT_VERSION " — created by craftablescience — licensed under MIT\n\n"
 		"Sample usage:\n"
-		" •\033[32m" " maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER " "\033[0m"
+		" •\033[32m" " maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER " "\033[0m\n"
+		" •\033[32m" " maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips " "\033[0m"
 	};
 
 	cli.add_epilog(enumInfo + std::string{PROGRAM_DETAILS});
+
+	//endregion
 
 	try {
 		cli.parse_args(argc, argv);
@@ -334,19 +592,7 @@ int main(int argc, const char* const argv[]) {
 			options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
 
 			// Bake VTF
-			static constexpr std::array<std::string_view, 10> DEVIANTART_MLP_TF_PLOT_SUMMARIES{
-				"Splicing DNA",
-				"Drinking a potion stolen from a wizard neighbor",
-				"Tampering with a sacred equine relic",
-				"Downloading a mysterious app",
-				"Irritating a farmhand who's secretly a witch",
-				"Getting isekai'd into Ponyville",
-				"Falling into the contraption",
-				"Entering the light of the full moon on Nightmare Night",
-				"Wearing a saddle on a dare",
-				"Doodling a pony with a magic marker",
-			};
-			std::cout << DEVIANTART_MLP_TF_PLOT_SUMMARIES[::randomInt(0, DEVIANTART_MLP_TF_PLOT_SUMMARIES.size())] << "..." << std::endl;
+			std::cout << randomDeviantArtMLPTFTrope() << "..." << std::endl;
 			::ElapsedTime stopwatch;
 			if (!vtfpp::VTF::create(inputPath, outputPath, options)) {
 				std::cerr << "Failed to TF input image. Is it a supported format?" << std::endl;
@@ -354,6 +600,201 @@ int main(int argc, const char* const argv[]) {
 			}
 			const auto elapsed = stopwatch.get().count();
 			std::cout << "Input image was TF'ed in " << elapsed << "ms 💖" << std::endl;
+		} else if (mode == "edit") {
+			// Check input path
+			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
+				throw std::invalid_argument{"Input path must be a valid file!"};
+			} else if (!inputPath.ends_with(".vtf")) {
+				throw std::invalid_argument{"Input file must be a VTF!"};
+			}
+
+			// Check output path
+			if (outputPath.empty()) {
+				outputPath = inputPath;
+			}
+			if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
+				throw std::invalid_argument{"Output path must not be a directory!"};
+			} else if (exists && !overwrite) {
+				std::string in;
+				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+					std::cout << "Output file already exists. Overwrite? (y/N) ";
+					std::cin >> in;
+				}
+				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
+					std::cout << "Output file already exists. Aborting." << std::endl;
+					return EXIT_SUCCESS;
+				}
+			} else if (exists) {
+				std::cout << "Output file already exists, overwriting..." << std::endl;
+			}
+
+			// Start to set up VTF for editing
+			::ElapsedTime loadStopwatch;
+			vtfpp::VTF vtf{inputPath};
+			if (!vtf) {
+				throw std::invalid_argument{"Unable to load input file as a VTF!"};
+			}
+			std::cout << "Loaded input VTF in " << loadStopwatch.get().count() << "ms 🐎" << std::endl;
+			::ElapsedTime editStopwatch;
+
+			// Get edit filter
+			const auto editFilterActual = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(editFilter);
+
+			// Get output format
+			vtfpp::ImageFormat setFormatActual = vtf.getFormat();
+			if (cli.is_used("--set-format")) {
+				setFormatActual = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat);
+				if (setFormatActual == vtfpp::VTF::FORMAT_UNCHANGED) {
+					setFormatActual = vtf.getFormat();
+				} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
+					setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion());
+				}
+			}
+
+			// Set platform
+			if (cli.is_used("--set-platform")) {
+				vtf.setPlatform(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
+			}
+
+			// Set version
+			if (cli.is_used("--set-version")) {
+				uint32_t setMajorVersion, setMinorVersion;
+				sourcepp::string::toInt(std::string_view{&setVersion[0], 1}, setMajorVersion);
+				sourcepp::string::toInt(std::string_view{&setVersion[2], 1}, setMinorVersion);
+				vtf.setVersion(setMajorVersion, setMinorVersion);
+			}
+
+			// Add/remove flags
+			for (const auto& flag : addFlags) {
+				vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+			}
+			for (const auto& flag : removeFlags) {
+				vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+			}
+
+			// Set size
+			vtf.setImageWidthResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
+			vtf.setImageHeightResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
+			if (cli.is_used("--set-width") && cli.is_used("--set-height")) {
+				vtf.setSize(setWidth, setHeight, editFilterActual);
+			} else if (cli.is_used("--set-width")) {
+				vtf.setSize(setWidth, vtf.getHeight(), editFilterActual);
+			} else if (cli.is_used("--set-height")) {
+				vtf.setSize(vtf.getWidth(), setHeight, editFilterActual);
+			}
+
+			// Set start frame
+			if (cli.is_used("--set-start-frame")) {
+				vtf.setStartFrame(static_cast<uint16_t>(setStartFrame));
+			}
+
+			// Set bumpmap scale
+			if (cli.is_used("--set-bumpmap-scale")) {
+				vtf.setBumpMapScale(setBumpMapScale);
+			}
+
+			// Recompute/remove mips
+			if (recomputeMips) {
+				vtf.setMipCount(vtfpp::ImageDimensions::getRecommendedMipCountForDims(setFormatActual, vtf.getWidth(), vtf.getHeight()));
+				vtf.computeMips(editFilterActual);
+			} else if (removeMips) {
+				vtf.setMipCount(1);
+			}
+
+			// Recompute/remove thumbnail
+			if (recomputeThumbnail) {
+				vtf.computeThumbnail(editFilterActual);
+			} else if (removeThumbnail) {
+				vtf.removeThumbnail();
+			}
+
+			// Recompute reflectivity
+			if (recomputeReflectivity) {
+				vtf.computeReflectivity();
+			}
+
+			// Set format
+			if (cli.is_used("--set-format")) {
+				vtf.setFormat(*not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat), editFilterActual);
+			}
+
+			// Set compression method
+			if (cli.is_used("--set-compression-method")) {
+				vtf.setCompressionMethod(*not_magic_enum::enum_cast<vtfpp::CompressionMethod>(setCompressionMethod));
+			}
+
+			// Set compression level
+			if (cli.is_used("--set-compression-level")) {
+				if (setCompressionLevel < -1) {
+					setCompressionLevel = -1;
+					std::cout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << std::endl;
+				} else if ((vtf.getCompressionMethod() == vtfpp::CompressionMethod::DEFLATE || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) && setCompressionLevel > 9) {
+					setCompressionLevel = 9;
+					std::cout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << std::endl;
+				} else if (vtf.getCompressionMethod() == vtfpp::CompressionMethod::ZSTD && setCompressionLevel > 22) {
+					setCompressionLevel = 22;
+					std::cout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << std::endl;
+				}
+				vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
+			}
+
+			// Modify particle sheet resource
+			if (cli.is_used("--set-particle-sheet-resource")) {
+				try {
+					vtfpp::SHT sht{setParticleSheetResource};
+					if (!sht) {
+						throw std::overflow_error{""};
+					}
+					vtf.setParticleSheetResource(sht);
+				} catch (const std::overflow_error&) {
+					std::cerr << "Failed to parse specified file for particle sheet resource! Check the file exists and has a .sht extension." << std::endl;
+				}
+			} else if (removeParticleSheetResource) {
+				vtf.removeParticleSheetResource();
+			}
+
+			// Modify CRC resource
+			if (cli.is_used("--set-crc-resource")) {
+				vtf.setCRCResource(static_cast<uint32_t>(setCRCResource));
+			} else if (removeCRCResource) {
+				vtf.removeCRCResource();
+			}
+
+			// Modify LOD resource
+			if (cli.is_used("--set-lod-resource")) {
+				uint8_t setU, setV;
+				const auto uv = sourcepp::string::split(setVersion, '.');
+				sourcepp::string::toInt(uv[0], setU);
+				sourcepp::string::toInt(uv[1], setV);
+				vtf.setLODResource(setU, setV);
+			} else if (removeLODResource) {
+				vtf.removeLODResource();
+			}
+
+			// Modify TSO resource
+			if (cli.is_used("--set-tso-resource")) {
+				vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTSOResource));
+			} else if (removeTSOResource) {
+				vtf.removeExtendedFlagsResource();
+			}
+
+			// Modify KVD resource
+			if (cli.is_used("--set-kvd-resource")) {
+				if (const auto txt = sourcepp::fs::readFileText(setKVDResource); txt.empty()) {
+					std::cerr << "Failed to read contents of specified file for KVD (KeyValues Data) resource! Check the file exists and is not empty." << std::endl;
+				} else {
+					vtf.setKeyValuesDataResource(txt);
+				}
+			} else if (removeKVDResource) {
+				vtf.removeKeyValuesDataResource();
+			}
+
+			// Bake VTF
+			if (!vtf.bake(outputPath)) {
+				std::cerr << "Failed to edit input VTF." << std::endl;
+				return EXIT_FAILURE;
+			}
+			std::cout << "Edited input VTF in " << editStopwatch.get().count() << "ms 💖" << std::endl;
 		}
 	} catch (const std::exception& e) {
 		if (argc > 1) {
