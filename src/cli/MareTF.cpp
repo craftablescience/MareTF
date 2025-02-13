@@ -840,7 +840,7 @@ int main(int argc, const char* const argv[]) {
 			std::cout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << std::endl;
 
 			if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
-				std::cout << BOLD << "Version:  " << 'v' << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
+				std::cout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
 			}
 
 			std::cout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << std::endl;
