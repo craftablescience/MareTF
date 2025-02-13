@@ -517,6 +517,20 @@ int main(int argc, const char* const argv[]) {
 	try {
 		cli.parse_args(argc, argv);
 
+		// Pretty formatting colors
+		std::string_view END;
+		std::string_view RED;
+		std::string_view GREEN;
+		std::string_view CYAN;
+		std::string_view BOLD;
+		if (!noPrettyFormatting) {
+			END   = "\033[0m";
+			RED   = "\033[0;31m";
+			GREEN = "\033[0;32m";
+			CYAN  = "\033[0;36m";
+			BOLD  = "\033[1m";
+		}
+
 		if (mode == "create") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -533,7 +547,7 @@ int main(int argc, const char* const argv[]) {
 			} else if (exists && !overwrite) {
 				std::string in;
 				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					std::cout << "Output file already exists. Overwrite? (y/N) ";
+					std::cout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
 					std::cin >> in;
 				}
 				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
@@ -583,13 +597,13 @@ int main(int argc, const char* const argv[]) {
 			// Set compression level
 			if (compressionLevel < -1) {
 				options.compressionLevel = -1;
-				std::cout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << std::endl;
+				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << std::endl;
 			} else if ((options.compressionMethod == vtfpp::CompressionMethod::DEFLATE || options.compressionMethod == vtfpp::CompressionMethod::CONSOLE_LZMA) && compressionLevel > 9) {
 				options.compressionLevel = 9;
-				std::cout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << std::endl;
+				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << std::endl;
 			} else if (options.compressionMethod == vtfpp::CompressionMethod::ZSTD && compressionLevel > 22) {
 				options.compressionLevel = 22;
-				std::cout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << std::endl;
+				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << std::endl;
 			} else {
 				options.compressionLevel = static_cast<int16_t>(compressionLevel);
 			}
@@ -612,7 +626,7 @@ int main(int argc, const char* const argv[]) {
 				return EXIT_FAILURE;
 			}
 			const auto elapsed = stopwatch.get().count();
-			std::cout << "Input image was TF'ed in " << elapsed << "ms" << (noPrettyFormatting ? "" : " 💖") << std::endl;
+			std::cout << "Input image was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << std::endl;
 		} else if (mode == "edit") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -630,7 +644,7 @@ int main(int argc, const char* const argv[]) {
 			} else if (exists && !overwrite) {
 				std::string in;
 				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					std::cout << "Output file already exists. Overwrite? (y/N) ";
+					std::cout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
 					std::cin >> in;
 				}
 				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
@@ -647,7 +661,7 @@ int main(int argc, const char* const argv[]) {
 			if (!vtf) {
 				throw std::invalid_argument{"Unable to load input file as a VTF!"};
 			}
-			std::cout << "Loaded input VTF in " << loadStopwatch.get().count() << "ms" << (noPrettyFormatting ? "" : " 🐎") << std::endl;
+			std::cout << "Loaded input VTF in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << std::endl;
 			::ElapsedTime editStopwatch;
 
 			// Get edit filter
@@ -807,7 +821,7 @@ int main(int argc, const char* const argv[]) {
 				std::cerr << "Failed to edit input VTF." << std::endl;
 				return EXIT_FAILURE;
 			}
-			std::cout << "Edited input VTF in " << editStopwatch.get().count() << "ms" << (noPrettyFormatting ? "" : " 💖") << std::endl;
+			std::cout << "Edited input VTF in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << std::endl;
 		} else if (mode == "info") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -820,19 +834,6 @@ int main(int argc, const char* const argv[]) {
 			vtfpp::VTF vtf{inputPath};
 			if (!vtf) {
 				throw std::invalid_argument{"Unable to load input file as a VTF!"};
-			}
-
-			std::string_view END;
-			std::string_view RED;
-			std::string_view GREEN;
-			std::string_view CYAN;
-			std::string_view BOLD;
-			if (!noPrettyFormatting) {
-				END   = "\033[0m";
-				RED   = "\033[0;31m";
-				GREEN = "\033[0;32m";
-				CYAN  = "\033[0;36m";
-				BOLD  = "\033[1m";
 			}
 
 			std::cout << GREEN << BOLD << " ――― FORMAT ―――" << END << std::endl;
