@@ -49,6 +49,13 @@ maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --rec
 - ...changes the version to 7.6 (supported by Strata Source engine games)...
 - ...and mipmaps will be recomputed with the default filtering algorithm (Kaiser).
 
+---
+
+```shell
+maretf info input.vtf
+```
+- Prints the VTF's metadata to the console.
+
 ## Backend
 
 This tool is powered by a collection of open-source C++20 Source engine parsers called [sourcepp](https://github.com/craftablescience/sourcepp).

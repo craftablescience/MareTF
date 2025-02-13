@@ -19,8 +19,8 @@ extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
 
 namespace {
 
-std::string_view randomDeviantArtMLPTFTrope() {
-	static constexpr std::array<std::string_view, 10> DEVIANTART_MLP_TF_TROPES{
+std::string_view randomDeviantArtTFTrope() {
+	static constexpr std::array<std::string_view, 10> DEVIANTART_TF_TROPES{
 		"Splicing DNA",
 		"Drinking a potion stolen from a wizard neighbor",
 		"Tampering with a sacred equine relic",
@@ -30,12 +30,12 @@ std::string_view randomDeviantArtMLPTFTrope() {
 		"Falling into the contraption",
 		"Entering the light of the full moon on Nightmare Night",
 		"Wearing a saddle on a dare",
-		"Doodling a pony with a magic marker",
+		"Drawing a pony with a magic marker",
 	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
-	std::uniform_int_distribution<int> dist{0, DEVIANTART_MLP_TF_TROPES.size()};
-	return DEVIANTART_MLP_TF_TROPES[dist(generator)];
+	std::uniform_int_distribution<int> dist{0, DEVIANTART_TF_TROPES.size()};
+	return DEVIANTART_TF_TROPES[dist(generator)];
 }
 
 template<typename duration = std::chrono::milliseconds>
@@ -75,8 +75,8 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help("The mode to run the program in. This determines what arguments are processed.")
-		.choices("create", "edit")
+		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", and "info".)")
+		.choices("create", "edit", "info")
 		.required()
 		.store_into(mode);
 
@@ -101,6 +101,13 @@ int main(int argc, const char* const argv[]) {
 		.help("Automatically say yes to any prompts.")
 		.flag()
 		.store_into(overwrite);
+
+	bool noPrettyFormatting;
+	cli
+		.add_argument("--no-pretty-formatting")
+		.help("Disables printing ANSI color codes and emojis.")
+		.flag()
+		.store_into(noPrettyFormatting);
 
 	//endregion
 
@@ -469,6 +476,10 @@ int main(int argc, const char* const argv[]) {
 
 	//endregion
 
+	//todo: extraction mode to pull out images/resources
+
+	//todo: argument to print info in json
+
 	//region Program Info
 
 	std::string enumInfo = "Enumerations:\n\n";
@@ -493,8 +504,10 @@ int main(int argc, const char* const argv[]) {
 		"Program details:\n\n"
 		PROJECT_NAME_PRETTY " — version v" PROJECT_VERSION " — created by " PROJECT_ORGANIZATION_NAME " — licensed under MIT\n\n"
 		"Sample usage:\n"
-		" •\033[32m" " maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER " "\033[0m\n"
-		" •\033[32m" " maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips " "\033[0m"
+		" • maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER\n"
+		" • maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips\n"
+		" • maretf info input.vtf\n"
+		"See the project README for more information."
 	};
 
 	cli.add_epilog(enumInfo + std::string{PROGRAM_DETAILS});
@@ -592,14 +605,14 @@ int main(int argc, const char* const argv[]) {
 			options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
 
 			// Bake VTF
-			std::cout << randomDeviantArtMLPTFTrope() << "..." << std::endl;
+			std::cout << randomDeviantArtTFTrope() << "..." << std::endl;
 			::ElapsedTime stopwatch;
 			if (!vtfpp::VTF::create(inputPath, outputPath, options)) {
 				std::cerr << "Failed to TF input image. Is it a supported format?" << std::endl;
 				return EXIT_FAILURE;
 			}
 			const auto elapsed = stopwatch.get().count();
-			std::cout << "Input image was TF'ed in " << elapsed << "ms 💖" << std::endl;
+			std::cout << "Input image was TF'ed in " << elapsed << "ms" << (noPrettyFormatting ? "" : " 💖") << std::endl;
 		} else if (mode == "edit") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -634,7 +647,7 @@ int main(int argc, const char* const argv[]) {
 			if (!vtf) {
 				throw std::invalid_argument{"Unable to load input file as a VTF!"};
 			}
-			std::cout << "Loaded input VTF in " << loadStopwatch.get().count() << "ms 🐎" << std::endl;
+			std::cout << "Loaded input VTF in " << loadStopwatch.get().count() << "ms" << (noPrettyFormatting ? "" : " 🐎") << std::endl;
 			::ElapsedTime editStopwatch;
 
 			// Get edit filter
@@ -794,7 +807,188 @@ int main(int argc, const char* const argv[]) {
 				std::cerr << "Failed to edit input VTF." << std::endl;
 				return EXIT_FAILURE;
 			}
-			std::cout << "Edited input VTF in " << editStopwatch.get().count() << "ms 💖" << std::endl;
+			std::cout << "Edited input VTF in " << editStopwatch.get().count() << "ms" << (noPrettyFormatting ? "" : " 💖") << std::endl;
+		} else if (mode == "info") {
+			// Check input path
+			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
+				throw std::invalid_argument{"Input path must be a valid file!"};
+			} else if (!inputPath.ends_with(".vtf")) {
+				throw std::invalid_argument{"Input file must be a VTF!"};
+			}
+
+			// Load VTF
+			vtfpp::VTF vtf{inputPath};
+			if (!vtf) {
+				throw std::invalid_argument{"Unable to load input file as a VTF!"};
+			}
+
+			std::string_view END;
+			std::string_view RED;
+			std::string_view GREEN;
+			std::string_view CYAN;
+			std::string_view BOLD;
+			if (!noPrettyFormatting) {
+				END   = "\033[0m";
+				RED   = "\033[0;31m";
+				GREEN = "\033[0;32m";
+				CYAN  = "\033[0;36m";
+				BOLD  = "\033[1m";
+			}
+
+			std::cout << GREEN << BOLD << " ――― FORMAT ―――" << END << std::endl;
+
+			std::cout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << std::endl;
+
+			if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
+				std::cout << BOLD << "Version:  " << 'v' << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
+			}
+
+			std::cout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << std::endl;
+
+			std::cout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << std::endl;
+			if (vtf.getSliceCount() > 1) {
+				std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << std::endl;
+			} else {
+				std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << std::endl;
+			}
+
+			std::cout << BOLD << "Flags:         " << END;
+			bool first = true;
+			for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
+				if (vtf.getFlags() & flag) {
+					if (!first) {
+						std::cout << " | ";
+					}
+					first = false;
+					std::cout << CYAN << name << END;
+				}
+			}
+			std::cout << std::endl;
+
+			std::cout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << std::endl;
+			std::cout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << std::endl;
+			std::cout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << std::endl;
+
+			std::cout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << std::endl;
+
+			std::cout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << std::endl;
+			std::cout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << std::endl;
+
+			std::cout << BOLD << "Compression:   " << END;
+			if (vtf.getCompressionLevel() == 0) {
+				if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
+					std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << std::endl;
+				} else {
+					std::cout << RED << "Uncompressed" << END << std::endl;
+				}
+			} else {
+				std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << std::endl;
+			}
+
+			std::cout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << std::endl;
+
+			std::cout << BOLD << "Thumbnail:      ";
+			if (vtf.hasThumbnailData()) {
+				std::cout << GREEN << "Exists";
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "Particle Sheet: ";
+			const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
+			if (particleSheetResource) {
+				const auto sheet = particleSheetResource->getDataAsParticleSheet();
+				if (!sheet) {
+					std::cout << RED << "Exists, but failed to parse";
+				} else {
+					std::cout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+				}
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "Image:          ";
+			if (vtf.hasImageData()) {
+				std::cout << GREEN << "Exists";
+			} else {
+				std::cout << RED << "Doesn't exist (HUH?)";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "CRC:            ";
+			if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+				std::cout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "LOD:            ";
+			if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+				const auto lod = lodResource->getDataAsLODControlInfo();
+				std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << lod.first << END << " — " << BOLD << "V: " << END << CYAN << lod.second;
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "KeyValues Data: ";
+			const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
+			if (kvdResource) {
+				const auto keyvalues = kvdResource->getDataAsKeyValuesData();
+				std::cout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			std::cout << BOLD << "Extended Flags: ";
+			if (auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+				std::cout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
+			} else {
+				std::cout << RED << "Doesn't exist";
+			}
+			std::cout << END << std::endl;
+
+			if (particleSheetResource) {
+				const auto sheet = particleSheetResource->getDataAsParticleSheet();
+				if (sheet) {
+					std::cout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << std::endl;
+					std::cout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << std::endl;
+					for (const auto& sequence : sheet.getSequences()) {
+						std::cout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << std::endl;
+						std::cout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << std::endl;
+						std::cout << '\t' << BOLD << "Loop:           " << END;
+						if (sequence.loop) {
+							std::cout << GREEN << "Yes";
+						} else {
+							std::cout << RED << "No";
+						}
+						std::cout << END << std::endl;
+						for (int i = 0; i < sequence.frames.size(); i++) {
+							const auto& frame = sequence.frames.at(i);
+							std::cout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << std::endl;
+							std::cout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << std::endl;
+							std::cout << "\t\t" << BOLD << "Bounds:   ";
+							if (sheet.getVersion() < 1) {
+								std::cout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << std::endl;
+							} else {
+								std::cout << END << std::endl;
+								for (const auto& bound : frame.bounds) {
+									std::cout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << std::endl;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (kvdResource) {
+				std::cout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << std::endl;
+				std::cout << kvdResource->getDataAsKeyValuesData() << END << std::endl;
+			}
 		}
 	} catch (const std::exception& e) {
 		if (argc > 1) {
