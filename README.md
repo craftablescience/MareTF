@@ -26,6 +26,9 @@ A work in progress command-line utility to work with VTF files.
   - Change VTF version, format, platform, etc.
   - Recompute mipmaps, thumbnail, reflectivity vector
   - Add, overwrite, or remove resources
+- Info Printout
+  - Print out all VTF metadata and non-image resource data
+  - Parse compiled particle sheet resource to plaintext
 - More to come!
 
 ## Example Usage
