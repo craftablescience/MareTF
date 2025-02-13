@@ -507,7 +507,8 @@ int main(int argc, const char* const argv[]) {
 		" • maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER\n"
 		" • maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips\n"
 		" • maretf info input.vtf\n"
-		"See the project README for more information."
+		"See the project README for more information.\n\n"
+		"Want to report a bug or request a feature? Make an issue at " PROJECT_HOMEPAGE_URL "/issues"
 	};
 
 	cli.add_epilog(enumInfo + std::string{PROGRAM_DETAILS});
