@@ -12,7 +12,7 @@
 
 A work in progress command-line utility to work with VTF files.
 
-- Creation Features
+- Create Mode
   - Directly convert animated images (APNG/GIF)
   - Directly convert floating point images (EXR/HDR)
   - Kaiser mipmap filtering selected by default
@@ -21,12 +21,12 @@ A work in progress command-line utility to work with VTF files.
   - Supports new Strata Source VTF version
     - New formats (BC7/BC6H)
     - New CPU compression (Deflate/Zstandard)
-- Editing Features
+- Edit Mode
   - Edit existing VTFs
   - Change VTF version, format, platform, etc.
   - Recompute mipmaps, thumbnail, reflectivity vector
   - Add, overwrite, or remove resources
-- Info Printout
+- Info Mode
   - Print out all VTF metadata and non-image resource data
   - Parse compiled particle sheet resource to plaintext
 - More to come!
