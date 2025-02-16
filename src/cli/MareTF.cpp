@@ -583,6 +583,15 @@ int main(int argc, const char* const argv[]) {
 				options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
 			}
 
+			// Set default flags based on input filename
+			if (const auto inputStem = std::filesystem::path{inputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color")) {
+				options.flags |= options.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+			} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
+				options.flags |= vtfpp::VTF::FLAG_NORMAL;
+			} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
+				options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+			}
+
 			// Set mipmap generation
 			options.computeMips = !noMips;
 
@@ -930,7 +939,10 @@ int main(int argc, const char* const argv[]) {
 			std::cout << BOLD << "LOD:            ";
 			if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
 				const auto lod = lodResource->getDataAsLODControlInfo();
-				std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << lod.first << END << " — " << BOLD << "V: " << END << CYAN << lod.second;
+				std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
+				if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
+					std::cout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
+				}
 			} else {
 				std::cout << RED << "Doesn't exist";
 			}

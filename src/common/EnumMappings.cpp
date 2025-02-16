@@ -119,7 +119,26 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"BC6H",
 };
 
-const std::vector<vtfpp::ImageConversion::ResizeFilter> RESIZE_FILTER_E{
+const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORMAT_E{
+	vtfpp::ImageConversion::FileFormat::DEFAULT,
+	vtfpp::ImageConversion::FileFormat::PNG,
+	vtfpp::ImageConversion::FileFormat::JPEG,
+	vtfpp::ImageConversion::FileFormat::BMP,
+	vtfpp::ImageConversion::FileFormat::TGA,
+	vtfpp::ImageConversion::FileFormat::HDR,
+	vtfpp::ImageConversion::FileFormat::EXR,
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
+	"DEFAULT",
+	"PNG",
+	"JPEG",
+	"BMP",
+	"TGA",
+	"HDR",
+	"EXR",
+};
+
+const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_FILTER_E{
 	vtfpp::ImageConversion::ResizeFilter::DEFAULT,
 	vtfpp::ImageConversion::ResizeFilter::BOX,
 	vtfpp::ImageConversion::ResizeFilter::BILINEAR,
@@ -129,7 +148,7 @@ const std::vector<vtfpp::ImageConversion::ResizeFilter> RESIZE_FILTER_E{
 	vtfpp::ImageConversion::ResizeFilter::POINT_SAMPLE,
 	vtfpp::ImageConversion::ResizeFilter::KAISER,
 };
-const std::vector<std::string_view> RESIZE_FILTER_S{
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_S{
 	"DEFAULT",
 	"BOX",
 	"BILINEAR",
@@ -138,6 +157,51 @@ const std::vector<std::string_view> RESIZE_FILTER_S{
 	"MITCHELL",
 	"POINT_SAMPLE",
 	"KAISER",
+};
+
+const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E{
+	vtfpp::ImageConversion::ResizeMethod::NONE,
+	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER,
+	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_SMALLER,
+	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_NEAREST,
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_METHOD_S{
+	"NONE",
+	"BIGGER",
+	"SMALLER",
+	"NEAREST",
+};
+
+const std::vector<vtfpp::CompressionMethod> COMPRESSION_METHOD_E{
+	vtfpp::CompressionMethod::DEFLATE,
+	vtfpp::CompressionMethod::ZSTD,
+	vtfpp::CompressionMethod::CONSOLE_LZMA,
+};
+const std::vector<std::string_view> COMPRESSION_METHOD_S{
+	"DEFLATE",
+	"ZSTD",
+	"CONSOLE_LZMA",
+};
+
+const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E{
+	vtfpp::Resource::TYPE_THUMBNAIL_DATA,
+	vtfpp::Resource::TYPE_IMAGE_DATA,
+	vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA,
+	vtfpp::Resource::TYPE_CRC,
+	vtfpp::Resource::TYPE_LOD_CONTROL_INFO,
+	vtfpp::Resource::TYPE_EXTENDED_FLAGS,
+	vtfpp::Resource::TYPE_KEYVALUES_DATA,
+	vtfpp::Resource::TYPE_AUX_COMPRESSION,
+};
+const std::vector<std::string_view> RESOURCE_TYPE_S{
+	"THUMBNAIL",
+	"IMAGE",
+	"PARTICLE_SHEET",
+	"CRC",
+	"LOD_CONTROL_INFO",
+	"EXTENDED_FLAGS",
+	"KEYVALUES_DATA",
+	"AUX_COMPRESSION",
 };
 
 const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E{
@@ -218,30 +282,6 @@ const std::vector<std::string_view> VTF_PLATFORM_S{
 	"PC",
 	"PS3",
 	"X360",
-};
-
-const std::vector<vtfpp::CompressionMethod> COMPRESSION_METHOD_E{
-	vtfpp::CompressionMethod::DEFLATE,
-	vtfpp::CompressionMethod::ZSTD,
-	vtfpp::CompressionMethod::CONSOLE_LZMA,
-};
-const std::vector<std::string_view> COMPRESSION_METHOD_S{
-	"DEFLATE",
-	"ZSTD",
-	"CONSOLE_LZMA",
-};
-
-const std::vector<vtfpp::ImageConversion::ResizeMethod> RESIZE_METHOD_E{
-	vtfpp::ImageConversion::ResizeMethod::NONE,
-	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER,
-	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_SMALLER,
-	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_NEAREST,
-};
-const std::vector<std::string_view> RESIZE_METHOD_S{
-	"NONE",
-	"POWER_OF_TWO_BIGGER",
-	"POWER_OF_TWO_SMALLER",
-	"POWER_OF_TWO_NEAREST",
 };
 
 } // namespace not_magic_enum::detail
