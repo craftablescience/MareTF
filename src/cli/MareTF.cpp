@@ -153,7 +153,7 @@ int main(int argc, const char* const argv[]) {
 		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied automatically based on the VTF properties.")
 		.append();
 	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
+		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
 			flagsArg.add_choice(name);
 		}
 	}
@@ -299,10 +299,10 @@ int main(int argc, const char* const argv[]) {
 	auto& addFlagsArg = editCLI
 		.add_argument("--add-flag")
 		.metavar("FLAG")
-		.help("Flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are ignored.")
+		.help("Flags to add. ENVMAP and NO_MIP flags are ignored.")
 		.append();
 	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
+		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
 			addFlagsArg.add_choice(name);
 		}
 	}
@@ -312,10 +312,10 @@ int main(int argc, const char* const argv[]) {
 	auto& removeFlagsArg = editCLI
 		.add_argument("--remove-flag")
 		.metavar("FLAG")
-		.help("Flags to remove. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are ignored.")
+		.help("Flags to remove. ENVMAP and NO_MIP flags are ignored.")
 		.append();
 	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_GENERATED)) {
+		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
 			removeFlagsArg.add_choice(name);
 		}
 	}
