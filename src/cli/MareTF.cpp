@@ -159,6 +159,13 @@ int main(int argc, const char* const argv[]) {
 	}
 	flagsArg.store_into(flags);
 
+	bool noTransparencyFlags;
+	createCLI
+		.add_argument("--no-automatic-transparency-flags")
+		.help("Disable adding ONE_BIT_ALPHA and MULTI_BIT_ALPHA flags by default depending on the output image format.")
+		.flag()
+		.store_into(noTransparencyFlags);
+
 	bool noMips;
 	createCLI
 		.add_argument("--no-mips")
@@ -262,7 +269,8 @@ int main(int argc, const char* const argv[]) {
 	auto& setFormatArg = editCLI
 		.add_argument("--set-format")
 		.metavar("IMAGE_FORMAT")
-		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information.");
+		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information."
+		      " Recommended to pair this with the recompute transparency flags argument.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
 		setFormatArg.add_choice(name);
 	}
@@ -320,6 +328,13 @@ int main(int argc, const char* const argv[]) {
 		}
 	}
 	removeFlagsArg.store_into(removeFlags);
+
+	bool recomputeTransparencyFlags;
+	editCLI
+		.add_argument("--recompute-transparency-flags")
+		.help("Recomputes transparency flags based on the image format.")
+		.flag()
+		.store_into(recomputeTransparencyFlags);
 
 	bool recomputeMips;
 	editCLI
@@ -592,6 +607,9 @@ int main(int argc, const char* const argv[]) {
 				options.flags |= vtfpp::VTF::FLAG_SSBUMP;
 			}
 
+			// Set default transparency flags
+			options.computeTransparencyFlags = !noTransparencyFlags;
+
 			// Set mipmap generation
 			options.computeMips = !noMips;
 
@@ -753,6 +771,11 @@ int main(int argc, const char* const argv[]) {
 			// Set format
 			if (cli.is_used("--set-format")) {
 				vtf.setFormat(*not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat), editFilterActual);
+			}
+
+			// Recompute transparency flags
+			if (recomputeTransparencyFlags) {
+				vtf.computeTransparencyFlags();
 			}
 
 			// Set compression method
