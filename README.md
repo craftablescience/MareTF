@@ -1,5 +1,5 @@
 <div>
-  <img align="left" width="44px" src="https://github.com/craftablescience/MareTF/blob/mane/res/logo.png?raw=true" alt="MareTF Logo" />
+  <img align="left" width="40px" src="https://github.com/craftablescience/MareTF/blob/mane/res/logo.png?raw=true" alt="MareTF Logo" />
   <h1>MareTF</h1>
 </div>
 
