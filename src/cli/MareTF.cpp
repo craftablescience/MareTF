@@ -76,8 +76,7 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help(R"(The mode to run the program in. This determines what arguments are processed."
-		       " Valid options: "create", "edit", and "info".)")
+		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", and "info".)")
 		.choices("create", "edit", "info")
 		.required()
 		.store_into(mode);
