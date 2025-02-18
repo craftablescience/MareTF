@@ -76,7 +76,8 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", and "info".)")
+		.help(R"(The mode to run the program in. This determines what arguments are processed."
+		       " Valid options: "create", "edit", and "info".)")
 		.choices("create", "edit", "info")
 		.required()
 		.store_into(mode);
@@ -138,7 +139,8 @@ int main(int argc, const char* const argv[]) {
 	auto& filterArg = createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
-		.help("The resize filter used to generate mipmaps and when resizing the base texture to match a power of 2 (if necessary).");
+		.help("The resize filter used to generate mipmaps and when resizing the base texture to match a power of 2"
+		      " (if necessary).");
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
 		filterArg.add_choice(name);
 	}
@@ -148,7 +150,8 @@ int main(int argc, const char* const argv[]) {
 	auto& flagsArg = createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
-		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied automatically based on the VTF properties.")
+		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied"
+		      " automatically based on the VTF properties.")
 		.append();
 	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
 		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
@@ -192,7 +195,9 @@ int main(int argc, const char* const argv[]) {
 	auto& compressionMethodArg = createCLI
 		.add_argument("-m", "--compression-method")
 		.metavar("COMPRESSION_METHOD")
-		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6. Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.");
+		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
+		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
+		      " LZMA is supported for console VTFs.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
 		compressionMethodArg.add_choice(name);
 	}
@@ -260,8 +265,8 @@ int main(int argc, const char* const argv[]) {
 	auto& setFormatArg = editCLI
 		.add_argument("--set-format")
 		.metavar("IMAGE_FORMAT")
-		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information."
-		      " Recommended to pair this with the recompute transparency flags argument.");
+		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing"
+		      " information. Recommended to pair this with the recompute transparency flags argument.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
 		setFormatArg.add_choice(name);
 	}
@@ -287,7 +292,8 @@ int main(int argc, const char* const argv[]) {
 	auto& editFilterArg = editCLI
 		.add_argument("--edit-filter")
 		.metavar("RESIZE_FILTER")
-		.help("Use this resize filter for all resizing operations that accept a filter parameter, including mipmap generation.");
+		.help("Use this resize filter for all resizing operations that accept a filter parameter,"
+		      " including mipmap generation.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
 		editFilterArg.add_choice(name);
 	}
@@ -377,7 +383,9 @@ int main(int argc, const char* const argv[]) {
 	auto& setCompressionMethodArg = editCLI
 		.add_argument("--set-compression-method")
 		.metavar("COMPRESSION_METHOD")
-		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6. Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.");
+		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
+		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
+		      " LZMA is supported for console VTFs.");
 	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
 		setCompressionMethodArg.add_choice(name);
 	}
@@ -417,7 +425,8 @@ int main(int argc, const char* const argv[]) {
 	bool removeParticleSheetResource;
 	editCLI
 		.add_argument("--remove-particle-sheet-resource")
-		.help("Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored.")
+		.help("Remove the particle sheet resource. If set particle sheet resource is specified,"
+		      " this argument is ignored.")
 		.flag()
 		.store_into(removeParticleSheetResource);
 
@@ -454,7 +463,8 @@ int main(int argc, const char* const argv[]) {
 	editCLI
 		.add_argument("--set-tso-resource")
 		.metavar("COMBINED_FLAGS")
-		.help("Set the TSO (extended flags) resource. You'll have to do the math to combine the flags into one integer yourself.")
+		.help("Set the TSO (extended flags) resource. You'll have to do the math to combine the flags"
+		      " into one integer yourself.")
 		.scan<'d', int>()
 		.store_into(setTSOResource);
 
@@ -475,7 +485,8 @@ int main(int argc, const char* const argv[]) {
 	bool removeKVDResource;
 	editCLI
 		.add_argument("--remove-kvd-resource")
-		.help("Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource is specified, this argument is ignored.")
+		.help("Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource is specified,"
+		      " this argument is ignored.")
 		.flag()
 		.store_into(removeKVDResource);
 
