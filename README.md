@@ -12,15 +12,19 @@
 
 A work in progress command-line utility to work with VTF files.
 
+## Features
+
 - Create Mode
   - Directly convert animated images (APNG/GIF)
   - Directly convert floating point images (EXR/HDR)
   - Kaiser mipmap filtering selected by default
   - Create non-power of two textures
-  - Create console (Orange Box) VTFs
+  - Create console VTFs
+    - Xbox 360
+    - PlayStation 3
   - Supports new Strata Source VTF version
-    - New formats (BC7/BC6H)
-    - New CPU compression (Deflate/Zstandard)
+    - New formats (BC7 / BC6H)
+    - New CPU compression (Deflate / Zstandard)
 - Edit Mode
   - Edit existing VTFs
   - Change VTF version, format, platform, etc.
@@ -30,6 +34,8 @@ A work in progress command-line utility to work with VTF files.
   - Print out all VTF metadata and non-image resource data
   - Parse compiled particle sheet resource to plaintext
 - More to come!
+
+<img src="https://github.com/craftablescience/MareTF/blob/mane/res/vtf_kirin_wink.png?raw=true" alt="The same green-skinned and red-haired kirin as from the MareTF logo, winking." />
 
 ## Example Usage
 
@@ -59,6 +65,11 @@ maretf info input.vtf
 ```
 - Prints the VTF's metadata to the console.
 
-## Backend
+## Credits
 
-This tool is powered by a collection of open-source C++20 Source engine parsers called [sourcepp](https://github.com/craftablescience/sourcepp).
+- The kirin in the program logo was created with [pony.town](https://pony.town)'s character creator
+- Dependencies:
+  - [argparse](https://github.com/p-ranav/argparse)
+  - [sourcepp](https://github.com/craftablescience/sourcepp)
+
+<img src="https://github.com/craftablescience/MareTF/blob/mane/res/vtf_kirin_sleep.png?raw=true" alt="The same green-skinned and red-haired kirin as from the MareTF logo, sleeping." />
