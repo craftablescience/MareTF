@@ -5,6 +5,7 @@
 #include <random>
 
 #include <argparse/argparse.hpp>
+#include <kvpp/KV1.h>
 #include <sourcepp/FS.h>
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
@@ -115,16 +116,15 @@ int main(int argc, const char* const argv[]) {
 
 	auto& createCLI = cli.add_group(R"("create" mode)");
 
-	std::string version;
+	std::string version{"7.4"};
 	createCLI
 		.add_argument("-v", "--version")
 		.metavar("X.Y")
-		.help("Major and minor version, split by a period.")
+		.help("Major and minor version, split by a period. Ignored if platform is specified as anything other than PC.")
 		.choices("7.0", "7.1", "7.2", "7.3", "7.4", "7.5", "7.6")
-		.default_value<std::string>("7.4")
-		.store_into(version);
+		.default_value(version).store_into(version);
 
-	std::string format;
+	std::string format{not_magic_enum::enum_name(vtfpp::VTF::FORMAT_DEFAULT)};
 	auto& formatArg = createCLI
 		.add_argument("-f", "--format")
 		.metavar("IMAGE_FORMAT")
@@ -132,10 +132,9 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
 		formatArg.add_choice(name);
 	}
-	formatArg.default_value<std::string>("DEFAULT");
-	formatArg.store_into(format);
+	formatArg.default_value(format).store_into(format);
 
-	std::string filter;
+	std::string filter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
 	auto& filterArg = createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
@@ -143,8 +142,7 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
 		filterArg.add_choice(name);
 	}
-	filterArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)});
-	filterArg.store_into(filter);
+	filterArg.default_value(filter).store_into(filter);
 
 	std::vector<std::string> flags;
 	auto& flagsArg = createCLI
@@ -180,7 +178,7 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(noThumbnail);
 
-	std::string platform;
+	std::string platform{not_magic_enum::enum_name(vtfpp::VTF::Platform::PLATFORM_PC)};
 	auto& platformArg = createCLI
 		.add_argument("-p", "--platform")
 		.metavar("PLATFORM")
@@ -188,10 +186,9 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::VTF::Platform>()) {
 		platformArg.add_choice(name);
 	}
-	platformArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::VTF::Platform::PLATFORM_PC)});
-	platformArg.store_into(platform);
+	platformArg.default_value(platform).store_into(platform);
 
-	std::string compressionMethod;
+	std::string compressionMethod{not_magic_enum::enum_name(vtfpp::CompressionMethod::ZSTD)};
 	auto& compressionMethodArg = createCLI
 		.add_argument("-m", "--compression-method")
 		.metavar("COMPRESSION_METHOD")
@@ -199,37 +196,33 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
 		compressionMethodArg.add_choice(name);
 	}
-	compressionMethodArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::CompressionMethod::ZSTD)});
-	compressionMethodArg.store_into(compressionMethod);
+	compressionMethodArg.default_value(compressionMethod).store_into(compressionMethod);
 
-	int compressionLevel;
+	int compressionLevel = 6;
 	createCLI
 		.add_argument("-c", "--compression-level")
 		.metavar("LEVEL")
 		.help("Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for Zstd.")
 		.scan<'d', int>()
-		.default_value<int>(6)
-		.store_into(compressionLevel);
+		.default_value(compressionLevel).store_into(compressionLevel);
 
-	int startFrame;
+	int startFrame = 0;
 	createCLI
 		.add_argument("--start-frame")
 		.metavar("FRAME_INDEX")
 		.help("The start frame used in animations, counting from zero. Ignored when creating console VTFs.")
 		.scan<'d', int>()
-		.default_value<int>(0)
-		.store_into(startFrame);
+		.default_value(startFrame).store_into(startFrame);
 
-	float bumpMapScale;
+	float bumpMapScale = 1.f;
 	createCLI
 		.add_argument("--bumpmap-scale")
 		.metavar("SCALE")
 		.help("The bumpmap scale. It can have a decimal point.")
 		.scan<'g', float>()
-		.default_value<float>(1.f)
-		.store_into(bumpMapScale);
+		.default_value(bumpMapScale).store_into(bumpMapScale);
 
-	std::string widthResizeMethod;
+	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	auto& widthResizeMethodArg = createCLI
 			.add_argument("--width-resize-method")
 			.metavar("RESIZE_METHOD")
@@ -237,10 +230,9 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeMethod>()) {
 		widthResizeMethodArg.add_choice(name);
 	}
-	widthResizeMethodArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)});
-	widthResizeMethodArg.store_into(widthResizeMethod);
+	widthResizeMethodArg.default_value(widthResizeMethod).store_into(widthResizeMethod);
 
-	std::string heightResizeMethod;
+	std::string heightResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	auto& heightResizeMethodArg = createCLI
 			.add_argument("--height-resize-method")
 			.metavar("RESIZE_METHOD")
@@ -248,8 +240,7 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeMethod>()) {
 		heightResizeMethodArg.add_choice(name);
 	}
-	heightResizeMethodArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)});
-	heightResizeMethodArg.store_into(heightResizeMethod);
+	heightResizeMethodArg.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
 	//endregion
 
@@ -292,7 +283,7 @@ int main(int argc, const char* const argv[]) {
 		.scan<'d', int>()
 		.store_into(setHeight);
 
-	std::string editFilter;
+	std::string editFilter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
 	auto& editFilterArg = editCLI
 		.add_argument("--edit-filter")
 		.metavar("RESIZE_FILTER")
@@ -300,8 +291,7 @@ int main(int argc, const char* const argv[]) {
 	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
 		editFilterArg.add_choice(name);
 	}
-	editFilterArg.default_value(std::string{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)});
-	editFilterArg.store_into(editFilter);
+	editFilterArg.default_value(editFilter).store_into(editFilter);
 
 	std::vector<std::string> addFlags;
 	auto& addFlagsArg = editCLI
@@ -491,9 +481,20 @@ int main(int argc, const char* const argv[]) {
 
 	//endregion
 
-	//todo: extraction mode to pull out images/resources
+	//region Info Mode Arguments
 
-	//todo: argument to print info in json
+	auto& infoCLI = cli.add_group(R"("info" mode)");
+
+	std::string infoOutputMode{"human"};
+	createCLI
+		.add_argument("--info-output-mode")
+		.help(R"(The mode to output information in. Can be "human" or "kv1".)")
+		.choices("human", "kv1")
+		.default_value(infoOutputMode).store_into(infoOutputMode);
+
+	//endregion
+
+	//todo: extraction mode to pull out images/resources
 
 	//region Program Info
 
@@ -578,6 +579,9 @@ int main(int argc, const char* const argv[]) {
 			vtfpp::VTF::CreationOptions options;
 
 			// Set version
+			if (version.size() != 3) {
+				throw std::runtime_error{"Invalid version!"};
+			}
 			sourcepp::string::toInt(std::string_view{&version[0], 1}, options.majorVersion);
 			sourcepp::string::toInt(std::string_view{&version[2], 1}, options.minorVersion);
 
@@ -869,162 +873,249 @@ int main(int argc, const char* const argv[]) {
 				throw std::invalid_argument{"Unable to load input file as a VTF!"};
 			}
 
-			std::cout << GREEN << BOLD << " ――― FORMAT ―――" << END << std::endl;
+			if (infoOutputMode == "human") {
+				std::cout << GREEN << BOLD << " ――― FORMAT ―――" << END << std::endl;
 
-			std::cout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << std::endl;
+				std::cout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << std::endl;
 
-			if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
-				std::cout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
-			}
-
-			std::cout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << std::endl;
-
-			std::cout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << std::endl;
-			if (vtf.getSliceCount() > 1) {
-				std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << std::endl;
-			} else {
-				std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << std::endl;
-			}
-
-			std::cout << BOLD << "Flags:         " << END;
-			bool first = true;
-			for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-				if (vtf.getFlags() & flag) {
-					if (!first) {
-						std::cout << " | ";
-					}
-					first = false;
-					std::cout << CYAN << name << END;
+				if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
+					std::cout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
 				}
-			}
-			std::cout << std::endl;
 
-			std::cout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << std::endl;
-			std::cout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << std::endl;
-			std::cout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << std::endl;
+				std::cout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << std::endl;
 
-			std::cout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << std::endl;
-
-			std::cout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << std::endl;
-			std::cout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << std::endl;
-
-			std::cout << BOLD << "Compression:   " << END;
-			if (vtf.getCompressionLevel() == 0) {
-				if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
-					std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << std::endl;
+				std::cout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << std::endl;
+				if (vtf.getSliceCount() > 1) {
+					std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << std::endl;
 				} else {
-					std::cout << RED << "Uncompressed" << END << std::endl;
+					std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << std::endl;
 				}
-			} else {
-				std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << std::endl;
-			}
 
-			std::cout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << std::endl;
-
-			std::cout << BOLD << "Thumbnail:      ";
-			if (vtf.hasThumbnailData()) {
-				std::cout << GREEN << "Exists";
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "Particle Sheet: ";
-			const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
-			if (particleSheetResource) {
-				const auto sheet = particleSheetResource->getDataAsParticleSheet();
-				if (!sheet) {
-					std::cout << RED << "Exists, but failed to parse";
-				} else {
-					std::cout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
-				}
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "Image:          ";
-			if (vtf.hasImageData()) {
-				std::cout << GREEN << "Exists";
-			} else {
-				std::cout << RED << "Doesn't exist (HUH?)";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "CRC:            ";
-			if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-				std::cout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "LOD:            ";
-			if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-				const auto lod = lodResource->getDataAsLODControlInfo();
-				std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
-				if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-					std::cout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
-				}
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "KeyValues Data: ";
-			const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
-			if (kvdResource) {
-				const auto keyvalues = kvdResource->getDataAsKeyValuesData();
-				std::cout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			std::cout << BOLD << "Extended Flags: ";
-			if (auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-				std::cout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
-			} else {
-				std::cout << RED << "Doesn't exist";
-			}
-			std::cout << END << std::endl;
-
-			if (particleSheetResource) {
-				const auto sheet = particleSheetResource->getDataAsParticleSheet();
-				if (sheet) {
-					std::cout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << std::endl;
-					std::cout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << std::endl;
-					for (const auto& sequence : sheet.getSequences()) {
-						std::cout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << std::endl;
-						std::cout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << std::endl;
-						std::cout << '\t' << BOLD << "Loop:           " << END;
-						if (sequence.loop) {
-							std::cout << GREEN << "Yes";
-						} else {
-							std::cout << RED << "No";
+				std::cout << BOLD << "Flags:         " << END;
+				bool first = true;
+				for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
+					if (vtf.getFlags() & flag) {
+						if (!first) {
+							std::cout << " | ";
 						}
-						std::cout << END << std::endl;
-						for (int i = 0; i < sequence.frames.size(); i++) {
-							const auto& frame = sequence.frames.at(i);
-							std::cout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << std::endl;
-							std::cout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << std::endl;
-							std::cout << "\t\t" << BOLD << "Bounds:   ";
-							if (sheet.getVersion() < 1) {
-								std::cout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << std::endl;
+						first = false;
+						std::cout << CYAN << name << END;
+					}
+				}
+				std::cout << std::endl;
+
+				std::cout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << std::endl;
+				std::cout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << std::endl;
+				std::cout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << std::endl;
+
+				std::cout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << std::endl;
+
+				std::cout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << std::endl;
+				std::cout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << std::endl;
+
+				std::cout << BOLD << "Compression:   " << END;
+				if (vtf.getCompressionLevel() == 0) {
+					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
+						std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << std::endl;
+					} else {
+						std::cout << RED << "Uncompressed" << END << std::endl;
+					}
+				} else {
+					std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << std::endl;
+				}
+
+				std::cout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << std::endl;
+
+				std::cout << BOLD << "Thumbnail:      ";
+				if (vtf.hasThumbnailData()) {
+					std::cout << GREEN << "Exists";
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "Particle Sheet: ";
+				const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
+				if (particleSheetResource) {
+					const auto sheet = particleSheetResource->getDataAsParticleSheet();
+					if (!sheet) {
+						std::cout << RED << "Exists, but failed to parse";
+					} else {
+						std::cout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+					}
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "Image:          ";
+				if (vtf.hasImageData()) {
+					std::cout << GREEN << "Exists";
+				} else {
+					std::cout << RED << "Doesn't exist (HUH?)";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "CRC:            ";
+				if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+					std::cout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "LOD:            ";
+				if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+					const auto lod = lodResource->getDataAsLODControlInfo();
+					std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
+					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
+						std::cout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
+					}
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "KeyValues Data: ";
+				const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
+				if (kvdResource) {
+					const auto keyvalues = kvdResource->getDataAsKeyValuesData();
+					std::cout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				std::cout << BOLD << "Extended Flags: ";
+				if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+					std::cout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
+				} else {
+					std::cout << RED << "Doesn't exist";
+				}
+				std::cout << END << std::endl;
+
+				if (particleSheetResource) {
+					const auto sheet = particleSheetResource->getDataAsParticleSheet();
+					if (sheet) {
+						std::cout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << std::endl;
+						std::cout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << std::endl;
+						for (const auto& sequence : sheet.getSequences()) {
+							std::cout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << std::endl;
+							std::cout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << std::endl;
+							std::cout << '\t' << BOLD << "Loop:           " << END;
+							if (sequence.loop) {
+								std::cout << GREEN << "Yes";
 							} else {
-								std::cout << END << std::endl;
-								for (const auto& bound : frame.bounds) {
-									std::cout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << std::endl;
+								std::cout << RED << "No";
+							}
+							std::cout << END << std::endl;
+							for (int i = 0; i < sequence.frames.size(); i++) {
+								const auto& frame = sequence.frames.at(i);
+								std::cout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << std::endl;
+								std::cout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << std::endl;
+								std::cout << "\t\t" << BOLD << "Bounds:   ";
+								if (sheet.getVersion() < 1) {
+									std::cout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << std::endl;
+								} else {
+									std::cout << END << std::endl;
+									for (const auto& bound : frame.bounds) {
+										std::cout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << std::endl;
+									}
 								}
 							}
 						}
 					}
 				}
-			}
 
-			if (kvdResource) {
-				std::cout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << std::endl;
-				std::cout << kvdResource->getDataAsKeyValuesData() << END << std::endl;
+				if (kvdResource) {
+					std::cout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << std::endl;
+					std::cout << kvdResource->getDataAsKeyValuesData() << END << std::endl;
+				}
+			} else if (infoOutputMode == "kv1") {
+				kvpp::KV1Writer kv;
+
+				// File format
+				kv["format"]["platform"] = not_magic_enum::enum_name(vtf.getPlatform());
+				kv["format"]["version_major"] = static_cast<int>(vtf.getMajorVersion());
+				kv["format"]["version_minor"] = static_cast<int>(vtf.getMinorVersion());
+
+				// Image
+				kv["image"]["format"] = not_magic_enum::enum_name(vtf.getFormat());
+				kv["image"]["dimensions"]["width"] = static_cast<int>(vtf.getWidth());
+				kv["image"]["dimensions"]["height"] = static_cast<int>(vtf.getHeight());
+				kv["image"]["dimensions"]["depth"] = static_cast<int>(vtf.getSliceCount());
+				kv["image"]["dimensions"]["mips"] = static_cast<int>(vtf.getMipCount());
+				kv["image"]["dimensions"]["frames"] = static_cast<int>(vtf.getFrameCount());
+				kv["image"]["dimensions"]["faces"] = static_cast<int>(vtf.getFaceCount());
+				kv["image"]["flags"] = static_cast<int>(vtf.getFlags());
+				kv["image"]["reflectivity"]["r"] = vtf.getReflectivity()[0];
+				kv["image"]["reflectivity"]["g"] = vtf.getReflectivity()[1];
+				kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
+				kv["image"]["start_frame"] = static_cast<int>(vtf.getStartFrame());
+				kv["image"]["bumpmap_scale"] = vtf.getBumpMapScale();
+				if (vtf.getCompressionLevel() == 0) {
+					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
+						kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
+					} else {
+						kv["image"]["compression"]["method"] = "NONE";
+					}
+				} else {
+					kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
+				}
+				kv["image"]["compression"]["level"] = static_cast<int>(vtf.getCompressionLevel());
+
+				// Thumbnail
+				kv["resources"]["thumbnail"]["present"] = vtf.hasThumbnailData();
+				kv["resources"]["thumbnail"]["format"] = not_magic_enum::enum_name(vtf.getThumbnailFormat());
+				kv["resources"]["thumbnail"]["width"] = static_cast<int>(vtf.getThumbnailWidth());
+				kv["resources"]["thumbnail"]["height"] = static_cast<int>(vtf.getThumbnailHeight());
+
+				// Resources
+				if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
+					const auto sheet = particleSheetResource->getDataAsParticleSheet();
+					if (sheet) {
+						kv["resources"]["particle_sheet"]["malformed"] = false;
+						kv["resources"]["particle_sheet"]["version"] = static_cast<int>(sheet.getVersion());
+						for (const auto& sequence : sheet.getSequences()) {
+							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)] = static_cast<int>(sequence.id);
+							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["duration_total"] = sequence.durationTotal;
+							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["loop"] = sequence.loop;
+							for (int i = 0; i < sequence.frames.size(); i++) {
+								const auto& frame = sequence.frames.at(i);
+								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["duration"] = frame.duration;
+								for (int b = 0; b < (sheet.getVersion() < 1 ? 1 : frame.bounds.size()); b++) {
+									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x1"] = frame.bounds.at(b).x1;
+									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y1"] = frame.bounds.at(b).y1;
+									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x2"] = frame.bounds.at(b).x2;
+									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y2"] = frame.bounds.at(b).y2;
+								}
+							}
+						}
+					} else {
+						kv["resources"]["particle_sheet"]["malformed"] = true;
+					}
+				}
+				if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+					kv["resources"]["crc"] = static_cast<int>(crcResource->getDataAsCRC());
+				}
+				if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+					const auto lod = lodResource->getDataAsLODControlInfo();
+					kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
+					kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
+					kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
+					kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
+				}
+				if (const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
+					kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
+				}
+				if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+					kv["resources"]["tso"] = static_cast<int>(tsoResource->getDataAsExtendedFlags());
+				}
+
+				// ...and print it all out
+				std::cout << kv.bake() << std::endl;
+			} else {
+				throw std::runtime_error{"Invalid info output mode specified!"};
 			}
 		}
 	} catch (const std::exception& e) {

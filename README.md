@@ -33,6 +33,7 @@ A work in progress command-line utility to work with VTF files.
 - Info Mode
   - Print out all VTF metadata and non-image resource data
   - Parse compiled particle sheet resource to plaintext
+  - Print data as colored human-readable text or as plain KeyValues
 - More to come!
 
 <img src="https://github.com/craftablescience/MareTF/blob/mane/res/vtf_kirin_wink.png?raw=true" alt="The same green-skinned and red-haired kirin as from the MareTF logo, winking." />

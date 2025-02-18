@@ -87,6 +87,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/argparse")
 
 # sourcepp
 set(SOURCEPP_LIBS_START_ENABLED OFF CACHE INTERNAL "" FORCE)
+set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_VTFPP           ON CACHE INTERNAL "" FORCE)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/sourcepp")
 
@@ -98,7 +99,7 @@ add_executable(${PROJECT_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
 maretf_configure_target(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::vtfpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::kvpp sourcepp::vtfpp)
 
 # installer
 option(MARETF_BUILD_INSTALLER "Build installer" OFF)
