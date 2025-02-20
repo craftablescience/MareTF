@@ -279,12 +279,14 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{
 	vtfpp::VTF::PLATFORM_PC,
-	vtfpp::VTF::PLATFORM_PS3,
+	vtfpp::VTF::PLATFORM_PS3_PORTAL2,
+	vtfpp::VTF::PLATFORM_PS3_ORANGEBOX,
 	vtfpp::VTF::PLATFORM_X360,
 };
 const std::vector<std::string_view> VTF_PLATFORM_S{
 	"PC",
-	"PS3",
+	"PS3_PORTAL2",
+	"PS3_ORANGEBOX",
 	"X360",
 };
 
