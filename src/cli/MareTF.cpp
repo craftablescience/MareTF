@@ -613,7 +613,7 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			// Set default flags based on input filename
-			if (const auto inputStem = std::filesystem::path{inputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color")) {
+			if (const auto inputStem = std::filesystem::path{inputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
 				options.flags |= options.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
 			} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
 				options.flags |= vtfpp::VTF::FLAG_NORMAL;
