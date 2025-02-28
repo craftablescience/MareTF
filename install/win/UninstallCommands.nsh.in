@@ -1,0 +1,5 @@
+DeleteRegKey HKCR '.vtf'
+
+DeleteRegKey HKCR '@PROJECT_NAME@_asset'
+
+System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'

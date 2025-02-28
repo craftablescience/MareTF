@@ -6,7 +6,7 @@ endif()
 # set up project
 project(maretf
         DESCRIPTION "A work in progress command-line utility to work with VTF files."
-        VERSION 0.3.5
+        VERSION 0.4.0
         HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
 set(PROJECT_NAME_PRETTY "MareTF")
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
@@ -26,8 +26,6 @@ if(MARETF_USE_LTO)
     check_ipo_supported(RESULT MARETF_USE_LTO)
 endif()
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${MARETF_USE_LTO})
-
-set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 # macro to set up many things at once for a given target
 function(maretf_configure_target TARGET)
@@ -66,11 +64,12 @@ function(maretf_configure_target TARGET)
                     "$<$<CONFIG:Release>:/OPT:ICF>")
         endif()
 
-        # Add an icon to the executable
+        # Add an icon and manifest to the executable
         if(TARGET_TYPE STREQUAL "EXECUTABLE")
             target_sources(
                     ${TARGET} PRIVATE
-                    "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.rc")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.rc"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/res/program.manifest")
         endif()
 
         # Don't show the console when running the executable
@@ -82,14 +81,8 @@ function(maretf_configure_target TARGET)
     endif()
 endfunction()
 
-# argparse
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/argparse")
-
-# sourcepp
-set(SOURCEPP_LIBS_START_ENABLED OFF CACHE INTERNAL "" FORCE)
-set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
-set(SOURCEPP_USE_VTFPP           ON CACHE INTERNAL "" FORCE)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/sourcepp")
+# external libraries
+include("${CMAKE_CURRENT_SOURCE_DIR}/ext/_ext.cmake")
 
 # maretf
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
@@ -101,46 +94,20 @@ add_executable(${PROJECT_NAME}
 maretf_configure_target(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::kvpp sourcepp::vtfpp)
 
+# maretf_gui
+add_executable(${PROJECT_NAME}_gui
+        "${CMAKE_CURRENT_SOURCE_DIR}/res/res.qrc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
+maretf_configure_target(${PROJECT_NAME}_gui)
+target_link_libraries(${PROJECT_NAME}_gui PRIVATE Qt::Core Qt::Gui Qt::Widgets sourcepp::kvpp sourcepp::vtfpp)
+target_include_directories(${PROJECT_NAME}_gui PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets")
+
 # installer
 option(MARETF_BUILD_INSTALLER "Build installer" OFF)
 if(MARETF_BUILD_INSTALLER)
-    set(CPACK_PACKAGE_NAME ${PROJECT_NAME_PRETTY})
-    set(CPACK_PACKAGE_VENDOR ${PROJECT_ORGANIZATION_NAME})
-    set(CPACK_PACKAGE_CONTACT "lauralewisdev@gmail.com")
-    set(CPACK_PACKAGE_DESCRIPTION ${CMAKE_PROJECT_DESCRIPTION})
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${CPACK_PACKAGE_DESCRIPTION})
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-    set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-    set(CPACK_MONOLITHIC_INSTALL ON)
-    set(CPACK_PACKAGE_EXECUTABLES ${PROJECT_NAME} ${PROJECT_NAME_PRETTY})
-    set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-    if(WIN32)
-        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
-
-        if(NOT (CPACK_GENERATOR STREQUAL "NSIS"))
-            message(AUTHOR_WARNING "CPack generator must be NSIS! Setting generator to NSIS...")
-            set(CPACK_GENERATOR "NSIS" CACHE INTERNAL "" FORCE)
-        endif()
-        set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
-        set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-        set(CPACK_NSIS_MODIFY_PATH ON)
-        set(CPACK_NSIS_DISPLAY_NAME ${PROJECT_NAME_PRETTY})
-        set(CPACK_NSIS_PACKAGE_NAME ${PROJECT_NAME_PRETTY})
-        set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.ico")
-        set(CPACK_NSIS_INSTALLED_ICON_NAME "${PROJECT_NAME}.exe")
-        set(CPACK_NSIS_URL_INFO_ABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
-        set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
-    else()
-        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-
-        if(NOT (CPACK_GENERATOR STREQUAL "DEB"))
-            message(AUTHOR_WARNING "CPack generator must be DEB! Setting generator to DEB...")
-            set(CPACK_GENERATOR "DEB" CACHE INTERNAL "" FORCE)
-        endif()
-        set(CPACK_STRIP_FILES ON)
-        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
-        set(CPACK_DEBIAN_COMPRESSION_TYPE "zstd")
-    endif()
-    include(CPack)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/install/_install.cmake")
 endif()

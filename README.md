@@ -72,9 +72,13 @@ maretf info input.vtf
 
 - Assets:
   - The kirin in the program logo (Olive Shade) was created with [pony.town](https://pony.town)'s character creator
+  - The font used in the GUI is [Celestia Medium Redux](http://www.mattyhex.net/CMR), licensed under public domain
 - CLI Dependencies:
   - [argparse](https://github.com/p-ranav/argparse)
   - [sourcepp](https://github.com/craftablescience/sourcepp)
+- GUI Dependencies:
+  - [sourcepp](https://github.com/craftablescience/sourcepp)
+  - [Qt](https://www.qt.io)
 
 ## Full Help Text
 
