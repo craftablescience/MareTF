@@ -1,0 +1,10 @@
+${If} ${EXT_REGISTER_ASSET_VTF}
+  WriteRegStr HKCR '.vtf' '' '@PROJECT_NAME@_asset'
+${EndIf}
+
+WriteRegStr HKCR '@PROJECT_NAME@_asset' '' 'Valve Texture Format File'
+WriteRegStr HKCR '@PROJECT_NAME@_asset\\shell' '' 'open'
+WriteRegStr HKCR '@PROJECT_NAME@_asset\\DefaultIcon' '' '$INSTDIR\\@PROJECT_NAME@_gui.exe,0'
+WriteRegStr HKCR '@PROJECT_NAME@_asset\\shell\\open\\command' '' '$INSTDIR\\@PROJECT_NAME@_gui.exe \"%1\"'
+
+System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
