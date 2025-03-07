@@ -10,7 +10,9 @@
   <a href="https://ko-fi.com/craftablescience" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/donate-006dae?label=ko-fi&logo=ko-fi" alt="Ko-Fi" /></a>
 </div>
 
-A work in progress command-line utility to work with VTF files.
+A utility to create, edit, and display every type of VTF file ever made.
+
+###### *See also: [VTF Thumbnailer](https://github.com/craftablescience/vtf-thumbnailer)*
 
 ## Features
 
@@ -36,7 +38,7 @@ A work in progress command-line utility to work with VTF files.
   - Print data as colored human-readable text or as plain KeyValues
 - More to come!
 
-<img src="https://github.com/craftablescience/MareTF/blob/mane/res/vtf_kirin_wink.png?raw=true" alt="The same green-skinned and red-haired kirin as from the MareTF logo, winking." />
+<img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_wink.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, winking." />
 
 ## Example Usage
 
@@ -68,8 +70,9 @@ maretf info input.vtf
 
 ## Credits
 
-- The kirin in the program logo was created with [pony.town](https://pony.town)'s character creator
-- Dependencies:
+- Assets:
+  - The kirin in the program logo (Olive Shade) was created with [pony.town](https://pony.town)'s character creator
+- CLI Dependencies:
   - [argparse](https://github.com/p-ranav/argparse)
   - [sourcepp](https://github.com/craftablescience/sourcepp)
 
@@ -299,4 +302,4 @@ RESIZE_METHOD
  • NEAREST
 ```
 
-<img src="https://github.com/craftablescience/MareTF/blob/mane/res/vtf_kirin_sleep.png?raw=true" alt="The same green-skinned and red-haired kirin as from the MareTF logo, sleeping." />
+<img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_sleep.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, sleeping." />
