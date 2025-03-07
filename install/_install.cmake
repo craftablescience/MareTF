@@ -27,7 +27,7 @@ elseif(UNIX)
     # Use system Qt - no install rules
 
     # Celestia Medium Redux font
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/CelestiaMediumRedux.ttf"
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/CelestiaMediumRedux.ttf"
             DESTINATION "share/fonts/truetype")
 
     # Desktop file
