@@ -107,7 +107,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::kvpp 
 
 # maretf_gui
 add_executable(${PROJECT_NAME}_gui
-        "${CMAKE_CURRENT_SOURCE_DIR}/res/res.qrc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"

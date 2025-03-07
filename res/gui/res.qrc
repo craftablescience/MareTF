@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../logo.png</file>
+
+        <file>background.png</file>
+        <file>CelestiaMediumRedux.ttf</file>
+        <file>close.png</file>
+        <file>close_hover.png</file>
+        <file>minimize.png</file>
+        <file>minimize_hover.png</file>
+        <file>olive_shade_sleep.png</file>
+        <file>text_box_background.png</file>
+        <file>text_box_face_smiling.png</file>
+        <file>text_box_foreground.png</file>
+    </qresource>
+</RCC>
