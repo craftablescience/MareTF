@@ -13,6 +13,10 @@ set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# initial VS integration
+set(CMAKE_FOLDER "Thirdparty" CACHE INTERNAL "" FORCE)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # set common compile options
 set(CMAKE_SKIP_BUILD_RPATH OFF)
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
@@ -52,8 +56,15 @@ function(maretf_configure_target TARGET)
         get_target_property(TARGET_TYPE ${TARGET} TYPE)
         get_target_property(TARGET_IS_GUI ${TARGET} WIN32_EXECUTABLE)
 
+        # Organize VS solution into folders
+        if(TARGET_TYPE STREQUAL "EXECUTABLE")
+            set_target_properties(${TARGET} PROPERTIES FOLDER "Executables")
+        else()
+            set_target_properties(${TARGET} PROPERTIES FOLDER "Libraries")
+        endif()
+
         # Create PDBs in release
-        if(MSVC AND ((TARGET_TYPE STREQUAL "SHARED_LIBRARY") OR (TARGET_TYPE STREQUAL "EXECUTABLE")))
+        if((TARGET_TYPE STREQUAL "SHARED_LIBRARY") OR (TARGET_TYPE STREQUAL "EXECUTABLE"))
             target_compile_options(
                     ${TARGET} PRIVATE
                     "$<$<CONFIG:Release>:/Zi>")
@@ -73,7 +84,7 @@ function(maretf_configure_target TARGET)
         endif()
 
         # Don't show the console when running the executable
-        if(MSVC AND TARGET_IS_GUI)
+        if(TARGET_IS_GUI)
             target_link_options(
                     ${TARGET} PRIVATE
                     "/ENTRY:mainCRTStartup")
@@ -110,4 +121,16 @@ target_include_directories(${PROJECT_NAME}_gui PRIVATE "${QT_INCLUDE}" "${QT_INC
 option(MARETF_BUILD_INSTALLER "Build installer" OFF)
 if(MARETF_BUILD_INSTALLER)
     include("${CMAKE_CURRENT_SOURCE_DIR}/install/_install.cmake")
+endif()
+
+# VS setup
+if(WIN32)
+    set_property(
+            DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}_gui")
+    set_target_properties(
+            ${PROJECT_NAME}_gui PROPERTIES
+            VS_DEBUGGER_COMMAND "$<TARGET_FILE:${PROJECT_NAME}_gui>"
+            VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
+            VS_DEBUGGER_ENVIRONMENT "PATH=%PATH%;${QT_BASEDIR}/bin;")
 endif()
