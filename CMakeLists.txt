@@ -25,7 +25,7 @@ option(MARETF_USE_LTO "Compile ${PROJECT_NAME_PRETTY} with LTO/IPO" OFF)
 cs_configure_defaults(MARETF_USE_LTO)
 
 # external libraries
-include("${CMAKE_CURRENT_SOURCE_DIR}/ext/_ext.cmake")
+cs_include_directory(ext)
 
 # maretf
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
@@ -52,7 +52,7 @@ target_include_directories(${PROJECT_NAME}_gui PRIVATE "${QT_INCLUDE}" "${QT_INC
 # installer
 option(MARETF_BUILD_INSTALLER "Build installer" OFF)
 if(MARETF_BUILD_INSTALLER)
-    include("${CMAKE_CURRENT_SOURCE_DIR}/install/_install.cmake")
+    cs_include_directory(install)
 endif()
 
 # VS setup
