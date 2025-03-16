@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
 	QApplication::setFont(QFont{QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":/CelestiaMediumRedux.ttf")).at(0)});
 #else
-	QApplication::setFont(QFont{"Celestia Medium Redux"});
+	QApplication::setFont(QFont{"Celestia Redux"});
 #endif
 
 	auto* window = new QMareWindow;
