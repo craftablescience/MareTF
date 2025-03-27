@@ -18,7 +18,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
 include(CS_All)
 
 # initial VS integration
-cs_setup_vs_defaults()
+cs_setup_vs_defaults(STARTUP_PROJECT "${PROJECT_NAME}_gui")
 
 # set common compile options
 option(MARETF_USE_LTO "Compile ${PROJECT_NAME_PRETTY} with LTO/IPO" OFF)
@@ -57,12 +57,7 @@ endif()
 
 # VS setup
 if(WIN32)
-    set_property(
-            DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}_gui")
     set_target_properties(
             ${PROJECT_NAME}_gui PROPERTIES
-            VS_DEBUGGER_COMMAND "$<TARGET_FILE:${PROJECT_NAME}_gui>"
-            VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
             VS_DEBUGGER_ENVIRONMENT "PATH=%PATH%;${QT_BASEDIR}/bin;")
 endif()
