@@ -602,6 +602,9 @@ int main(int argc, const char* const argv[]) {
 				options.outputFormat = vtfpp::VTF::FORMAT_DEFAULT;
 			} else {
 				options.outputFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(format);
+				if (options.majorVersion == 7 && options.minorVersion == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
+					std::cerr << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << std::endl;
+				}
 			}
 
 			// Set filter
