@@ -1,5 +1,5 @@
 # Configuration stuff
-if(WIN32)
+if(WIN32 AND MARETF_BUILD_GUI)
     # Qt
     install(IMPORTED_RUNTIME_ARTIFACTS
             Qt6::Core Qt6::Gui Qt6::Widgets
@@ -23,7 +23,7 @@ if(WIN32)
             "${CMAKE_CURRENT_LIST_DIR}/win/UninstallCommands.nsh.in"
             "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh"
             @ONLY)
-elseif(UNIX)
+elseif(UNIX AND MARETF_BUILD_GUI)
     # Use system Qt - no install rules
 
     # Celestia Medium Redux font
@@ -67,7 +67,10 @@ set(CPACK_STRIP_FILES ON)
 set(CPACK_THREADS 0)
 set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 if(WIN32)
-    install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
+    if(MARETF_BUILD_GUI)
+        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
+    endif()
 
     if(NOT (CPACK_GENERATOR STREQUAL "NSIS"))
         message(AUTHOR_WARNING "CPACK_GENERATOR on Windows must be NSIS! Setting generator to NSIS...")
@@ -82,19 +85,28 @@ if(WIN32)
     set(CPACK_NSIS_INSTALLED_ICON_NAME "${PROJECT_NAME}.exe")
     set(CPACK_NSIS_URL_INFO_ABOUT "${CMAKE_PROJECT_HOMEPAGE_URL}")
     set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh" CPACK_NSIS_EXTRA_INSTALL_COMMANDS)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh" CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/install/win") # NSIS.template.in, NSIS.InstallOptions.ini.in
+    if(MARETF_BUILD_GUI)
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh" CPACK_NSIS_EXTRA_INSTALL_COMMANDS)
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh" CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS)
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/install/win") # NSIS.template.in, NSIS.InstallOptions.ini.in
+    endif()
 else()
-    install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_gui RUNTIME DESTINATION bin)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+    if(MARETF_BUILD_GUI)
+        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION bin)
+    endif()
 
     if(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libxcb-cursor0, libqt6core6, libqt6gui6, libqt6widgets6")
+        if(MARETF_BUILD_GUI)
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "libxcb-cursor0, libqt6core6, libqt6gui6, libqt6widgets6")
+        endif()
         set(CPACK_DEBIAN_COMPRESSION_TYPE "zstd")
     elseif(CPACK_GENERATOR STREQUAL "RPM")
         set(CPACK_RPM_PACKAGE_LICENSE "MIT")
-        set(CPACK_RPM_PACKAGE_REQUIRES "libxcb >= 1.17, qt6-qtbase >= 6.6.3, qt6-qtbase-gui >= 6.6.3")
+        if(MARETF_BUILD_GUI)
+            set(CPACK_RPM_PACKAGE_REQUIRES "libxcb >= 1.17, qt6-qtbase >= 6.6.3, qt6-qtbase-gui >= 6.6.3")
+        endif()
         if(CMAKE_VERSION VERSION_LESS "3.31")
             set(CPACK_RPM_COMPRESSION_TYPE "xz")
         else()
