@@ -220,8 +220,8 @@ int main(int argc, const char* const argv[]) {
 
 	float bumpMapScale = 1.f;
 	createCLI
-		.add_argument("--bumpmap-scale")
-		.metavar("SCALE")
+		.add_argument("--bumpscale")
+		.metavar("BUMPMAP_SCALE")
 		.help("The bumpmap scale. It can have a decimal point.")
 		.scan<'g', float>()
 		.default_value(bumpMapScale).store_into(bumpMapScale);
