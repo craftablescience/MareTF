@@ -83,125 +83,176 @@ maretf info input.vtf
 ## Full Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [-y] [--no-pretty-formatting] [--version X.Y] [--format IMAGE_FORMAT]
-              [--filter RESIZE_FILTER] [--flag FLAG]... [--no-automatic-transparency-flags] [--no-mips] [--no-thumbnail]
-              [--platform PLATFORM] [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
-              [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl]
-              [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD] [--srgb] [--clamps]
-              [--clampt] [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump] [--set-version X.Y]
-              [--set-format IMAGE_FORMAT] [--set-width WIDTH] [--set-height HEIGHT] [--edit-filter RESIZE_FILTER]
-              [--add-flag FLAG]... [--remove-flag FLAG]... [--recompute-transparency-flags] [--recompute-mips]
-              [--remove-mips] [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
-              [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD] [--set-compression-level LEVEL]
-              [--set-start-frame FRAME_INDEX] [--set-bumpmap-scale SCALE] [--set-particle-sheet-resource PATH]
-              [--remove-particle-sheet-resource] [--set-crc-resource CRC] [--remove-crc-resource]
-              [--set-lod-resource U.V] [--remove-lod-resource] [--set-tso-resource COMBINED_FLAGS]
-              [--remove-tso-resource] [--set-kvd-resource PATH] [--remove-kvd-resource] [--info-output-mode VAR]
-              MODE PATH
+Usage: maretf [--help] [--output PATH] [-y] [--no-pretty-formatting] [--version X.Y]
+              [--format IMAGE_FORMAT] [--filter RESIZE_FILTER] [--flag FLAG]...
+              [--no-automatic-transparency-flags] [--no-mips] [--no-thumbnail]
+              [--platform PLATFORM] [--compression-method COMPRESSION_METHOD]
+              [--compression-level LEVEL] [--start-frame FRAME_INDEX]
+              [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl]
+              [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
+              [--srgb] [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear]
+              [--aniso] [--normal] [--ssbump] [--set-version X.Y] [--set-format IMAGE_FORMAT]
+              [--set-width WIDTH] [--set-height HEIGHT] [--edit-filter RESIZE_FILTER]
+              [--add-flag FLAG]... [--remove-flag FLAG]... [--recompute-transparency-flags]
+              [--recompute-mips] [--remove-mips] [--recompute-thumbnail] [--remove-thumbnail]
+              [--recompute-reflectivity] [--set-platform PLATFORM]
+              [--set-compression-method COMPRESSION_METHOD] [--set-compression-level LEVEL]
+              [--set-start-frame FRAME_INDEX] [--set-bumpmap-scale SCALE]
+              [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
+              [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
+              [--remove-lod-resource] [--set-tso-resource COMBINED_FLAGS]
+              [--remove-tso-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--info-output-mode VAR] MODE PATH
 
 Positional arguments:
-  MODE                                         The mode to run the program in. This determines what arguments are
-                                               processed. Valid options: "create", "edit", and "info". "convert" is also
-                                               permissible and is an alias of "create" for vtex2 compatibility.
+  MODE                                         The mode to run the program in. This
+                                               determines what arguments are processed. Valid
+                                               options: "create", "edit", and "info".
+                                               "convert" is also permissible and is an alias
+                                               of "create" for vtex2 compatibility.
                                                [required]
   PATH                                         The path to the input file. [required]
 
 Optional arguments:
   -h, --help                                   shows help message and exits
-  -o, --output PATH                            The path to the output file, if the current mode outputs a file.
+  -o, --output PATH                            The path to the output file, if the current
+                                               mode outputs a file.
   -y                                           Automatically say yes to any prompts.
-  -q, --quiet                                  Don't print anything to stdout or stderr (assuming program arguments are
-                                               parsed successfully).
+  -q, --quiet                                  Don't print anything to stdout or stderr
+                                               (assuming program arguments are parsed
+                                               successfully).
   --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
 
 "create" mode (detailed usage):
-  -v, --version                                Major and minor version, split by a period. Ignored if platform is
-                                               specified as anything other than PC. [nargs=0..1] [default: "7.4"]
-  -f, --format                                 Output format. [nargs=0..1] [default: "DEFAULT"]
-  -r, --filter                                 The resize filter used to generate mipmaps and when resizing the base
-                                               texture to match a power of 2 (if necessary). [nargs=0..1]
+  -v, --version                                Major and minor version, split by a period.
+                                               Ignored if platform is specified as anything
+                                               other than PC. [nargs=0..1] [default: "7.4"]
+  -f, --format                                 Output format. [nargs=0..1]
+                                               [default: "DEFAULT"]
+  -r, --filter                                 The resize filter used to generate mipmaps and
+                                               when resizing the base texture to match a
+                                               power of 2 (if necessary). [nargs=0..1]
                                                [default: "KAISER"]
-  --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and
-                                               NO_LOD flags are applied automatically based on the VTF properties.
-                                               [may be repeated]
-  --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and MULTI_BIT_ALPHA flags by default
-                                               depending on the output image format.
+  --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA,
+                                               MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are
+                                               applied automatically based on the VTF
+                                               properties. [may be repeated]
+  --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
+                                               MULTI_BIT_ALPHA flags by default depending on
+                                               the output image format.
   --no-mips                                    Disable mipmap generation.
   --no-thumbnail                               Disable thumbnail generation.
-  -p, --platform                               Set the platform (PC/console) to build for. [nargs=0..1] [default: "PC"]
-  -m, --compression-method                     Set the compression method. Deflate is supported on all Strata Source
-                                               games for VTF v7.6. Zstd is supported on all Strata Source games for VTF
-                                               v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.
+  -p, --platform                               Set the platform (PC/console) to build for.
+                                               [nargs=0..1] [default: "PC"]
+  -m, --compression-method                     Set the compression method. Deflate is
+                                               supported on all Strata Source games for VTF
+                                               v7.6. Zstd is supported on all Strata Source
+                                               games for VTF v7.6 besides Portal: Revolution.
+                                               LZMA is supported for console VTFs.
                                                [nargs=0..1] [default: "ZSTD"]
-  -c, --compression-level                      Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for
-                                               Zstd. [nargs=0..1] [default: 6]
-  --start-frame                                The start frame used in animations, counting from zero. Ignored when
-                                               creating console VTFs. [nargs=0..1] [default: 0]
-  --bumpscale                                  The bumpmap scale. It can have a decimal point. [nargs=0..1] [default: 1]
-  --invert-green                               Invert the green channel of the input image. This converts OpenGL normal
-                                               maps into DirectX normal maps.
-  --opengl                                     Alias of --invert-green, added for vtex2 compatibility.
-  --width-resize-method                        How to resize the texture's width to match a power of 2. [nargs=0..1]
-                                               [default: "BIGGER"]
-  --height-resize-method                       How to resize the texture's height to match a power of 2. [nargs=0..1]
-                                               [default: "BIGGER"]
-  --srgb                                       Adds PWL_CORRECTED flag before version 7.4, adds SRGB flag otherwise.
-  --clamps                                     Alias of --flag CLAMP_S, added for vtex2 compatibility.
-  --clampt                                     Alias of --flag CLAMP_T, added for vtex2 compatibility.
-  --clampu                                     Alias of --flag CLAMP_U, added for vtex2 compatibility.
-  --pointsample                                Alias of --flag POINT_SAMPLE, added for vtex2 compatibility.
-  --trilinear                                  Alias of --flag TRILINEAR, added for vtex2 compatibility.
-  --aniso                                      Alias of --flag ANISOTROPIC, added for vtex2 compatibility.
-  --normal                                     Alias of --flag NORMAL, added for vtex2 compatibility.
-  --ssbump                                     Alias of --flag SSBUMP, added for vtex2 compatibility.
+  -c, --compression-level                      Set the compression level. -1 to 9 for Deflate
+                                               and LZMA, -1 to 22 for Zstd. [nargs=0..1]
+                                               [default: 6]
+  --start-frame                                The start frame used in animations, counting
+                                               from zero. Ignored when creating console VTFs.
+                                               [nargs=0..1] [default: 0]
+  --bumpscale                                  The bumpmap scale. It can have a decimal
+                                               point. [nargs=0..1] [default: 1]
+  --invert-green                               Invert the green channel of the input image.
+                                               This converts OpenGL normal maps into DirectX
+                                               normal maps.
+  --opengl                                     Alias of --invert-green, added for vtex2
+                                               compatibility.
+  --width-resize-method                        How to resize the texture's width to match a
+                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+  --height-resize-method                       How to resize the texture's height to match a
+                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+  --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
+                                               adds SRGB flag otherwise.
+  --clamps                                     Alias of --flag CLAMP_S, added for vtex2
+                                               compatibility.
+  --clampt                                     Alias of --flag CLAMP_T, added for vtex2
+                                               compatibility.
+  --clampu                                     Alias of --flag CLAMP_U, added for vtex2
+                                               compatibility.
+  --pointsample                                Alias of --flag POINT_SAMPLE, added for vtex2
+                                               compatibility.
+  --trilinear                                  Alias of --flag TRILINEAR, added for vtex2
+                                               compatibility.
+  --aniso                                      Alias of --flag ANISOTROPIC, added for vtex2
+                                               compatibility.
+  --normal                                     Alias of --flag NORMAL, added for vtex2
+                                               compatibility.
+  --ssbump                                     Alias of --flag SSBUMP, added for vtex2
+                                               compatibility.
 
 "edit" mode (detailed usage):
   --set-version X.Y                            Set the version.
-  --set-format IMAGE_FORMAT                    Set the image format. Keep in mind converting to a lossy format like DXTn
-                                               means irreversibly losing information. Recommended to pair this with the
-                                               recompute transparency flags argument.
-  --set-width WIDTH                            Set the lowest mip's width. Ignores power of two resize rule.
-  --set-height HEIGHT                          Set the lowest mip's height. Ignores power of two resize rule.
-  --edit-filter                                Use this resize filter for all resizing operations that accept a filter
-                                               parameter, including mipmap generation. [nargs=0..1] [default: "KAISER"]
-  --add-flag FLAG                              Flags to add. ENVMAP and NO_MIP flags are ignored. [may be repeated]
-  --remove-flag FLAG                           Flags to remove. ENVMAP and NO_MIP flags are ignored. [may be repeated]
-  --recompute-transparency-flags               Recomputes transparency flags based on the image format.
-  --recompute-mips                             Recomputes mipmaps with the specified edit resize filter.
-  --remove-mips                                Remove mipmaps. If recompute mips is specified, this argument is ignored.
+  --set-format IMAGE_FORMAT                    Set the image format. Keep in mind converting
+                                               to a lossy format like DXTn means irreversibly
+                                               losing information. Recommended to pair this
+                                               with the recompute transparency flags
+                                               argument.
+  --set-width WIDTH                            Set the lowest mip's width. Ignores power of
+                                               two resize rule.
+  --set-height HEIGHT                          Set the lowest mip's height. Ignores power of
+                                               two resize rule.
+  --edit-filter                                Use this resize filter for all resizing
+                                               operations that accept a filter parameter,
+                                               including mipmap generation. [nargs=0..1]
+                                               [default: "KAISER"]
+  --add-flag FLAG                              Flags to add. ENVMAP and NO_MIP flags are
+                                               ignored. [may be repeated]
+  --remove-flag FLAG                           Flags to remove. ENVMAP and NO_MIP flags are
+                                               ignored. [may be repeated]
+  --recompute-transparency-flags               Recomputes transparency flags based on the
+                                               image format.
+  --recompute-mips                             Recomputes mipmaps with the specified edit
+                                               resize filter.
+  --remove-mips                                Remove mipmaps. If recompute mips is
+                                               specified, this argument is ignored.
   --recompute-thumbnail                        Recompute the thumbnail.
-  --remove-thumbnail                           Remove the thumbnail. If recompute thumbnail is specified, this argument
-                                               is ignored.
+  --remove-thumbnail                           Remove the thumbnail. If recompute thumbnail
+                                               is specified, this argument is ignored.
   --recompute-reflectivity                     Recompute the reflectivity vector.
   --set-platform PLATFORM                      Set the VTF platform.
-  --set-compression-method COMPRESSION_METHOD  Set the compression method. Deflate is supported on all Strata Source
-                                               games for VTF v7.6. Zstd is supported on all Strata Source games for VTF
-                                               v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.
-  --set-compression-level LEVEL                Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for
-                                               Zstd.
+  --set-compression-method COMPRESSION_METHOD  Set the compression method. Deflate is
+                                               supported on all Strata Source games for VTF
+                                               v7.6. Zstd is supported on all Strata Source
+                                               games for VTF v7.6 besides Portal: Revolution.
+                                               LZMA is supported for console VTFs.
+  --set-compression-level LEVEL                Set the compression level. -1 to 9 for Deflate
+                                               and LZMA, -1 to 22 for Zstd.
   --set-start-frame FRAME_INDEX                Set the start frame.
-  --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal point.
-  --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should point to a valid particle
-                                               sheet file.
-  --remove-particle-sheet-resource             Remove the particle sheet resource. If set particle sheet resource is
-                                               specified, this argument is ignored.
+  --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
+                                               point.
+  --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should
+                                               point to a valid particle sheet file.
+  --remove-particle-sheet-resource             Remove the particle sheet resource. If set
+                                               particle sheet resource is specified, this
+                                               argument is ignored.
   --set-crc-resource CRC                       Set the CRC resource.
-  --remove-crc-resource                        Remove the CRC resource. If set CRC resource is specified, this argument
-                                               is ignored.
-  --set-lod-resource U.V                       Set the LOD resource. U and V values should be separated by a period.
-  --remove-lod-resource                        Remove the LOD resource. If set LOD resource is specified, this argument
-                                               is ignored.
-  --set-tso-resource COMBINED_FLAGS            Set the TSO (extended flags) resource. You'll have to do the math to
-                                               combine the flags into one integer yourself.
-  --remove-tso-resource                        Remove the TSO (extended flags) resource. If set TSO resource is
-                                               specified, this argument is ignored.
-  --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data) resource. Path should point to a
-                                               text file.
-  --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource
+  --remove-crc-resource                        Remove the CRC resource. If set CRC resource
                                                is specified, this argument is ignored.
+  --set-lod-resource U.V                       Set the LOD resource. U and V values should be
+                                               separated by a period.
+  --remove-lod-resource                        Remove the LOD resource. If set LOD resource
+                                               is specified, this argument is ignored.
+  --set-tso-resource COMBINED_FLAGS            Set the TSO (extended flags) resource. You'll
+                                               have to do the math to combine the flags into
+                                               one integer yourself.
+  --remove-tso-resource                        Remove the TSO (extended flags) resource. If
+                                               set TSO resource is specified, this argument
+                                               is ignored.
+  --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data)
+                                               resource. Path should point to a text file.
+  --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
+                                               resource. If set KVD resource is specified,
+                                               this argument is ignored.
 
 "info" mode (detailed usage):
-  --info-output-mode                           The mode to output information in. Can be "human" or "kv1". [nargs=0..1]
+  --info-output-mode                           The mode to output information in. Can be
+                                               "human" or "kv1". [nargs=0..1]
                                                [default: "human"]
 
 Enumerations:
