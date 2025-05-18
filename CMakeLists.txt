@@ -13,6 +13,10 @@ set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# options
+option(MARETF_BUILD_GUI       "Build MareTF GUI"       OFF)
+option(MARETF_BUILD_INSTALLER "Build MareTF installer" OFF)
+
 # add helpers
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
 include(CS_All)
@@ -38,7 +42,6 @@ cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
 target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::kvpp sourcepp::vtfpp)
 
 # maretf_gui
-option(MARETF_BUILD_GUI "Build MareTF GUI" OFF)
 if(MARETF_BUILD_GUI)
     add_executable(${PROJECT_NAME}_gui WIN32
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
@@ -53,7 +56,6 @@ if(MARETF_BUILD_GUI)
 endif()
 
 # installer
-option(MARETF_BUILD_INSTALLER "Build installer" OFF)
 if(MARETF_BUILD_INSTALLER)
     cs_include_directory(install)
 endif()
