@@ -110,6 +110,8 @@ Optional arguments:
   -h, --help                                   shows help message and exits
   -o, --output PATH                            The path to the output file, if the current mode outputs a file.
   -y                                           Automatically say yes to any prompts.
+  -q, --quiet                                  Don't print anything to stdout or stderr (assuming program arguments are
+                                               parsed successfully).
   --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
 
 "create" mode (detailed usage):
