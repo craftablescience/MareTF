@@ -54,6 +54,36 @@ protected:
 	std::chrono::time_point<clock, duration> start;
 };
 
+struct tfout_t {
+	static inline bool QUIET = false;
+	tfout_t& operator<<(const auto& x) {
+		if (!QUIET) std::cout << x;
+		return *this;
+	}
+} tfout;
+
+struct tferr_t {
+	static inline bool QUIET = false;
+	tferr_t& operator<<(const auto& x) {
+		if (!QUIET) std::cerr << x;
+		return *this;
+	}
+} tferr;
+
+struct tfendl_t {} tfendl;
+
+template<>
+tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
+	if (!QUIET) std::cout << std::endl;
+	return *this;
+}
+
+template<>
+tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
+	if (!QUIET) std::cerr << std::endl;
+	return *this;
+}
+
 } // namespace
 
 int main(int argc, const char* const argv[]) {
@@ -102,6 +132,13 @@ int main(int argc, const char* const argv[]) {
 		.help("Automatically say yes to any prompts.")
 		.flag()
 		.store_into(overwrite);
+
+	bool quiet;
+	cli
+		.add_argument("-q", "--quiet")
+		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully).")
+		.flag()
+		.store_into(quiet);
 
 	bool noPrettyFormatting;
 	cli
@@ -621,6 +658,11 @@ int main(int argc, const char* const argv[]) {
 	try {
 		cli.parse_args(argc, argv);
 
+		if (quiet) {
+			tfout_t::QUIET = true;
+			tferr_t::QUIET = true;
+		}
+
 		// Pretty formatting colors
 		std::string_view END;
 		std::string_view RED;
@@ -651,15 +693,15 @@ int main(int argc, const char* const argv[]) {
 			} else if (exists && !overwrite) {
 				std::string in;
 				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					std::cout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+					tfout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
 					std::cin >> in;
 				}
 				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-					std::cout << "Output file already exists. Aborting." << std::endl;
+					tfout << "Output file already exists. Aborting." << tfendl;
 					return EXIT_SUCCESS;
 				}
 			} else if (exists) {
-				std::cout << "Output file already exists, overwriting..." << std::endl;
+				tfout << "Output file already exists, overwriting..." << tfendl;
 			}
 
 			// Start to set up options
@@ -680,7 +722,7 @@ int main(int argc, const char* const argv[]) {
 			} else {
 				options.outputFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(format);
 				if (options.majorVersion == 7 && options.minorVersion == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
-					std::cerr << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << std::endl;
+					tferr << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << tfendl;
 				}
 			}
 
@@ -749,13 +791,13 @@ int main(int argc, const char* const argv[]) {
 			// Set compression level
 			if (compressionLevel < -1) {
 				options.compressionLevel = -1;
-				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << std::endl;
+				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << tfendl;
 			} else if ((options.compressionMethod == vtfpp::CompressionMethod::DEFLATE || options.compressionMethod == vtfpp::CompressionMethod::CONSOLE_LZMA) && compressionLevel > 9) {
 				options.compressionLevel = 9;
-				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << std::endl;
+				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << tfendl;
 			} else if (options.compressionMethod == vtfpp::CompressionMethod::ZSTD && compressionLevel > 22) {
 				options.compressionLevel = 22;
-				std::cout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << std::endl;
+				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << tfendl;
 			} else {
 				options.compressionLevel = static_cast<int16_t>(compressionLevel);
 			}
@@ -774,14 +816,14 @@ int main(int argc, const char* const argv[]) {
 			options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
 
 			// Bake VTF
-			std::cout << randomDeviantArtTFTrope() << "..." << std::endl;
+			tfout << randomDeviantArtTFTrope() << "..." << tfendl;
 			::ElapsedTime stopwatch;
 			if (!vtfpp::VTF::create(inputPath, outputPath, options)) {
-				std::cerr << "Failed to TF input image. Is it a supported format?" << std::endl;
+				tferr << "Failed to TF input image. Is it a supported format?" << tfendl;
 				return EXIT_FAILURE;
 			}
 			const auto elapsed = stopwatch.get().count();
-			std::cout << "Input image was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << std::endl;
+			tfout << "Input image was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 		} else if (mode == "edit") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -799,15 +841,15 @@ int main(int argc, const char* const argv[]) {
 			} else if (exists && !overwrite) {
 				std::string in;
 				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					std::cout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+					tfout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
 					std::cin >> in;
 				}
 				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-					std::cout << "Output file already exists. Aborting." << std::endl;
+					tfout << "Output file already exists. Aborting." << tfendl;
 					return EXIT_SUCCESS;
 				}
 			} else if (exists) {
-				std::cout << "Output file already exists, overwriting..." << std::endl;
+				tfout << "Output file already exists, overwriting..." << tfendl;
 			}
 
 			// Start to set up VTF for editing
@@ -816,7 +858,7 @@ int main(int argc, const char* const argv[]) {
 			if (!vtf) {
 				throw std::invalid_argument{"Unable to load input file as a VTF!"};
 			}
-			std::cout << "Loaded input VTF in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << std::endl;
+			tfout << "Loaded input VTF in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
 			::ElapsedTime editStopwatch;
 
 			// Get edit filter
@@ -914,13 +956,13 @@ int main(int argc, const char* const argv[]) {
 			if (cli.is_used("--set-compression-level")) {
 				if (setCompressionLevel < -1) {
 					setCompressionLevel = -1;
-					std::cout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << std::endl;
+					tfout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << tfendl;
 				} else if ((vtf.getCompressionMethod() == vtfpp::CompressionMethod::DEFLATE || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) && setCompressionLevel > 9) {
 					setCompressionLevel = 9;
-					std::cout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << std::endl;
+					tfout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << tfendl;
 				} else if (vtf.getCompressionMethod() == vtfpp::CompressionMethod::ZSTD && setCompressionLevel > 22) {
 					setCompressionLevel = 22;
-					std::cout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << std::endl;
+					tfout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << tfendl;
 				}
 				vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
 			}
@@ -934,7 +976,7 @@ int main(int argc, const char* const argv[]) {
 					}
 					vtf.setParticleSheetResource(sht);
 				} catch (const std::overflow_error&) {
-					std::cerr << "Failed to parse specified file for particle sheet resource! Check the file exists and has a .sht extension." << std::endl;
+					tferr << "Failed to parse specified file for particle sheet resource! Check the file exists and has a .sht extension." << tfendl;
 				}
 			} else if (removeParticleSheetResource) {
 				vtf.removeParticleSheetResource();
@@ -968,7 +1010,7 @@ int main(int argc, const char* const argv[]) {
 			// Modify KVD resource
 			if (cli.is_used("--set-kvd-resource")) {
 				if (const auto txt = sourcepp::fs::readFileText(setKVDResource); txt.empty()) {
-					std::cerr << "Failed to read contents of specified file for KVD (KeyValues Data) resource! Check the file exists and is not empty." << std::endl;
+					tferr << "Failed to read contents of specified file for KVD (KeyValues Data) resource! Check the file exists and is not empty." << tfendl;
 				} else {
 					vtf.setKeyValuesDataResource(txt);
 				}
@@ -978,10 +1020,10 @@ int main(int argc, const char* const argv[]) {
 
 			// Bake VTF
 			if (!vtf.bake(outputPath)) {
-				std::cerr << "Failed to edit input VTF." << std::endl;
+				tferr << "Failed to edit input VTF." << tfendl;
 				return EXIT_FAILURE;
 			}
-			std::cout << "Edited input VTF in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << std::endl;
+			tfout << "Edited input VTF in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 		} else if (mode == "info") {
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
@@ -997,152 +1039,152 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			if (infoOutputMode == "human") {
-				std::cout << GREEN << BOLD << " ――― FORMAT ―――" << END << std::endl;
+				tfout << GREEN << BOLD << " ――― FORMAT ―――" << END << tfendl;
 
-				std::cout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << std::endl;
+				tfout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << tfendl;
 
 				if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
-					std::cout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << std::endl;
+					tfout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << tfendl;
 				}
 
-				std::cout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << std::endl;
+				tfout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << tfendl;
 
-				std::cout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << std::endl;
+				tfout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << tfendl;
 				if (vtf.getSliceCount() > 1) {
-					std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << std::endl;
+					tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << tfendl;
 				} else {
-					std::cout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << std::endl;
+					tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 				}
 
-				std::cout << BOLD << "Flags:         " << END;
+				tfout << BOLD << "Flags:         " << END;
 				bool first = true;
 				for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
 					if (vtf.getFlags() & flag) {
 						if (!first) {
-							std::cout << " | ";
+							tfout << " | ";
 						}
 						first = false;
-						std::cout << CYAN << name << END;
+						tfout << CYAN << name << END;
 					}
 				}
-				std::cout << std::endl;
+				tfout << tfendl;
 
-				std::cout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << std::endl;
-				std::cout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << std::endl;
-				std::cout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << std::endl;
+				tfout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << tfendl;
+				tfout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << tfendl;
+				tfout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << tfendl;
 
-				std::cout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << std::endl;
+				tfout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << tfendl;
 
-				std::cout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << std::endl;
-				std::cout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << std::endl;
+				tfout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << tfendl;
+				tfout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << tfendl;
 
-				std::cout << BOLD << "Compression:   " << END;
+				tfout << BOLD << "Compression:   " << END;
 				if (vtf.getCompressionLevel() == 0) {
 					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
-						std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << std::endl;
+						tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << tfendl;
 					} else {
-						std::cout << RED << "Uncompressed" << END << std::endl;
+						tfout << RED << "Uncompressed" << END << tfendl;
 					}
 				} else {
-					std::cout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << std::endl;
+					tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << tfendl;
 				}
 
-				std::cout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << std::endl;
+				tfout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << tfendl;
 
-				std::cout << BOLD << "Thumbnail:      ";
+				tfout << BOLD << "Thumbnail:      ";
 				if (vtf.hasThumbnailData()) {
-					std::cout << GREEN << "Exists";
+					tfout << GREEN << "Exists";
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "Particle Sheet: ";
+				tfout << BOLD << "Particle Sheet: ";
 				const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
 				if (particleSheetResource) {
 					const auto sheet = particleSheetResource->getDataAsParticleSheet();
 					if (!sheet) {
-						std::cout << RED << "Exists, but failed to parse";
+						tfout << RED << "Exists, but failed to parse";
 					} else {
-						std::cout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+						tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
 					}
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "Image:          ";
+				tfout << BOLD << "Image:          ";
 				if (vtf.hasImageData()) {
-					std::cout << GREEN << "Exists";
+					tfout << GREEN << "Exists";
 				} else {
-					std::cout << RED << "Doesn't exist (HUH?)";
+					tfout << RED << "Doesn't exist (HUH?)";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "CRC:            ";
+				tfout << BOLD << "CRC:            ";
 				if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-					std::cout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
+					tfout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "LOD:            ";
+				tfout << BOLD << "LOD:            ";
 				if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
 					const auto lod = lodResource->getDataAsLODControlInfo();
-					std::cout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
+					tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
 					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-						std::cout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
+						tfout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
 					}
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "KeyValues Data: ";
+				tfout << BOLD << "KeyValues Data: ";
 				const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
 				if (kvdResource) {
 					const auto keyvalues = kvdResource->getDataAsKeyValuesData();
-					std::cout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
+					tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
-				std::cout << BOLD << "Extended Flags: ";
+				tfout << BOLD << "Extended Flags: ";
 				if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-					std::cout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
+					tfout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
 				} else {
-					std::cout << RED << "Doesn't exist";
+					tfout << RED << "Doesn't exist";
 				}
-				std::cout << END << std::endl;
+				tfout << END << tfendl;
 
 				if (particleSheetResource) {
 					const auto sheet = particleSheetResource->getDataAsParticleSheet();
 					if (sheet) {
-						std::cout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << std::endl;
-						std::cout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << std::endl;
+						tfout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << tfendl;
+						tfout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << tfendl;
 						for (const auto& sequence : sheet.getSequences()) {
-							std::cout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << std::endl;
-							std::cout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << std::endl;
-							std::cout << '\t' << BOLD << "Loop:           " << END;
+							tfout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << tfendl;
+							tfout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << tfendl;
+							tfout << '\t' << BOLD << "Loop:           " << END;
 							if (sequence.loop) {
-								std::cout << GREEN << "Yes";
+								tfout << GREEN << "Yes";
 							} else {
-								std::cout << RED << "No";
+								tfout << RED << "No";
 							}
-							std::cout << END << std::endl;
+							tfout << END << tfendl;
 							for (int i = 0; i < sequence.frames.size(); i++) {
 								const auto& frame = sequence.frames.at(i);
-								std::cout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << std::endl;
-								std::cout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << std::endl;
-								std::cout << "\t\t" << BOLD << "Bounds:   ";
+								tfout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << tfendl;
+								tfout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << tfendl;
+								tfout << "\t\t" << BOLD << "Bounds:   ";
 								if (sheet.getVersion() < 1) {
-									std::cout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << std::endl;
+									tfout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << tfendl;
 								} else {
-									std::cout << END << std::endl;
+									tfout << END << tfendl;
 									for (const auto& bound : frame.bounds) {
-										std::cout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << std::endl;
+										tfout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << tfendl;
 									}
 								}
 							}
@@ -1151,8 +1193,8 @@ int main(int argc, const char* const argv[]) {
 				}
 
 				if (kvdResource) {
-					std::cout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << std::endl;
-					std::cout << kvdResource->getDataAsKeyValuesData() << END << std::endl;
+					tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
+					tfout << kvdResource->getDataAsKeyValuesData() << END << tfendl;
 				}
 			} else if (infoOutputMode == "kv1") {
 				kvpp::KV1Writer kv;
@@ -1236,7 +1278,7 @@ int main(int argc, const char* const argv[]) {
 				}
 
 				// ...and print it all out
-				std::cout << kv.bake() << std::endl;
+				tfout << kv.bake() << tfendl;
 			} else {
 				throw std::runtime_error{"Invalid info output mode specified!"};
 			}
