@@ -83,7 +83,7 @@ maretf info input.vtf
 ## Full Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-pretty-formatting]
+Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-recurse] [--no-pretty-formatting]
               [--version X.Y] [--format IMAGE_FORMAT] [--filter RESIZE_FILTER]
               [--flag FLAG]... [--no-automatic-transparency-flags] [--no-mips]
               [--no-thumbnail] [--platform PLATFORM]
@@ -91,7 +91,7 @@ Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-pretty-formatting]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
               [--opengl] [--width-resize-method RESIZE_METHOD]
               [--height-resize-method RESIZE_METHOD] [--gamma-correct]
-              [--gamma-correct-amount AMOUNT] [--srgb] [--clamps] [--clampt] [--clampu]
+              [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt] [--clampu]
               [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
               [--set-version X.Y] [--set-format IMAGE_FORMAT] [--set-width WIDTH]
               [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
@@ -113,16 +113,19 @@ Positional arguments:
                                                "convert" is also permissible and is an alias
                                                of "create" for vtex2 compatibility.
                                                [required]
-  PATH                                         The path to the input file. [required]
+  PATH                                         The path to the input file or directory. [required]
 
 Optional arguments:
   -h, --help                                   shows help message and exits
-  -o, --output PATH                            The path to the output file, if the current
-                                               mode outputs a file.
+  -o, --output PATH                            The path to the output file (if the current
+                                               mode outputs a file). Ignored if the input
+                                               path is a directory.
   -y                                           Automatically say yes to any prompts.
   -q, --quiet                                  Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
                                                successfully).
+  --no-recurse                                 If the input path is a directory, do not enter
+                                               subdirectories when scanning for files.
   --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
 
 "create" mode (detailed usage):

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <chrono>
 #include <filesystem>
@@ -115,7 +116,7 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("path")
 		.metavar("PATH")
-		.help("The path to the input file.")
+		.help("The path to the input file or directory.")
 		.required()
 		.store_into(inputPath);
 
@@ -123,7 +124,7 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("-o", "--output")
 		.metavar("PATH")
-		.help("The path to the output file, if the current mode outputs a file.")
+		.help("The path to the output file (if the current mode outputs a file). Ignored if the input path is a directory.")
 		.store_into(outputPath);
 
 	bool overwrite;
@@ -139,6 +140,13 @@ int main(int argc, const char* const argv[]) {
 		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully).")
 		.flag()
 		.store_into(quiet);
+
+	bool noRecurse;
+	cli
+		.add_argument("--no-recurse")
+		.help("If the input path is a directory, do not enter subdirectories when scanning for files.")
+		.flag()
+		.store_into(noRecurse);
 
 	bool noPrettyFormatting;
 	cli
@@ -692,616 +700,719 @@ int main(int argc, const char* const argv[]) {
 			BOLD  = "\033[1m";
 		}
 
+		static constexpr auto DIR_OPTIONS = std::filesystem::directory_options::follow_directory_symlink | std::filesystem::directory_options::skip_permission_denied;
+
 		if (mode == "create" || mode == "convert") {
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
-				throw std::invalid_argument{"Input path must be a valid file!"};
-			}
-
-			// Check output path
-			if (outputPath.empty()) {
-				const std::filesystem::path inputPathPath{inputPath};
-				outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + ".vtf";
-			}
-			if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
-				throw std::invalid_argument{"Output path must not be a directory!"};
-			} else if (exists && !overwrite) {
-				std::string in;
-				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					tfout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
-					std::cin >> in;
+			const auto create = [&](const std::string& currentInputPath) {
+				// Check output path
+				if (outputPath.empty()) {
+					const std::filesystem::path inputPathPath{currentInputPath};
+					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + ".vtf";
 				}
-				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-					tfout << "Output file already exists. Aborting." << tfendl;
-					return EXIT_SUCCESS;
+				if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
+					tferr << "Output path at " << BOLD << outputPath << END << " must not be a directory!" << tfendl;
+					return EXIT_FAILURE;
+				} else if (exists && !overwrite) {
+					std::string in;
+					while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+						tfout << "Output file at " << BOLD << outputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+						std::cin >> in;
+					}
+					if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
+						tfout << "Output file already exists. Aborting." << tfendl;
+						return EXIT_SUCCESS;
+					}
+				} else if (exists) {
+					tfout << "Output file already exists, overwriting..." << tfendl;
 				}
-			} else if (exists) {
-				tfout << "Output file already exists, overwriting..." << tfendl;
-			}
 
-			// Start to set up options
-			vtfpp::VTF::CreationOptions options;
+				// Start to set up options
+				vtfpp::VTF::CreationOptions options;
 
-			// Set version
-			if (version.size() != 3) {
-				throw std::runtime_error{"Invalid version!"};
-			}
-			sourcepp::string::toInt(std::string_view{&version[0], 1}, options.majorVersion);
-			sourcepp::string::toInt(std::string_view{&version[2], 1}, options.minorVersion);
-
-			// Set format
-			if (format == "UNCHANGED") {
-				options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
-			} else if (format == "DEFAULT") {
-				options.outputFormat = vtfpp::VTF::FORMAT_DEFAULT;
-			} else {
-				options.outputFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(format);
-				if (options.majorVersion == 7 && options.minorVersion == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
-					tferr << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << tfendl;
+				// Set version
+				if (version.size() != 3) {
+					throw std::runtime_error{"Invalid version!"};
 				}
-			}
+				sourcepp::string::toInt(std::string_view{&version[0], 1}, options.majorVersion);
+				sourcepp::string::toInt(std::string_view{&version[2], 1}, options.minorVersion);
 
-			// Set filter
-			options.filter = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter);
+				// Set format
+				if (format == "UNCHANGED") {
+					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+				} else if (format == "DEFAULT") {
+					options.outputFormat = vtfpp::VTF::FORMAT_DEFAULT;
+				} else {
+					options.outputFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(format);
+					if (options.majorVersion == 7 && options.minorVersion == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
+						tfout << RED << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << END << tfendl;
+					}
+				}
 
-			// Set flags
-			for (const auto& flag : flags) {
-				options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
-			}
-			static constexpr auto addSRGBFlag = [](vtfpp::VTF::CreationOptions& opts) {
-				opts.flags |= opts.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+				// Set filter
+				options.filter = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter);
+
+				// Set flags
+				for (const auto& flag : flags) {
+					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
+				}
+				static constexpr auto addSRGBFlag = [](vtfpp::VTF::CreationOptions& opts) {
+					opts.flags |= opts.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+				};
+				if (srgb) {
+					addSRGBFlag(options);
+				}
+				if (clamp_s) {
+					options.flags |= vtfpp::VTF::FLAG_CLAMP_S;
+				}
+				if (clamp_t) {
+					options.flags |= vtfpp::VTF::FLAG_CLAMP_T;
+				}
+				if (clamp_u) {
+					options.flags |= vtfpp::VTF::FLAG_CLAMP_U;
+				}
+				if (point_sample) {
+					options.flags |= vtfpp::VTF::FLAG_POINT_SAMPLE;
+				}
+				if (trilinear) {
+					options.flags |= vtfpp::VTF::FLAG_TRILINEAR;
+				}
+				if (anisotropic) {
+					options.flags |= vtfpp::VTF::FLAG_ANISOTROPIC;
+				}
+				if (normal) {
+					options.flags |= vtfpp::VTF::FLAG_NORMAL;
+				}
+				if (ssbump) {
+					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+				}
+
+				// Set default flags based on input filename
+				if (const auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
+					addSRGBFlag(options);
+				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
+					options.flags |= vtfpp::VTF::FLAG_NORMAL;
+				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
+					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+				}
+
+				// Set default transparency flags
+				options.computeTransparencyFlags = !noTransparencyFlags;
+
+				// Set mipmap generation
+				options.computeMips = !noMips;
+
+				// Set thumbnail generation
+				options.computeThumbnail = !noThumbnail;
+
+				// Set platform
+				options.platform = *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform);
+
+				// Set compression method
+				options.compressionMethod = *not_magic_enum::enum_cast<vtfpp::CompressionMethod>(compressionMethod);
+
+				// Set compression level
+				if (compressionLevel < -1) {
+					options.compressionLevel = -1;
+					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << tfendl;
+				} else if ((options.compressionMethod == vtfpp::CompressionMethod::DEFLATE || options.compressionMethod == vtfpp::CompressionMethod::CONSOLE_LZMA) && compressionLevel > 9) {
+					options.compressionLevel = 9;
+					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << tfendl;
+				} else if (options.compressionMethod == vtfpp::CompressionMethod::ZSTD && compressionLevel > 22) {
+					options.compressionLevel = 22;
+					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << tfendl;
+				} else {
+					options.compressionLevel = static_cast<int16_t>(compressionLevel);
+				}
+
+				// Set start frame
+				options.startFrame = static_cast<uint16_t>(startFrame);
+
+				// Set bumpmap scale
+				options.bumpMapScale = bumpMapScale;
+
+				// Set resize methods
+				options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(widthResizeMethod);
+				options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
+
+				// Set gamma correction
+				if (gammaCorrection) {
+					options.gammaCorrection = gammaCorrectionAmount;
+				}
+
+				// Set inversion of green channel
+				options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
+
+				// Bake VTF
+				::ElapsedTime stopwatch;
+				if (!vtfpp::VTF::create(currentInputPath, outputPath, options)) {
+					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+					return EXIT_FAILURE;
+				}
+				const auto elapsed = stopwatch.get().count();
+				tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+				return EXIT_SUCCESS;
 			};
-			if (srgb) {
-				addSRGBFlag(options);
-			}
-			if (clamp_s) {
-				options.flags |= vtfpp::VTF::FLAG_CLAMP_S;
-			}
-			if (clamp_t) {
-				options.flags |= vtfpp::VTF::FLAG_CLAMP_T;
-			}
-			if (clamp_u) {
-				options.flags |= vtfpp::VTF::FLAG_CLAMP_U;
-			}
-			if (point_sample) {
-				options.flags |= vtfpp::VTF::FLAG_POINT_SAMPLE;
-			}
-			if (trilinear) {
-				options.flags |= vtfpp::VTF::FLAG_TRILINEAR;
-			}
-			if (anisotropic) {
-				options.flags |= vtfpp::VTF::FLAG_ANISOTROPIC;
-			}
-			if (normal) {
-				options.flags |= vtfpp::VTF::FLAG_NORMAL;
-			}
-			if (ssbump) {
-				options.flags |= vtfpp::VTF::FLAG_SSBUMP;
-			}
 
-			// Set default flags based on input filename
-			if (const auto inputStem = std::filesystem::path{inputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
-				addSRGBFlag(options);
-			} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
-				options.flags |= vtfpp::VTF::FLAG_NORMAL;
-			} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
-				options.flags |= vtfpp::VTF::FLAG_SSBUMP;
-			}
-
-			// Set default transparency flags
-			options.computeTransparencyFlags = !noTransparencyFlags;
-
-			// Set mipmap generation
-			options.computeMips = !noMips;
-
-			// Set thumbnail generation
-			options.computeThumbnail = !noThumbnail;
-
-			// Set platform
-			options.platform = *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform);
-
-			// Set compression method
-			options.compressionMethod = *not_magic_enum::enum_cast<vtfpp::CompressionMethod>(compressionMethod);
-
-			// Set compression level
-			if (compressionLevel < -1) {
-				options.compressionLevel = -1;
-				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << tfendl;
-			} else if ((options.compressionMethod == vtfpp::CompressionMethod::DEFLATE || options.compressionMethod == vtfpp::CompressionMethod::CONSOLE_LZMA) && compressionLevel > 9) {
-				options.compressionLevel = 9;
-				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << tfendl;
-			} else if (options.compressionMethod == vtfpp::CompressionMethod::ZSTD && compressionLevel > 22) {
-				options.compressionLevel = 22;
-				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << tfendl;
-			} else {
-				options.compressionLevel = static_cast<int16_t>(compressionLevel);
-			}
-
-			// Set start frame
-			options.startFrame = static_cast<uint16_t>(startFrame);
-
-			// Set bumpmap scale
-			options.bumpMapScale = bumpMapScale;
-
-			// Set resize methods
-			options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(widthResizeMethod);
-			options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
-
-			// Set gamma correction
-			if (gammaCorrection) {
-				options.gammaCorrection = gammaCorrectionAmount;
-			}
-
-			// Set inversion of green channel
-			options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
-
-			// Bake VTF
-			tfout << randomDeviantArtTFTrope() << "..." << tfendl;
-			::ElapsedTime stopwatch;
-			if (!vtfpp::VTF::create(inputPath, outputPath, options)) {
-				tferr << "Failed to TF input image. Is it a supported format?" << tfendl;
-				return EXIT_FAILURE;
-			}
-			const auto elapsed = stopwatch.get().count();
-			tfout << "Input image was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
-		} else if (mode == "edit") {
 			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
-				throw std::invalid_argument{"Input path must be a valid file!"};
-			} else if (!inputPath.ends_with(".vtf")) {
-				throw std::invalid_argument{"Input file must be a VTF!"};
+			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+				throw std::invalid_argument{"Input path does not exist!"};
 			}
 
-			// Check output path
-			if (outputPath.empty()) {
-				outputPath = inputPath;
+			if (std::filesystem::is_regular_file(inputPath)) {
+				tfout << BOLD << randomDeviantArtTFTrope() << "..." << END << tfendl;
+				return create(inputPath);
 			}
-			if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
-				throw std::invalid_argument{"Output path must not be a directory!"};
-			} else if (exists && !overwrite) {
-				std::string in;
-				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-					tfout << "Output file already exists. Overwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
-					std::cin >> in;
-				}
-				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-					tfout << "Output file already exists. Aborting." << tfendl;
-					return EXIT_SUCCESS;
-				}
-			} else if (exists) {
-				tfout << "Output file already exists, overwriting..." << tfendl;
-			}
-
-			// Start to set up VTF for editing
-			::ElapsedTime loadStopwatch;
-			vtfpp::VTF vtf{inputPath};
-			if (!vtf) {
-				throw std::invalid_argument{"Unable to load input file as a VTF!"};
-			}
-			tfout << "Loaded input VTF in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
-			::ElapsedTime editStopwatch;
-
-			// Get edit filter
-			const auto editFilterActual = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(editFilter);
-
-			// Get output format
-			vtfpp::ImageFormat setFormatActual = vtf.getFormat();
-			if (cli.is_used("--set-format")) {
-				setFormatActual = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat);
-				if (setFormatActual == vtfpp::VTF::FORMAT_UNCHANGED) {
-					setFormatActual = vtf.getFormat();
-				} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
-					setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion());
-				}
-			}
-
-			// Set platform
-			if (cli.is_used("--set-platform")) {
-				vtf.setPlatform(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
-			}
-
-			// Set version
-			if (cli.is_used("--set-version")) {
-				uint32_t setMajorVersion, setMinorVersion;
-				sourcepp::string::toInt(std::string_view{&setVersion[0], 1}, setMajorVersion);
-				sourcepp::string::toInt(std::string_view{&setVersion[2], 1}, setMinorVersion);
-				vtf.setVersion(setMajorVersion, setMinorVersion);
-			}
-
-			// Add/remove flags
-			for (const auto& flag : addFlags) {
-				vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
-			}
-			for (const auto& flag : removeFlags) {
-				vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
-			}
-
-			// Set size
-			vtf.setImageWidthResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
-			vtf.setImageHeightResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
-			if (cli.is_used("--set-width") && cli.is_used("--set-height")) {
-				vtf.setSize(setWidth, setHeight, editFilterActual);
-			} else if (cli.is_used("--set-width")) {
-				vtf.setSize(setWidth, vtf.getHeight(), editFilterActual);
-			} else if (cli.is_used("--set-height")) {
-				vtf.setSize(vtf.getWidth(), setHeight, editFilterActual);
-			}
-
-			// Set start frame
-			if (cli.is_used("--set-start-frame")) {
-				vtf.setStartFrame(static_cast<uint16_t>(setStartFrame));
-			}
-
-			// Set bumpmap scale
-			if (cli.is_used("--set-bumpmap-scale")) {
-				vtf.setBumpMapScale(setBumpMapScale);
-			}
-
-			// Recompute/remove mips
-			if (recomputeMips) {
-				vtf.setMipCount(vtfpp::ImageDimensions::getRecommendedMipCountForDims(setFormatActual, vtf.getWidth(), vtf.getHeight()));
-				vtf.computeMips(editFilterActual);
-			} else if (removeMips) {
-				vtf.setMipCount(1);
-			}
-
-			// Recompute/remove thumbnail
-			if (recomputeThumbnail) {
-				vtf.computeThumbnail(editFilterActual);
-			} else if (removeThumbnail) {
-				vtf.removeThumbnail();
-			}
-
-			// Recompute reflectivity
-			if (recomputeReflectivity) {
-				vtf.computeReflectivity();
-			}
-
-			// Set format
-			if (cli.is_used("--set-format")) {
-				vtf.setFormat(*not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat), editFilterActual);
-			}
-
-			// Recompute transparency flags
-			if (recomputeTransparencyFlags) {
-				vtf.computeTransparencyFlags();
-			}
-
-			// Set compression method
-			if (cli.is_used("--set-compression-method")) {
-				vtf.setCompressionMethod(*not_magic_enum::enum_cast<vtfpp::CompressionMethod>(setCompressionMethod));
-			}
-
-			// Set compression level
-			if (cli.is_used("--set-compression-level")) {
-				if (setCompressionLevel < -1) {
-					setCompressionLevel = -1;
-					tfout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << tfendl;
-				} else if ((vtf.getCompressionMethod() == vtfpp::CompressionMethod::DEFLATE || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) && setCompressionLevel > 9) {
-					setCompressionLevel = 9;
-					tfout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << tfendl;
-				} else if (vtf.getCompressionMethod() == vtfpp::CompressionMethod::ZSTD && setCompressionLevel > 22) {
-					setCompressionLevel = 22;
-					tfout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << tfendl;
-				}
-				vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
-			}
-
-			// Modify particle sheet resource
-			if (cli.is_used("--set-particle-sheet-resource")) {
-				try {
-					vtfpp::SHT sht{setParticleSheetResource};
-					if (!sht) {
-						throw std::overflow_error{""};
-					}
-					vtf.setParticleSheetResource(sht);
-				} catch (const std::overflow_error&) {
-					tferr << "Failed to parse specified file for particle sheet resource! Check the file exists and has a .sht extension." << tfendl;
-				}
-			} else if (removeParticleSheetResource) {
-				vtf.removeParticleSheetResource();
-			}
-
-			// Modify CRC resource
-			if (cli.is_used("--set-crc-resource")) {
-				vtf.setCRCResource(static_cast<uint32_t>(setCRCResource));
-			} else if (removeCRCResource) {
-				vtf.removeCRCResource();
-			}
-
-			// Modify LOD resource
-			if (cli.is_used("--set-lod-resource")) {
-				uint8_t setU, setV;
-				const auto uv = sourcepp::string::split(setVersion, '.');
-				sourcepp::string::toInt(uv[0], setU);
-				sourcepp::string::toInt(uv[1], setV);
-				vtf.setLODResource(setU, setV);
-			} else if (removeLODResource) {
-				vtf.removeLODResource();
-			}
-
-			// Modify TSO resource
-			if (cli.is_used("--set-tso-resource")) {
-				vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTSOResource));
-			} else if (removeTSOResource) {
-				vtf.removeExtendedFlagsResource();
-			}
-
-			// Modify KVD resource
-			if (cli.is_used("--set-kvd-resource")) {
-				if (const auto txt = sourcepp::fs::readFileText(setKVDResource); txt.empty()) {
-					tferr << "Failed to read contents of specified file for KVD (KeyValues Data) resource! Check the file exists and is not empty." << tfendl;
-				} else {
-					vtf.setKeyValuesDataResource(txt);
-				}
-			} else if (removeKVDResource) {
-				vtf.removeKeyValuesDataResource();
-			}
-
-			// Bake VTF
-			if (!vtf.bake(outputPath)) {
-				tferr << "Failed to edit input VTF." << tfendl;
-				return EXIT_FAILURE;
-			}
-			tfout << "Edited input VTF in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
-		} else if (mode == "info") {
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath) || !std::filesystem::is_regular_file(inputPath)) {
-				throw std::invalid_argument{"Input path must be a valid file!"};
-			} else if (!inputPath.ends_with(".vtf")) {
-				throw std::invalid_argument{"Input file must be a VTF!"};
-			}
-
-			// Load VTF
-			vtfpp::VTF vtf{inputPath};
-			if (!vtf) {
-				throw std::invalid_argument{"Unable to load input file as a VTF!"};
-			}
-
-			if (infoOutputMode == "human") {
-				tfout << GREEN << BOLD << " ――― FORMAT ―――" << END << tfendl;
-
-				tfout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << tfendl;
-
-				if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
-					tfout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << tfendl;
-				}
-
-				tfout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << tfendl;
-
-				tfout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << tfendl;
-				if (vtf.getSliceCount() > 1) {
-					tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << tfendl;
-				} else {
-					tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
-				}
-
-				tfout << BOLD << "Flags:         " << END;
-				bool first = true;
-				for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-					if (vtf.getFlags() & flag) {
-						if (!first) {
-							tfout << " | ";
+			if (std::filesystem::is_directory(inputPath)) {
+				static constexpr std::array<std::string_view, 13> SUPPORTED_EXTENSIONS{".apng", ".bmp", ".exr", ".gif", ".hdr", ".jpeg", ".jpg", ".pic", ".png", ".pgm", ".ppm", ".psd", ".tga"};
+				int out = EXIT_SUCCESS;
+				if (noRecurse) {
+					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(dirEntry.path().extension().string())) != SUPPORTED_EXTENSIONS.end()) {
+							outputPath = "";
+							out = out || create(dirEntry.path().string());
 						}
-						first = false;
-						tfout << CYAN << name << END;
+					}
+				} else {
+					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(dirEntry.path().extension().string())) != SUPPORTED_EXTENSIONS.end()) {
+							outputPath = "";
+							out = out || create(dirEntry.path().string());
+						}
 					}
 				}
-				tfout << tfendl;
+				return out;
+			}
+			throw std::invalid_argument{"Input path is not a file or directory!"};
+		}
+		if (mode == "edit") {
+			const auto edit = [&](const std::string& currentInputPath) {
+				// Check output path
+				if (outputPath.empty()) {
+					outputPath = currentInputPath;
+				}
+				if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
+					tferr << "Output path at " << BOLD << outputPath << END << " must not be a directory!" << tfendl;
+					return EXIT_FAILURE;
+				} else if (exists && !overwrite) {
+					std::string in;
+					while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+						tfout << "Output file at " << BOLD << outputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+						std::cin >> in;
+					}
+					if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
+						tfout << "Output file already exists. Aborting." << tfendl;
+						return EXIT_SUCCESS;
+					}
+				} else if (exists) {
+					tfout << "Output file already exists, overwriting..." << tfendl;
+				}
 
-				tfout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << tfendl;
-				tfout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << tfendl;
-				tfout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << tfendl;
+				// Start to set up VTF for editing
+				::ElapsedTime loadStopwatch;
+				vtfpp::VTF vtf{currentInputPath};
+				if (!vtf) {
+					tferr << "Unable to load input file at " << BOLD << currentInputPath << END << " as a VTF!" << tfendl;
+					return EXIT_FAILURE;
+				}
+				tfout << "Loaded input VTF at " << BOLD << currentInputPath << END << " in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
+				::ElapsedTime editStopwatch;
 
-				tfout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << tfendl;
+				// Get edit filter
+				const auto editFilterActual = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(editFilter);
 
-				tfout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << tfendl;
-				tfout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << tfendl;
+				// Get output format
+				vtfpp::ImageFormat setFormatActual = vtf.getFormat();
+				if (cli.is_used("--set-format")) {
+					setFormatActual = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat);
+					if (setFormatActual == vtfpp::VTF::FORMAT_UNCHANGED) {
+						setFormatActual = vtf.getFormat();
+					} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
+						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion());
+					}
+				}
 
-				tfout << BOLD << "Compression:   " << END;
-				if (vtf.getCompressionLevel() == 0) {
-					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
-						tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << tfendl;
+				// Set platform
+				if (cli.is_used("--set-platform")) {
+					vtf.setPlatform(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
+				}
+
+				// Set version
+				if (cli.is_used("--set-version")) {
+					uint32_t setMajorVersion, setMinorVersion;
+					sourcepp::string::toInt(std::string_view{&setVersion[0], 1}, setMajorVersion);
+					sourcepp::string::toInt(std::string_view{&setVersion[2], 1}, setMinorVersion);
+					vtf.setVersion(setMajorVersion, setMinorVersion);
+				}
+
+				// Add/remove flags
+				for (const auto& flag : addFlags) {
+					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+				}
+				for (const auto& flag : removeFlags) {
+					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+				}
+
+				// Set size
+				vtf.setImageWidthResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
+				vtf.setImageHeightResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
+				if (cli.is_used("--set-width") && cli.is_used("--set-height")) {
+					vtf.setSize(setWidth, setHeight, editFilterActual);
+				} else if (cli.is_used("--set-width")) {
+					vtf.setSize(setWidth, vtf.getHeight(), editFilterActual);
+				} else if (cli.is_used("--set-height")) {
+					vtf.setSize(vtf.getWidth(), setHeight, editFilterActual);
+				}
+
+				// Set start frame
+				if (cli.is_used("--set-start-frame")) {
+					vtf.setStartFrame(static_cast<uint16_t>(setStartFrame));
+				}
+
+				// Set bumpmap scale
+				if (cli.is_used("--set-bumpmap-scale")) {
+					vtf.setBumpMapScale(setBumpMapScale);
+				}
+
+				// Recompute/remove mips
+				if (recomputeMips) {
+					vtf.setMipCount(vtfpp::ImageDimensions::getRecommendedMipCountForDims(setFormatActual, vtf.getWidth(), vtf.getHeight()));
+					vtf.computeMips(editFilterActual);
+				} else if (removeMips) {
+					vtf.setMipCount(1);
+				}
+
+				// Recompute/remove thumbnail
+				if (recomputeThumbnail) {
+					vtf.computeThumbnail(editFilterActual);
+				} else if (removeThumbnail) {
+					vtf.removeThumbnail();
+				}
+
+				// Recompute reflectivity
+				if (recomputeReflectivity) {
+					vtf.computeReflectivity();
+				}
+
+				// Set format
+				if (cli.is_used("--set-format")) {
+					vtf.setFormat(*not_magic_enum::enum_cast<vtfpp::ImageFormat>(setFormat), editFilterActual);
+				}
+
+				// Recompute transparency flags
+				if (recomputeTransparencyFlags) {
+					vtf.computeTransparencyFlags();
+				}
+
+				// Set compression method
+				if (cli.is_used("--set-compression-method")) {
+					vtf.setCompressionMethod(*not_magic_enum::enum_cast<vtfpp::CompressionMethod>(setCompressionMethod));
+				}
+
+				// Set compression level
+				if (cli.is_used("--set-compression-level")) {
+					if (setCompressionLevel < -1) {
+						setCompressionLevel = -1;
+						tfout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << tfendl;
+					} else if ((vtf.getCompressionMethod() == vtfpp::CompressionMethod::DEFLATE || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) && setCompressionLevel > 9) {
+						setCompressionLevel = 9;
+						tfout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << tfendl;
+					} else if (vtf.getCompressionMethod() == vtfpp::CompressionMethod::ZSTD && setCompressionLevel > 22) {
+						setCompressionLevel = 22;
+						tfout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << tfendl;
+					}
+					vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
+				}
+
+				// Modify particle sheet resource
+				if (cli.is_used("--set-particle-sheet-resource")) {
+					try {
+						vtfpp::SHT sht{setParticleSheetResource};
+						if (!sht) {
+							throw std::overflow_error{""};
+						}
+						vtf.setParticleSheetResource(sht);
+					} catch (const std::overflow_error&) {
+						tferr << "Failed to parse specified file at " << BOLD << setParticleSheetResource << END << " for particle sheet resource! Check the file exists and has a .sht extension." << tfendl;
+					}
+				} else if (removeParticleSheetResource) {
+					vtf.removeParticleSheetResource();
+				}
+
+				// Modify CRC resource
+				if (cli.is_used("--set-crc-resource")) {
+					vtf.setCRCResource(static_cast<uint32_t>(setCRCResource));
+				} else if (removeCRCResource) {
+					vtf.removeCRCResource();
+				}
+
+				// Modify LOD resource
+				if (cli.is_used("--set-lod-resource")) {
+					uint8_t setU, setV;
+					const auto uv = sourcepp::string::split(setVersion, '.');
+					sourcepp::string::toInt(uv[0], setU);
+					sourcepp::string::toInt(uv[1], setV);
+					vtf.setLODResource(setU, setV);
+				} else if (removeLODResource) {
+					vtf.removeLODResource();
+				}
+
+				// Modify TSO resource
+				if (cli.is_used("--set-tso-resource")) {
+					vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTSOResource));
+				} else if (removeTSOResource) {
+					vtf.removeExtendedFlagsResource();
+				}
+
+				// Modify KVD resource
+				if (cli.is_used("--set-kvd-resource")) {
+					if (const auto txt = sourcepp::fs::readFileText(setKVDResource); txt.empty()) {
+						tferr << "Failed to read contents of specified file at " << BOLD << setKVDResource << END << " for KVD (KeyValues Data) resource! Check the file exists and is not empty." << tfendl;
 					} else {
-						tfout << RED << "Uncompressed" << END << tfendl;
+						vtf.setKeyValuesDataResource(txt);
+					}
+				} else if (removeKVDResource) {
+					vtf.removeKeyValuesDataResource();
+				}
+
+				// Bake VTF
+				if (!vtf.bake(outputPath)) {
+					tferr << "Failed to save edited VTF at " << BOLD << outputPath << END << "." << tfendl;
+					return EXIT_FAILURE;
+				}
+				tfout << "Saved edited VTF to " << BOLD << outputPath << END << " in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+				return EXIT_SUCCESS;
+			};
+
+			// Check input path
+			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+				throw std::invalid_argument{"Input path does not exist!"};
+			}
+
+			if (std::filesystem::is_regular_file(inputPath)) {
+				if (!inputPath.ends_with(".vtf")) {
+					throw std::invalid_argument{"Input file must be a VTF!"};
+				}
+				return edit(inputPath);
+			}
+			if (std::filesystem::is_directory(inputPath)) {
+				int out = EXIT_SUCCESS;
+				if (noRecurse) {
+					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							out = out || edit(dirEntry.path().string());
+						}
 					}
 				} else {
-					tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << tfendl;
+					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							out = out || edit(dirEntry.path().string());
+						}
+					}
+				}
+				return out;
+			}
+			throw std::invalid_argument{"Input path is not a file or directory!"};
+		}
+		if (mode == "info") {
+			const auto info = [&](const std::string& currentInputPath) {
+				// Load VTF
+				vtfpp::VTF vtf{currentInputPath};
+				if (!vtf) {
+					throw std::invalid_argument{"Unable to load input file as a VTF!"};
 				}
 
-				tfout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << tfendl;
+				if (infoOutputMode == "human") {
+					tfout << tfendl << RED << BOLD << currentInputPath << END << '\n' << tfendl;
 
-				tfout << BOLD << "Thumbnail:      ";
-				if (vtf.hasThumbnailData()) {
-					tfout << GREEN << "Exists";
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
+					tfout << GREEN << BOLD << " ――― FORMAT ―――" << END << tfendl;
 
-				tfout << BOLD << "Particle Sheet: ";
-				const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
-				if (particleSheetResource) {
-					const auto sheet = particleSheetResource->getDataAsParticleSheet();
-					if (!sheet) {
-						tfout << RED << "Exists, but failed to parse";
+					tfout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << tfendl;
+
+					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
+						tfout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << tfendl;
+					}
+
+					tfout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << tfendl;
+
+					tfout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << tfendl;
+					if (vtf.getSliceCount() > 1) {
+						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << tfendl;
 					} else {
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
 
-				tfout << BOLD << "Image:          ";
-				if (vtf.hasImageData()) {
-					tfout << GREEN << "Exists";
-				} else {
-					tfout << RED << "Doesn't exist (HUH?)";
-				}
-				tfout << END << tfendl;
-
-				tfout << BOLD << "CRC:            ";
-				if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-					tfout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
-
-				tfout << BOLD << "LOD:            ";
-				if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-					const auto lod = lodResource->getDataAsLODControlInfo();
-					tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
-					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-						tfout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
-					}
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
-
-				tfout << BOLD << "KeyValues Data: ";
-				const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
-				if (kvdResource) {
-					const auto keyvalues = kvdResource->getDataAsKeyValuesData();
-					tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
-
-				tfout << BOLD << "Extended Flags: ";
-				if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-					tfout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
-				} else {
-					tfout << RED << "Doesn't exist";
-				}
-				tfout << END << tfendl;
-
-				if (particleSheetResource) {
-					const auto sheet = particleSheetResource->getDataAsParticleSheet();
-					if (sheet) {
-						tfout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << tfendl;
-						tfout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << tfendl;
-						for (const auto& sequence : sheet.getSequences()) {
-							tfout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << tfendl;
-							tfout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << tfendl;
-							tfout << '\t' << BOLD << "Loop:           " << END;
-							if (sequence.loop) {
-								tfout << GREEN << "Yes";
-							} else {
-								tfout << RED << "No";
+					tfout << BOLD << "Flags:         " << END;
+					bool first = true;
+					for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
+						if (vtf.getFlags() & flag) {
+							if (!first) {
+								tfout << " | ";
 							}
-							tfout << END << tfendl;
-							for (int i = 0; i < sequence.frames.size(); i++) {
-								const auto& frame = sequence.frames.at(i);
-								tfout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << tfendl;
-								tfout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << tfendl;
-								tfout << "\t\t" << BOLD << "Bounds:   ";
-								if (sheet.getVersion() < 1) {
-									tfout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << tfendl;
+							first = false;
+							tfout << CYAN << name << END;
+						}
+					}
+					tfout << tfendl;
+
+					tfout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << tfendl;
+					tfout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << tfendl;
+					tfout << BOLD << "Faces:         " << CYAN << static_cast<int>(vtf.getFaceCount()) << END << tfendl;
+
+					tfout << BOLD << "Reflectivity:  " << END << '[' << CYAN << vtf.getReflectivity()[0] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[1] << 'f' << END << ", " << CYAN << vtf.getReflectivity()[2] << 'f' << END << ']' << tfendl;
+
+					tfout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << tfendl;
+					tfout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << tfendl;
+
+					tfout << BOLD << "Compression:   " << END;
+					if (vtf.getCompressionLevel() == 0) {
+						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
+							tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << tfendl;
+						} else {
+							tfout << RED << "Uncompressed" << END << tfendl;
+						}
+					} else {
+						tfout << GREEN << not_magic_enum::enum_name(vtf.getCompressionMethod()) << END << " (level " << CYAN << vtf.getCompressionLevel() << END << ')' << tfendl;
+					}
+
+					tfout << '\n' << GREEN << BOLD << " ――― RESOURCES ―――" << END << tfendl;
+
+					tfout << BOLD << "Thumbnail:      ";
+					if (vtf.hasThumbnailData()) {
+						tfout << GREEN << "Exists";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "Particle Sheet: ";
+					const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
+					if (particleSheetResource) {
+						const auto sheet = particleSheetResource->getDataAsParticleSheet();
+						if (!sheet) {
+							tfout << RED << "Exists, but failed to parse";
+						} else {
+							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+						}
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "Image:          ";
+					if (vtf.hasImageData()) {
+						tfout << GREEN << "Exists";
+					} else {
+						tfout << RED << "Doesn't exist (HUH?)";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "CRC:            ";
+					if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "LOD:            ";
+					if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+						const auto lod = lodResource->getDataAsLODControlInfo();
+						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
+						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
+							tfout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
+						}
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "KeyValues Data: ";
+					const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
+					if (kvdResource) {
+						const auto keyvalues = kvdResource->getDataAsKeyValuesData();
+						tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "Extended Flags: ";
+					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					if (particleSheetResource) {
+						const auto sheet = particleSheetResource->getDataAsParticleSheet();
+						if (sheet) {
+							tfout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << tfendl;
+							tfout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << tfendl;
+							for (const auto& sequence : sheet.getSequences()) {
+								tfout << BOLD << "Sequence " << END << CYAN << sequence.id << END << BOLD << ':' << END << tfendl;
+								tfout << '\t' << BOLD << "Total Duration: " << END << CYAN << sequence.durationTotal << 'f' << END << tfendl;
+								tfout << '\t' << BOLD << "Loop:           " << END;
+								if (sequence.loop) {
+									tfout << GREEN << "Yes";
 								} else {
-									tfout << END << tfendl;
-									for (const auto& bound : frame.bounds) {
-										tfout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << tfendl;
+									tfout << RED << "No";
+								}
+								tfout << END << tfendl;
+								for (int i = 0; i < sequence.frames.size(); i++) {
+									const auto& frame = sequence.frames.at(i);
+									tfout << '\t' << BOLD << "Frame " << END << CYAN << i << END << BOLD << ':' << END << tfendl;
+									tfout << "\t\t" << BOLD << "Duration: " << END << CYAN << frame.duration << 'f' << END << tfendl;
+									tfout << "\t\t" << BOLD << "Bounds:   ";
+									if (sheet.getVersion() < 1) {
+										tfout << '(' << CYAN << frame.bounds.at(0).x1 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y1 << 'f' << END << "), (" << CYAN << frame.bounds.at(0).x2 << 'f' << END << ", " << CYAN << frame.bounds.at(0).y2 << 'f' << END << ')' << tfendl;
+									} else {
+										tfout << END << tfendl;
+										for (const auto& bound : frame.bounds) {
+											tfout << "\t\t\t" << '(' << CYAN << bound.x1 << 'f' << END << ", " << CYAN << bound.y1 << 'f' << END << "), (" << CYAN << bound.x2 << 'f' << END << ", " << CYAN << bound.y2 << 'f' << END << ')' << tfendl;
+										}
 									}
 								}
 							}
 						}
 					}
-				}
 
-				if (kvdResource) {
-					tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
-					tfout << kvdResource->getDataAsKeyValuesData() << END << tfendl;
-				}
-			} else if (infoOutputMode == "kv1") {
-				kvpp::KV1Writer kv;
-
-				// File format
-				kv["format"]["platform"] = not_magic_enum::enum_name(vtf.getPlatform());
-				kv["format"]["version_major"] = static_cast<int>(vtf.getMajorVersion());
-				kv["format"]["version_minor"] = static_cast<int>(vtf.getMinorVersion());
-
-				// Image
-				kv["image"]["format"] = not_magic_enum::enum_name(vtf.getFormat());
-				kv["image"]["dimensions"]["width"] = static_cast<int>(vtf.getWidth());
-				kv["image"]["dimensions"]["height"] = static_cast<int>(vtf.getHeight());
-				kv["image"]["dimensions"]["depth"] = static_cast<int>(vtf.getSliceCount());
-				kv["image"]["dimensions"]["mips"] = static_cast<int>(vtf.getMipCount());
-				kv["image"]["dimensions"]["frames"] = static_cast<int>(vtf.getFrameCount());
-				kv["image"]["dimensions"]["faces"] = static_cast<int>(vtf.getFaceCount());
-				kv["image"]["flags"] = static_cast<int>(vtf.getFlags());
-				kv["image"]["reflectivity"]["r"] = vtf.getReflectivity()[0];
-				kv["image"]["reflectivity"]["g"] = vtf.getReflectivity()[1];
-				kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
-				kv["image"]["start_frame"] = static_cast<int>(vtf.getStartFrame());
-				kv["image"]["bumpmap_scale"] = vtf.getBumpMapScale();
-				if (vtf.getCompressionLevel() == 0) {
-					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
-						kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
-					} else {
-						kv["image"]["compression"]["method"] = "NONE";
+					if (kvdResource) {
+						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
+						tfout << kvdResource->getDataAsKeyValuesData() << END << tfendl;
 					}
-				} else {
-					kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
-				}
-				kv["image"]["compression"]["level"] = static_cast<int>(vtf.getCompressionLevel());
+				} else if (infoOutputMode == "kv1") {
+					kvpp::KV1Writer kv;
 
-				// Thumbnail
-				kv["resources"]["thumbnail"]["present"] = vtf.hasThumbnailData();
-				kv["resources"]["thumbnail"]["format"] = not_magic_enum::enum_name(vtf.getThumbnailFormat());
-				kv["resources"]["thumbnail"]["width"] = static_cast<int>(vtf.getThumbnailWidth());
-				kv["resources"]["thumbnail"]["height"] = static_cast<int>(vtf.getThumbnailHeight());
+					// File format
+					kv["format"]["platform"] = not_magic_enum::enum_name(vtf.getPlatform());
+					kv["format"]["version_major"] = static_cast<int>(vtf.getMajorVersion());
+					kv["format"]["version_minor"] = static_cast<int>(vtf.getMinorVersion());
 
-				// Resources
-				if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
-					const auto sheet = particleSheetResource->getDataAsParticleSheet();
-					if (sheet) {
-						kv["resources"]["particle_sheet"]["malformed"] = false;
-						kv["resources"]["particle_sheet"]["version"] = static_cast<int>(sheet.getVersion());
-						for (const auto& sequence : sheet.getSequences()) {
-							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)] = static_cast<int>(sequence.id);
-							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["duration_total"] = sequence.durationTotal;
-							kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["loop"] = sequence.loop;
-							for (int i = 0; i < sequence.frames.size(); i++) {
-								const auto& frame = sequence.frames.at(i);
-								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["duration"] = frame.duration;
-								for (int b = 0; b < (sheet.getVersion() < 1 ? 1 : frame.bounds.size()); b++) {
-									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x1"] = frame.bounds.at(b).x1;
-									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y1"] = frame.bounds.at(b).y1;
-									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x2"] = frame.bounds.at(b).x2;
-									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y2"] = frame.bounds.at(b).y2;
-								}
-							}
+					// Image
+					kv["image"]["format"] = not_magic_enum::enum_name(vtf.getFormat());
+					kv["image"]["dimensions"]["width"] = static_cast<int>(vtf.getWidth());
+					kv["image"]["dimensions"]["height"] = static_cast<int>(vtf.getHeight());
+					kv["image"]["dimensions"]["depth"] = static_cast<int>(vtf.getSliceCount());
+					kv["image"]["dimensions"]["mips"] = static_cast<int>(vtf.getMipCount());
+					kv["image"]["dimensions"]["frames"] = static_cast<int>(vtf.getFrameCount());
+					kv["image"]["dimensions"]["faces"] = static_cast<int>(vtf.getFaceCount());
+					kv["image"]["flags"] = static_cast<int>(vtf.getFlags());
+					kv["image"]["reflectivity"]["r"] = vtf.getReflectivity()[0];
+					kv["image"]["reflectivity"]["g"] = vtf.getReflectivity()[1];
+					kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
+					kv["image"]["start_frame"] = static_cast<int>(vtf.getStartFrame());
+					kv["image"]["bumpmap_scale"] = vtf.getBumpMapScale();
+					if (vtf.getCompressionLevel() == 0) {
+						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
+							kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
+						} else {
+							kv["image"]["compression"]["method"] = "NONE";
 						}
 					} else {
-						kv["resources"]["particle_sheet"]["malformed"] = true;
+						kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
+					}
+					kv["image"]["compression"]["level"] = static_cast<int>(vtf.getCompressionLevel());
+
+					// Thumbnail
+					kv["resources"]["thumbnail"]["present"] = vtf.hasThumbnailData();
+					kv["resources"]["thumbnail"]["format"] = not_magic_enum::enum_name(vtf.getThumbnailFormat());
+					kv["resources"]["thumbnail"]["width"] = static_cast<int>(vtf.getThumbnailWidth());
+					kv["resources"]["thumbnail"]["height"] = static_cast<int>(vtf.getThumbnailHeight());
+
+					// Resources
+					if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
+						const auto sheet = particleSheetResource->getDataAsParticleSheet();
+						if (sheet) {
+							kv["resources"]["particle_sheet"]["malformed"] = false;
+							kv["resources"]["particle_sheet"]["version"] = static_cast<int>(sheet.getVersion());
+							for (const auto& sequence : sheet.getSequences()) {
+								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)] = static_cast<int>(sequence.id);
+								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["duration_total"] = sequence.durationTotal;
+								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["loop"] = sequence.loop;
+								for (int i = 0; i < sequence.frames.size(); i++) {
+									const auto& frame = sequence.frames.at(i);
+									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["duration"] = frame.duration;
+									for (int b = 0; b < (sheet.getVersion() < 1 ? 1 : frame.bounds.size()); b++) {
+										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x1"] = frame.bounds.at(b).x1;
+										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y1"] = frame.bounds.at(b).y1;
+										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x2"] = frame.bounds.at(b).x2;
+										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y2"] = frame.bounds.at(b).y2;
+									}
+								}
+							}
+						} else {
+							kv["resources"]["particle_sheet"]["malformed"] = true;
+						}
+					}
+					if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+						kv["resources"]["crc"] = static_cast<int>(crcResource->getDataAsCRC());
+					}
+					if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+						const auto lod = lodResource->getDataAsLODControlInfo();
+						kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
+						kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
+						kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
+						kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
+					}
+					if (const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
+						kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
+					}
+					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						kv["resources"]["tso"] = static_cast<int>(tsoResource->getDataAsExtendedFlags());
+					}
+
+					// ...and print it all out
+					tfout << kv.bake();
+				} else {
+					throw std::runtime_error{"Invalid info output mode specified!"};
+				}
+				return EXIT_SUCCESS;
+			};
+
+			// Check input path
+			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+				throw std::invalid_argument{"Input path does not exist!"};
+			}
+
+			if (std::filesystem::is_regular_file(inputPath)) {
+				if (!inputPath.ends_with(".vtf")) {
+					throw std::invalid_argument{"Input file must be a VTF!"};
+				}
+				const auto out = info(inputPath);
+				tfout << tfendl;
+				return out;
+			}
+			if (std::filesystem::is_directory(inputPath)) {
+				int out = EXIT_SUCCESS;
+				if (noRecurse) {
+					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							out = out || info(dirEntry.path().string());
+						}
+					}
+				} else {
+					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							if (infoOutputMode == "kv1") {
+								tfout << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;
+							}
+							out = out || info(dirEntry.path().string());
+							if (infoOutputMode == "human") {
+								tfout << tfendl;
+							} else if (infoOutputMode == "kv1") {
+								tfout << '}' << tfendl;
+							}
+						}
 					}
 				}
-				if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-					kv["resources"]["crc"] = static_cast<int>(crcResource->getDataAsCRC());
-				}
-				if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-					const auto lod = lodResource->getDataAsLODControlInfo();
-					kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
-					kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
-					kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
-					kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
-				}
-				if (const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
-					kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
-				}
-				if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-					kv["resources"]["tso"] = static_cast<int>(tsoResource->getDataAsExtendedFlags());
-				}
-
-				// ...and print it all out
-				tfout << kv.bake() << tfendl;
-			} else {
-				throw std::runtime_error{"Invalid info output mode specified!"};
+				return out;
 			}
+			throw std::invalid_argument{"Input path is not a file or directory!"};
 		}
 	} catch (const std::exception& e) {
 		if (argc > 1) {
