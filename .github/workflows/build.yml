@@ -97,8 +97,8 @@ jobs:
         working-directory: '${{env.BUILD_DIR}}'
         run: cmake --build . --config ${{matrix.build_type}} -t maretf -- -j$(nproc)
 
-      - name: Upload Standalone [compiler:gcc]
-        if: ${{matrix.compiler == 'gcc'}}
+      - name: Upload Standalone [compiler:gcc][cpack_generator:DEB]
+        if: ${{matrix.compiler == 'gcc' && matrix.cpack_generator == 'DEB'}}
         uses: actions/upload-artifact@v4
         with:
           name: 'MareTF-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
@@ -115,7 +115,7 @@ jobs:
         if: ${{matrix.compiler == 'gcc'}}
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/MareTF-*-Linux.deb
           retention-days: 7
