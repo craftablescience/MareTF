@@ -226,6 +226,20 @@ int main(int argc, const char* const argv[]) {
 		.scan<'g', float>()
 		.default_value(bumpMapScale).store_into(bumpMapScale);
 
+	bool invertGreenChannel;
+	createCLI
+		.add_argument("--invert-green")
+		.help("Invert the green channel of the input image. This converts OpenGL normal maps into DirectX normal maps.")
+		.flag()
+		.store_into(invertGreenChannel);
+
+	bool invertGreenChannelAlt;
+	createCLI
+		.add_argument("--opengl")
+		.help("Alias of --invert-green, added for vtex2 compatibility.")
+		.flag()
+		.store_into(invertGreenChannelAlt);
+
 	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	auto& widthResizeMethodArg = createCLI
 			.add_argument("--width-resize-method")
@@ -256,42 +270,42 @@ int main(int argc, const char* const argv[]) {
 	bool clamp_s;
 	createCLI
 		.add_argument("--clamps")
-		.help("Equivalent to --flag CLAMP_S, added for vtex2 compatibility.")
+		.help("Alias of --flag CLAMP_S, added for vtex2 compatibility.")
 		.flag()
 		.store_into(clamp_s);
 
 	bool clamp_t;
 	createCLI
 		.add_argument("--clampt")
-		.help("Equivalent to --flag CLAMP_T, added for vtex2 compatibility.")
+		.help("Alias of --flag CLAMP_T, added for vtex2 compatibility.")
 		.flag()
 		.store_into(clamp_t);
 
 	bool clamp_u;
 	createCLI
 		.add_argument("--clampu")
-		.help("Equivalent to --flag CLAMP_U, added for vtex2 compatibility.")
+		.help("Alias of --flag CLAMP_U, added for vtex2 compatibility.")
 		.flag()
 		.store_into(clamp_u);
 
 	bool point_sample;
 	createCLI
 		.add_argument("--pointsample")
-		.help("Equivalent to --flag POINT_SAMPLE, added for vtex2 compatibility.")
+		.help("Alias of --flag POINT_SAMPLE, added for vtex2 compatibility.")
 		.flag()
 		.store_into(point_sample);
 
 	bool trilinear;
 	createCLI
 		.add_argument("--trilinear")
-		.help("Equivalent to --flag TRILINEAR, added for vtex2 compatibility.")
+		.help("Alias of --flag TRILINEAR, added for vtex2 compatibility.")
 		.flag()
 		.store_into(trilinear);
 
 	bool anisotropic;
 	createCLI
 		.add_argument("--aniso")
-		.help("Equivalent to --flag ANISOTROPIC, added for vtex2 compatibility.")
+		.help("Alias of --flag ANISOTROPIC, added for vtex2 compatibility.")
 		.flag()
 		.store_into(anisotropic);
 
@@ -735,6 +749,9 @@ int main(int argc, const char* const argv[]) {
 			// Set resize methods
 			options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(widthResizeMethod);
 			options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
+
+			// Set inversion of green channel
+			options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
 
 			// Bake VTF
 			std::cout << randomDeviantArtTFTrope() << "..." << std::endl;
