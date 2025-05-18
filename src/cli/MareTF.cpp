@@ -36,8 +36,8 @@ std::string_view randomDeviantArtTFTrope() {
 	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
-	std::uniform_int_distribution<int> dist{0, DEVIANTART_TF_TROPES.size()};
-	return DEVIANTART_TF_TROPES[dist(generator)];
+	std::uniform_int_distribution<> dist{0, DEVIANTART_TF_TROPES.size() - 1};
+	return DEVIANTART_TF_TROPES.at(dist(generator));
 }
 
 template<typename duration = std::chrono::milliseconds>
@@ -1417,7 +1417,7 @@ int main(int argc, const char* const argv[]) {
 	} catch (const std::exception& e) {
 		if (argc > 1) {
 			std::cerr << e.what() << '\n' << std::endl;
-			std::cerr << cli << std::endl;
+			std::cerr << "Run " << argv[0] << " with no arguments for usage information." << '\n' << std::endl;
 		} else {
 			std::cout << cli << std::endl;
 		}
