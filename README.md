@@ -113,7 +113,8 @@ Positional arguments:
                                                "convert" is also permissible and is an alias
                                                of "create" for vtex2 compatibility.
                                                [required]
-  PATH                                         The path to the input file or directory. [required]
+  PATH                                         The path to the input file or directory.
+                                               [required]
 
 Optional arguments:
   -h, --help                                   shows help message and exits
