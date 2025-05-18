@@ -309,6 +309,20 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(anisotropic);
 
+	bool normal;
+	createCLI
+		.add_argument("--normal")
+		.help("Alias of --flag NORMAL, added for vtex2 compatibility.")
+		.flag()
+		.store_into(normal);
+
+	bool ssbump;
+	createCLI
+		.add_argument("--ssbump")
+		.help("Alias of --flag SSBUMP, added for vtex2 compatibility.")
+		.flag()
+		.store_into(ssbump);
+
 	//endregion
 
 	//region Edit Mode Arguments
@@ -700,6 +714,12 @@ int main(int argc, const char* const argv[]) {
 			}
 			if (anisotropic) {
 				options.flags |= vtfpp::VTF::FLAG_ANISOTROPIC;
+			}
+			if (normal) {
+				options.flags |= vtfpp::VTF::FLAG_NORMAL;
+			}
+			if (ssbump) {
+				options.flags |= vtfpp::VTF::FLAG_SSBUMP;
 			}
 
 			// Set default flags based on input filename
