@@ -101,7 +101,9 @@ Usage: maretf [--help] [--output PATH] [-y] [--no-pretty-formatting] [--version 
 
 Positional arguments:
   MODE                                         The mode to run the program in. This determines what arguments are
-                                               processed. Valid options: "create", "edit", and "info". [required]
+                                               processed. Valid options: "create", "edit", and "info". "convert" is also
+                                               permissible and is an alias of "create" for vtex2 compatibility.
+                                               [required]
   PATH                                         The path to the input file. [required]
 
 Optional arguments:
