@@ -83,18 +83,20 @@ maretf info input.vtf
 ## Full Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [-y] [--no-pretty-formatting] [--version X.Y]
-              [--format IMAGE_FORMAT] [--filter RESIZE_FILTER] [--flag FLAG]...
-              [--no-automatic-transparency-flags] [--no-mips] [--no-thumbnail]
-              [--platform PLATFORM] [--compression-method COMPRESSION_METHOD]
-              [--compression-level LEVEL] [--start-frame FRAME_INDEX]
-              [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl]
-              [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
-              [--srgb] [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear]
-              [--aniso] [--normal] [--ssbump] [--set-version X.Y] [--set-format IMAGE_FORMAT]
-              [--set-width WIDTH] [--set-height HEIGHT] [--edit-filter RESIZE_FILTER]
-              [--add-flag FLAG]... [--remove-flag FLAG]... [--recompute-transparency-flags]
-              [--recompute-mips] [--remove-mips] [--recompute-thumbnail] [--remove-thumbnail]
+Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-pretty-formatting]
+              [--version X.Y] [--format IMAGE_FORMAT] [--filter RESIZE_FILTER]
+              [--flag FLAG]... [--no-automatic-transparency-flags] [--no-mips]
+              [--no-thumbnail] [--platform PLATFORM]
+              [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
+              [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
+              [--opengl] [--width-resize-method RESIZE_METHOD]
+              [--height-resize-method RESIZE_METHOD] [--gamma-correct]
+              [--gamma-correct-amount AMOUNT] [--srgb] [--clamps] [--clampt] [--clampu]
+              [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
+              [--set-version X.Y] [--set-format IMAGE_FORMAT] [--set-width WIDTH]
+              [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
+              [--remove-flag FLAG]... [--recompute-transparency-flags] [--recompute-mips]
+              [--remove-mips] [--recompute-thumbnail] [--remove-thumbnail]
               [--recompute-reflectivity] [--set-platform PLATFORM]
               [--set-compression-method COMPRESSION_METHOD] [--set-compression-level LEVEL]
               [--set-start-frame FRAME_INDEX] [--set-bumpmap-scale SCALE]
@@ -167,6 +169,11 @@ Optional arguments:
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
   --height-resize-method                       How to resize the texture's height to match a
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
+  --gamma-correct                              Perform gamma correction on the input image. 
+  --gamma-correct-amount                       The gamma to use in gamma correction. A value
+                                               of 2.2 is assumed by a good deal of code in
+                                               Source engine, change this if you know what
+                                               you're doing. [nargs=0..1] [default: 2.2]
   --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
                                                adds SRGB flag otherwise.
   --clamps                                     Alias of --flag CLAMP_S, added for vtex2

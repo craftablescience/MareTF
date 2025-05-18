@@ -297,6 +297,21 @@ int main(int argc, const char* const argv[]) {
 	}
 	heightResizeMethodArg.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
+	bool gammaCorrection;
+	createCLI
+		.add_argument("--gamma-correct")
+		.help("Perform gamma correction on the input image.")
+		.flag()
+		.store_into(gammaCorrection);
+
+	float gammaCorrectionAmount = 2.2f;
+	createCLI
+		.add_argument("--gamma-correct-amount")
+		.metavar("GAMMA")
+		.help("The gamma to use in gamma correction. A value of 2.2 is assumed by a good deal of code in Source engine, change this if you know what you're doing.")
+		.scan<'g', float>()
+		.default_value(gammaCorrectionAmount).store_into(gammaCorrectionAmount);
+
 	bool srgb;
 	createCLI
 		.add_argument("--srgb")
@@ -811,6 +826,11 @@ int main(int argc, const char* const argv[]) {
 			// Set resize methods
 			options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(widthResizeMethod);
 			options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
+
+			// Set gamma correction
+			if (gammaCorrection) {
+				options.gammaCorrection = gammaCorrectionAmount;
+			}
 
 			// Set inversion of green channel
 			options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
