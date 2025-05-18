@@ -246,6 +246,55 @@ int main(int argc, const char* const argv[]) {
 	}
 	heightResizeMethodArg.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
+	bool srgb;
+	createCLI
+		.add_argument("--srgb")
+		.help("Adds PWL_CORRECTED flag before version 7.4, adds SRGB flag otherwise.")
+		.flag()
+		.store_into(srgb);
+
+	bool clamp_s;
+	createCLI
+		.add_argument("--clamps")
+		.help("Equivalent to --flag CLAMP_S, added for vtex2 compatibility.")
+		.flag()
+		.store_into(clamp_s);
+
+	bool clamp_t;
+	createCLI
+		.add_argument("--clampt")
+		.help("Equivalent to --flag CLAMP_T, added for vtex2 compatibility.")
+		.flag()
+		.store_into(clamp_t);
+
+	bool clamp_u;
+	createCLI
+		.add_argument("--clampu")
+		.help("Equivalent to --flag CLAMP_U, added for vtex2 compatibility.")
+		.flag()
+		.store_into(clamp_u);
+
+	bool point_sample;
+	createCLI
+		.add_argument("--pointsample")
+		.help("Equivalent to --flag POINT_SAMPLE, added for vtex2 compatibility.")
+		.flag()
+		.store_into(point_sample);
+
+	bool trilinear;
+	createCLI
+		.add_argument("--trilinear")
+		.help("Equivalent to --flag TRILINEAR, added for vtex2 compatibility.")
+		.flag()
+		.store_into(trilinear);
+
+	bool anisotropic;
+	createCLI
+		.add_argument("--aniso")
+		.help("Equivalent to --flag ANISOTROPIC, added for vtex2 compatibility.")
+		.flag()
+		.store_into(anisotropic);
+
 	//endregion
 
 	//region Edit Mode Arguments
@@ -614,10 +663,34 @@ int main(int argc, const char* const argv[]) {
 			for (const auto& flag : flags) {
 				options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
 			}
+			static constexpr auto addSRGBFlag = [](vtfpp::VTF::CreationOptions& opts) {
+				opts.flags |= opts.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+			};
+			if (srgb) {
+				addSRGBFlag(options);
+			}
+			if (clamp_s) {
+				options.flags |= vtfpp::VTF::FLAG_CLAMP_S;
+			}
+			if (clamp_t) {
+				options.flags |= vtfpp::VTF::FLAG_CLAMP_T;
+			}
+			if (clamp_u) {
+				options.flags |= vtfpp::VTF::FLAG_CLAMP_U;
+			}
+			if (point_sample) {
+				options.flags |= vtfpp::VTF::FLAG_POINT_SAMPLE;
+			}
+			if (trilinear) {
+				options.flags |= vtfpp::VTF::FLAG_TRILINEAR;
+			}
+			if (anisotropic) {
+				options.flags |= vtfpp::VTF::FLAG_ANISOTROPIC;
+			}
 
 			// Set default flags based on input filename
 			if (const auto inputStem = std::filesystem::path{inputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
-				options.flags |= options.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+				addSRGBFlag(options);
 			} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
 				options.flags |= vtfpp::VTF::FLAG_NORMAL;
 			} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
