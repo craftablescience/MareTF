@@ -107,8 +107,8 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", and "info". "convert" is also permissible and is an alias of "create" for vtex2 compatibility.)")
-		.choices("create", "convert", "edit", "info")
+		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", "extract", and "info". "convert" is also permissible and is an alias of "create" for vtex2 compatibility.)")
+		.choices("create", "convert", "edit", "extract", "info")
 		.required()
 		.store_into(mode);
 
@@ -641,7 +641,88 @@ int main(int argc, const char* const argv[]) {
 
 	//endregion
 
-	//todo: extraction mode to pull out images/resources
+	//region Extract Mode Arguments
+
+	auto& extractCLI = cli.add_group(R"("extract" mode)");
+
+	std::string extractFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
+	auto& extractFormatArg = extractCLI
+		.add_argument("--extract-format")
+		.metavar("FILE_FORMAT")
+		.help("Output file format.");
+	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::FileFormat>()) {
+		extractFormatArg.add_choice(name);
+	}
+	extractFormatArg.default_value(extractFormat).store_into(extractFormat);
+
+	int extractMip = 0;
+	editCLI
+		.add_argument("--extract-mip")
+		.metavar("MIP")
+		.help("Set the mip to extract. Overridden by --extract-all-mips.")
+		.scan<'d', int>()
+		.default_value(extractMip).store_into(extractMip);
+
+	bool extractAllMips;
+	extractCLI
+		.add_argument("--extract-all-mips")
+		.help("Extract all mips. Overridden by --extract-all.")
+		.flag()
+		.store_into(extractAllMips);
+
+	int extractFrame = 0;
+	editCLI
+		.add_argument("--extract-frame")
+		.metavar("FRAME")
+		.help("Set the frame to extract. Overridden by --extract-all-frames.")
+		.scan<'d', int>()
+		.default_value(0).store_into(extractFrame);
+
+	bool extractAllFrames;
+	extractCLI
+		.add_argument("--extract-all-frames")
+		.help("Extract all frames. Overridden by --extract-all.")
+		.flag()
+		.store_into(extractAllFrames);
+
+	int extractFace = 0;
+	editCLI
+		.add_argument("--extract-face")
+		.metavar("FACE")
+		.help("Set the face to extract. Overridden by --extract-all-faces.")
+		.scan<'d', int>()
+		.default_value(extractFace).store_into(extractFace);
+
+	bool extractAllFaces;
+	extractCLI
+		.add_argument("--extract-all-faces")
+		.help("Extract all faces. Overridden by --extract-all.")
+		.flag()
+		.store_into(extractAllFaces);
+
+	int extractSlice = 0;
+	editCLI
+		.add_argument("--extract-slices")
+		.metavar("SLICE")
+		.help("Set the slice to extract. Overridden by --extract-all-slices.")
+		.scan<'d', int>()
+		.default_value(extractSlice).store_into(extractSlice);
+
+	bool extractAllSlices;
+	extractCLI
+		.add_argument("--extract-all-slices")
+		.help("Extract all slices. Overridden by --extract-all.")
+		.flag()
+		.store_into(extractAllSlices);
+
+	bool extractAll;
+	extractCLI
+		.add_argument("--extract-all")
+		.help("Extract all mips, frames, faces, and slices.")
+		.flag()
+		.store_into(extractAll);
+
+	//endregion
 
 	//region Program Info
 
@@ -1108,6 +1189,153 @@ int main(int argc, const char* const argv[]) {
 						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
 							outputPath = "";
 							out = out || edit(dirEntry.path().string());
+						}
+					}
+				}
+				return out;
+			}
+			throw std::invalid_argument{"Input path is not a file or directory!"};
+		}
+		if (mode == "extract") {
+			const auto extract = [&](const std::string& currentInputPath) {
+				// Start to set up VTF for extracting
+				::ElapsedTime loadStopwatch;
+				vtfpp::VTF vtf{currentInputPath};
+				if (!vtf) {
+					tferr << "Unable to load input file at " << BOLD << currentInputPath << END << " as a VTF!" << tfendl;
+					return EXIT_FAILURE;
+				}
+				tfout << "Loaded input VTF at " << BOLD << currentInputPath << END << " in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
+
+				// Get output format
+				vtfpp::ImageConversion::FileFormat fileFormat = *not_magic_enum::enum_cast<vtfpp::ImageConversion::FileFormat>(extractFormat);
+				if (fileFormat == vtfpp::ImageConversion::FileFormat::DEFAULT) {
+					fileFormat = vtfpp::ImageConversion::getDefaultFileFormatForImageFormat(vtf.getFormat());
+				}
+
+				// Check output path
+				if (outputPath.empty()) {
+					const std::filesystem::path inputPathPath{currentInputPath};
+					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string();
+					switch (fileFormat) {
+						using enum vtfpp::ImageConversion::FileFormat;
+						default:
+						case DEFAULT:
+							// We should not be here!
+							break;
+						case PNG:
+							outputPath += ".png";
+							break;
+						case JPEG:
+							outputPath += ".jpg";
+							break;
+						case BMP:
+							outputPath += ".bmp";
+							break;
+						case TGA:
+							outputPath += ".tga";
+							break;
+						case HDR:
+							outputPath += ".hdr";
+							break;
+						case EXR:
+							outputPath += ".exr";
+							break;
+					}
+				}
+
+				// Check output doesn't exist
+				const auto checkFileDoesntExist = [&](const std::string& currentOutputPath) {
+					if (const bool exists = std::filesystem::exists(currentOutputPath); exists && !std::filesystem::is_regular_file(currentOutputPath)) {
+						tferr << "Output path at " << BOLD << currentOutputPath << END << " must not be a directory!" << tfendl;
+						return false;
+					} else if (exists && !overwrite) {
+						std::string in;
+						while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+							tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+							std::cin >> in;
+						}
+						if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
+							tfout << "Output file already exists. Aborting." << tfendl;
+							return false;
+						}
+					} else if (exists) {
+						tfout << "Output file already exists, overwriting..." << tfendl;
+					}
+					return true;
+				};
+
+				// Extract all VTF image data
+				::ElapsedTime extractStopwatch;
+				std::vector<bool> extractionSuccessful;
+				if (extractAll) {
+					extractAllMips = extractAllFrames = extractAllFaces = extractAllSlices = true;
+				}
+				if (extractAllMips || extractAllFrames || extractAllFaces || extractAllSlices) {
+					for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
+						std::filesystem::path outputPathFixupFrame{outputPath};
+						if (extractAllFrames && vtf.getFrameCount() > 1) {
+							outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
+						}
+						for (int face = extractAllFaces ? 0 : extractFace; face < (extractAllFaces ? vtf.getFaceCount() : extractFace + 1); face++) {
+							std::filesystem::path outputPathFixupFace = outputPathFixupFrame;
+							if (extractAllFaces && vtf.getFaceCount() > 1) {
+								outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
+							}
+							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getSliceCount() : extractSlice + 1); slice++) {
+								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
+								if (extractAllSlices && vtf.getSliceCount() > 1) {
+									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 2) + outputPathFixupSlice.extension().string());
+								}
+								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
+									std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
+									if (extractAllMips && vtf.getMipCount() > 1) {
+										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
+									}
+									extractionSuccessful.push_back(checkFileDoesntExist(outputPathFixupMip.string()) && vtf.saveImageToFile(outputPathFixupMip.string(), mip, frame, face, slice, fileFormat));
+								}
+							}
+						}
+					}
+				} else {
+					extractionSuccessful.push_back(checkFileDoesntExist(outputPath) && vtf.saveImageToFile(outputPath, extractMip, extractFrame, extractFace, extractSlice, fileFormat));
+				}
+
+				// Extract VTF
+				int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0);
+				if (successCount < extractionSuccessful.size()) {
+					tferr << "Failed to save " << BOLD << (extractionSuccessful.size() - successCount) << END << " of " << BOLD << extractionSuccessful.size() << END << " files." << tfendl;
+					return EXIT_FAILURE;
+				}
+				tfout << "Saved VTF image data in " << CYAN << extractStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+				return EXIT_SUCCESS;
+			};
+
+			// Check input path
+			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+				throw std::invalid_argument{"Input path does not exist!"};
+			}
+
+			if (std::filesystem::is_regular_file(inputPath)) {
+				if (!inputPath.ends_with(".vtf")) {
+					throw std::invalid_argument{"Input file must be a VTF!"};
+				}
+				return extract(inputPath);
+			}
+			if (std::filesystem::is_directory(inputPath)) {
+				int out = EXIT_SUCCESS;
+				if (noRecurse) {
+					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							out = out || extract(dirEntry.path().string());
+						}
+					}
+				} else {
+					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+							outputPath = "";
+							out = out || extract(dirEntry.path().string());
 						}
 					}
 				}
