@@ -139,7 +139,11 @@ Optional arguments:
 "create" mode (detailed usage):
   -v, --version                                Major and minor version, split by a period.
                                                Ignored if platform is specified as anything
-                                               other than PC. [nargs=0..1] [default: "7.4"]
+                                               other than PC. Note that older branches of the
+                                               Source engine will not load VTF versions made
+                                               for newer branches. VTF v7.6 is only loadable
+                                               by games running on Strata Source.
+                                               [nargs=0..1] [default: "7.4"]
   -f, --format                                 Output format. [nargs=0..1]
                                                [default: "DEFAULT"]
   -r, --filter                                 The resize filter used to generate mipmaps and

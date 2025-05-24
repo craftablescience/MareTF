@@ -165,7 +165,9 @@ int main(int argc, const char* const argv[]) {
 	createCLI
 		.add_argument("-v", "--version")
 		.metavar("X.Y")
-		.help("Major and minor version, split by a period. Ignored if platform is specified as anything other than PC.")
+		.help("Major and minor version, split by a period. Ignored if platform is specified as anything other than"
+		      " PC. Note that older branches of the Source engine will not load VTF versions made for newer branches."
+		      " VTF v7.6 is only loadable by games running on Strata Source.")
 		.choices("7.0", "7.1", "7.2", "7.3", "7.4", "7.5", "7.6")
 		.default_value(version).store_into(version);
 
