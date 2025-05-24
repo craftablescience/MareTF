@@ -32,6 +32,10 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Change VTF version, format, platform, etc.
   - Recompute mipmaps, thumbnail, reflectivity vector
   - Add, overwrite, or remove resources
+- Extract Mode
+  - Save the image data contained within VTFs as image files
+    - Save as PNG/JPEG/BMP/TGA/HDR/EXR
+    - Defaults to PNG or EXR based on the image format
 - Info Mode
   - Print out all VTF metadata and non-image resource data
   - Parse compiled particle sheet resource to plaintext
@@ -104,14 +108,17 @@ Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-recurse] [--no-prett
               [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
               [--remove-lod-resource] [--set-tso-resource COMBINED_FLAGS]
               [--remove-tso-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
-              [--info-output-mode VAR] MODE PATH
+              [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
+              [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
+              [--extract-face FACE] [--extract-all-faces] [--extract-slices SLICE]
+              [--extract-all-slices] [--extract-all] MODE PATH
 
 Positional arguments:
   MODE                                         The mode to run the program in. This
                                                determines what arguments are processed. Valid
-                                               options: "create", "edit", and "info".
-                                               "convert" is also permissible and is an alias
-                                               of "create" for vtex2 compatibility.
+                                               options: "create", "edit", "extract", and
+                                               "info". "convert" is also permissible and is
+                                               an alias of "create" for vtex2 compatibility.
                                                [required]
   PATH                                         The path to the input file or directory.
                                                [required]
@@ -266,6 +273,28 @@ Optional arguments:
                                                "human" or "kv1". [nargs=0..1]
                                                [default: "human"]
 
+"extract" mode (detailed usage):
+  --extract-format                             Output file format. [nargs=0..1]
+                                               [default: "DEFAULT"]
+  --extract-mip                                Set the mip to extract. Overridden by
+                                               --extract-all-mips. [nargs=0..1] [default: 0]
+  --extract-all-mips                           Extract all mips. Overridden by --extract-all.
+  --extract-frame                              Set the frame to extract. Overridden by
+                                               --extract-all-frames. [nargs=0..1]
+                                               [default: 0]
+  --extract-all-frames                         Extract all frames. Overridden by
+                                               --extract-all.
+  --extract-face                               Set the face to extract. Overridden by
+                                               --extract-all-faces. [nargs=0..1] [default: 0]
+  --extract-all-faces                          Extract all faces. Overridden by
+                                               --extract-all.
+  --extract-slices                             Set the slice to extract. Overridden by
+                                               --extract-all-slices. [nargs=0..1]
+                                               [default: 0]
+  --extract-all-slices                         Extract all slices. Overridden by
+                                               --extract-all.
+  --extract-all                                Extract all mips, frames, faces, and slices.
+
 Enumerations:
 
 IMAGE_FORMAT
@@ -326,16 +355,6 @@ IMAGE_FORMAT
  • BC7
  • BC6H
 
-RESIZE_FILTER
- • DEFAULT
- • BOX
- • BILINEAR
- • CUBIC_BSPLINE
- • CATMULL_ROM
- • MITCHELL
- • POINT_SAMPLE
- • KAISER
-
 FLAG
  • POINT_SAMPLE
  • TRILINEAR
@@ -378,16 +397,35 @@ PLATFORM
  • PS3_ORANGEBOX
  • X360
 
-COMPRESSION_METHOD
- • DEFLATE
- • ZSTD
- • CONSOLE_LZMA
+FILE_FORMAT
+ • DEFAULT
+ • PNG
+ • JPEG
+ • BMP
+ • TGA
+ • HDR
+ • EXR
+
+RESIZE_FILTER
+ • DEFAULT
+ • BOX
+ • BILINEAR
+ • CUBIC_BSPLINE
+ • CATMULL_ROM
+ • MITCHELL
+ • POINT_SAMPLE
+ • KAISER
 
 RESIZE_METHOD
  • NONE
  • BIGGER
  • SMALLER
  • NEAREST
+
+COMPRESSION_METHOD
+ • DEFLATE
+ • ZSTD
+ • CONSOLE_LZMA
 ```
 
 <img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_sleep.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, sleeping." />

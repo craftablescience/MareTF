@@ -738,11 +738,12 @@ int main(int argc, const char* const argv[]) {
 		enumInfo += '\n';
 	};
 	addEnumInfo.template operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
-	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
 	addEnumInfo.template operator()<vtfpp::VTF::Flags>("FLAG");
 	addEnumInfo.template operator()<vtfpp::VTF::Platform>("PLATFORM");
-	addEnumInfo.template operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
+	addEnumInfo.template operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
+	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
 	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeMethod>("RESIZE_METHOD");
+	addEnumInfo.template operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
 
 	static constexpr std::string_view PROGRAM_DETAILS{
 		"Program details:\n\n"
