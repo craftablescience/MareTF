@@ -39,7 +39,7 @@ add_executable(${PROJECT_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
 cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
-target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse sourcepp::kvpp sourcepp::vtfpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static sourcepp::kvpp sourcepp::vtfpp)
 
 # maretf_gui
 if(MARETF_BUILD_GUI)

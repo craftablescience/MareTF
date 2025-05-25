@@ -1,11 +1,17 @@
+# global overrides
+set(BUILD_SHARED_LIBS OFF) # here because of efsw, the little scamp
+
 # argparse
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/argparse")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/argparse")
+
+# efsw
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/efsw")
 
 # sourcepp
 set(SOURCEPP_LIBS_START_ENABLED OFF CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_VTFPP           ON CACHE INTERNAL "" FORCE)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/sourcepp")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/sourcepp")
 
 if(MARETF_BUILD_GUI)
     # Qt
