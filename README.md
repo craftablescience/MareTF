@@ -130,6 +130,8 @@ Optional arguments:
                                                mode outputs a file). Ignored if the input
                                                path is a directory.
   -y, --yes                                    Automatically say yes to any prompts.
+  -n, --no                                     Automatically say no to any prompts.
+                                               Overrides --yes.
   -q, --quiet                                  Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
                                                successfully).
@@ -140,8 +142,9 @@ Optional arguments:
 "create" mode (detailed usage):
   --watch                                      After creation is complete, watch the input
                                                file or directory for any changes and re-TF
-                                               the VTF(s). --yes is implied after the first
-                                               conversion pass.
+                                               the VTF(s). --no is implied on the first
+                                               creation pass. --yes is implied after the
+                                               first creation pass.
   -v, --version                                Major and minor version, split by a period.
                                                Ignored if platform is specified as anything
                                                other than PC. Note that older branches of the
@@ -409,9 +412,11 @@ PLATFORM
 FILE_FORMAT
  • DEFAULT
  • PNG
+ • JPG
  • JPEG
  • BMP
  • TGA
+ • QOI
  • HDR
  • EXR
 

@@ -6,10 +6,13 @@
 #include <filesystem>
 #include <functional>
 #include <exception>
+#include <mutex>
 #include <random>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -111,9 +114,7 @@ class MareTFFileWatchListener : public efsw::FileWatchListener {
 public:
 	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, std::string)>;
 
-	explicit MareTFFileWatchListener(Callback callback_)
-		: efsw::FileWatchListener{}
-		, callback{std::move(callback_)} {}
+	explicit MareTFFileWatchListener(Callback callback_) : efsw::FileWatchListener{}, callback{std::move(callback_)} {}
 
 	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) override {
 		this->callback(watchID, dir, filename, action, oldFilename);
@@ -204,6 +205,13 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(overwrite);
 
+	bool noOverwrite;
+	cli
+		.add_argument("--no")
+		.help("Automatically say no to any prompts. Overrides --yes.")
+		.flag()
+		.store_into(noOverwrite);
+
 	bool quiet;
 	cli
 		.add_argument("-q", "--quiet")
@@ -235,7 +243,7 @@ int main(int argc, const char* const argv[]) {
 	createCLI
 		.add_argument("--watch")
 		.help("After creation is complete, watch the input file or directory for any changes and re-TF the VTF(s)."
-		      " --yes is implied after the first conversion pass.")
+		      " --no is implied on the first creation pass. --yes is implied after the first creation pass.")
 		.flag()
 		.store_into(watch);
 
@@ -865,6 +873,34 @@ int main(int argc, const char* const argv[]) {
 
 		static constexpr auto DIR_OPTIONS = std::filesystem::directory_options::follow_directory_symlink | std::filesystem::directory_options::skip_permission_denied;
 
+		const auto checkFileDoesntExist = [&](const std::string& currentOutputPath, bool& shouldRet) -> int {
+			shouldRet = true;
+			const bool exists = std::filesystem::exists(currentOutputPath);
+			if (exists && !std::filesystem::is_regular_file(currentOutputPath)) {
+				tferr << "Output path at " << BOLD << currentOutputPath << END << " must not be a directory!" << tfendl;
+				return EXIT_FAILURE;
+			}
+			if (exists && noOverwrite) {
+				tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists, leaving unmodified." << tfendl;
+				return EXIT_SUCCESS;
+			}
+			if (exists && !overwrite) {
+				std::string in;
+				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+					tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
+					std::cin >> in;
+				}
+				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
+					tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists, leaving unmodified." << tfendl;
+					return EXIT_SUCCESS;
+				}
+			} else if (exists) {
+				tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists, overwriting..." << tfendl;
+			}
+			shouldRet = false;
+			return EXIT_SUCCESS;
+		};
+
 		if (mode == "create" || mode == "convert") {
 			const auto create = [&](const std::string& currentInputPath) {
 				// Check output path
@@ -872,21 +908,12 @@ int main(int argc, const char* const argv[]) {
 					const std::filesystem::path inputPathPath{currentInputPath};
 					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + ".vtf";
 				}
-				if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
-					tferr << "Output path at " << BOLD << outputPath << END << " must not be a directory!" << tfendl;
-					return EXIT_FAILURE;
-				} else if (exists && !overwrite) {
-					std::string in;
-					while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-						tfout << "Output file at " << BOLD << outputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
-						std::cin >> in;
+				{
+					bool checkFileShouldRet;
+					int out = checkFileDoesntExist(outputPath, checkFileShouldRet);
+					if (checkFileShouldRet) {
+						return out;
 					}
-					if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-						tfout << "Output file already exists. Aborting." << tfendl;
-						return EXIT_SUCCESS;
-					}
-				} else if (exists) {
-					tfout << "Output file already exists, overwriting..." << tfendl;
 				}
 
 				// Start to set up options
@@ -1021,6 +1048,11 @@ int main(int argc, const char* const argv[]) {
 				throw std::invalid_argument{"Input path does not exist!"};
 			}
 
+			// Watch mode overrides this
+			if (watch) {
+				noOverwrite = true;
+			}
+
 			int out = EXIT_SUCCESS;
 			if (std::filesystem::is_regular_file(inputPath)) {
 				tfout << BOLD << randomDeviantArtTFTrope() << "..." << END << tfendl;
@@ -1050,35 +1082,84 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			if (watch) {
-				// todo: watch should skip files that already exist on the first pass, and this should be documented
 				overwrite = true;
+				noOverwrite = false;
 
-				efsw::FileWatcher fileWatcher;
 				const bool watchingSingleFile = std::filesystem::is_regular_file(inputPath);
 
-				std::unordered_map<std::string, std::pair<unsigned int, efsw::Action>> fileActions;
+				efsw::FileWatcher fileWatcher;
+				std::unordered_map<std::string, std::pair<::ElapsedTime<>, efsw::Action>> fileActions;
+				std::mutex fileActionsMutex;
 				::MareTFFileWatchListener fileUpdateListener{
-					[&](efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) {
-						const auto path = dir + filename;
-						switch (action) {
+					[&](efsw::WatchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) {
+						auto path = dir + filename;
+						if (watchingSingleFile && std::filesystem::absolute(path) != std::filesystem::absolute(inputPath)) {
+							return;
+						}
+
+						std::lock_guard fileActionsLock{fileActionsMutex};
+
+						// Collapse Moved events so we don't need to check them in the switches below
+						if (action == efsw::Actions::Moved) {
+							if (!oldFilename.empty()) {
+								const auto oldPath = dir + oldFilename;
+								if (fileActions.contains(oldPath) && fileActions[oldPath].second == efsw::Action::Add) {
+									fileActions.erase(oldPath);
+								} else {
+									fileActions[oldPath] = {{}, efsw::Actions::Delete};
+								}
+							}
+							fileActions[path] = {{}, efsw::Actions::Add};
+							return;
+						}
+
+						if (!fileActions.contains(path)) {
+							fileActions[path] = {{}, action};
+							return;
+						}
+						switch (fileActions[path].second) {
 							case efsw::Actions::Add:
-								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Added" << tfendl;
+								switch (action) {
+									case efsw::Actions::Add:
+									case efsw::Actions::Modified:
+										fileActions[path].first = {};
+										break;
+									case efsw::Actions::Delete:
+										fileActions.erase(path);
+										break;
+									case efsw::Actions::Moved:
+										break;
+								}
 								break;
 							case efsw::Actions::Delete:
-								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Delete" << tfendl;
+								switch (action) {
+									case efsw::Actions::Add:
+									case efsw::Actions::Modified:
+										fileActions[path] = {{}, efsw::Actions::Add};
+										break;
+									case efsw::Actions::Delete:
+									case efsw::Actions::Moved:
+										break;
+								}
 								break;
 							case efsw::Actions::Modified:
-								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Modified" << tfendl;
+								switch (action) {
+									case efsw::Actions::Add:
+									case efsw::Actions::Modified:
+										fileActions[path].first = {};
+										break;
+								case efsw::Actions::Delete:
+										fileActions[path] = {{}, efsw::Actions::Delete};
+								case efsw::Actions::Moved:
+										break;
+								}
 								break;
 							case efsw::Actions::Moved:
-								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Moved from (" << oldFilename << ")" << tfendl;
-								break;
-							default:
 								break;
 						}
 					}
 				};
-				auto watchID = fileWatcher.addWatch(inputPath, &fileUpdateListener, true);
+				fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse);
 
 				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
 #ifdef _WIN32
@@ -1096,15 +1177,43 @@ int main(int argc, const char* const argv[]) {
 				};
 				sigemptyset(&sigIntHandler.sa_mask);
 				sigIntHandler.sa_flags = 0;
-
 				sigaction(SIGINT, &sigIntHandler, nullptr);
 #endif
 
 				fileWatcher.watch();
-				for (;;) {
-					// todo: collapse all events. if a file is modified, wait until all modifications complete
+				for (;; std::this_thread::sleep_for(250ms)) {
+					{
+						std::lock_guard fileActionsLock{fileActionsMutex};
 
-					std::this_thread::sleep_for(250ms);
+						const auto pathsView = fileActions | std::views::keys;
+						std::vector<std::string> paths{pathsView.begin(), pathsView.end()};
+						for (const auto& path : paths) {
+							if (fileActions[path].first.get() < 750ms || !fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
+								continue;
+							}
+							switch (fileActions[path].second) {
+								case efsw::Actions::Add:
+								case efsw::Actions::Modified:
+									if (!watchingSingleFile) {
+										outputPath = "";
+									}
+									create(path);
+									break;
+								case efsw::Actions::Delete: {
+									const auto vtfPath = std::filesystem::path{path}.replace_extension(".vtf").string();
+									if (std::error_code ec; std::filesystem::exists(vtfPath, ec)) {
+										ec.clear();
+										std::filesystem::remove(vtfPath, ec);
+										tfout << "Deleted " << BOLD << vtfPath << END << "." << tfendl;
+									}
+									break;
+								}
+								case efsw::Actions::Moved:
+									break;
+							}
+							fileActions.erase(path);
+						}
+					}
 				}
 			}
 
@@ -1116,21 +1225,12 @@ int main(int argc, const char* const argv[]) {
 				if (outputPath.empty()) {
 					outputPath = currentInputPath;
 				}
-				if (const bool exists = std::filesystem::exists(outputPath); exists && !std::filesystem::is_regular_file(outputPath)) {
-					tferr << "Output path at " << BOLD << outputPath << END << " must not be a directory!" << tfendl;
-					return EXIT_FAILURE;
-				} else if (exists && !overwrite) {
-					std::string in;
-					while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-						tfout << "Output file at " << BOLD << outputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
-						std::cin >> in;
+				{
+					bool checkFileShouldRet;
+					int out = checkFileDoesntExist(outputPath, checkFileShouldRet);
+					if (checkFileShouldRet) {
+						return out;
 					}
-					if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-						tfout << "Output file already exists. Aborting." << tfendl;
-						return EXIT_SUCCESS;
-					}
-				} else if (exists) {
-					tfout << "Output file already exists, overwriting..." << tfendl;
 				}
 
 				// Start to set up VTF for editing
@@ -1365,27 +1465,6 @@ int main(int argc, const char* const argv[]) {
 					outputPath.append(supportedImageFileFormatExtension(fileFormat));
 				}
 
-				// Check output doesn't exist
-				const auto checkFileDoesntExist = [&](const std::string& currentOutputPath) {
-					if (const bool exists = std::filesystem::exists(currentOutputPath); exists && !std::filesystem::is_regular_file(currentOutputPath)) {
-						tferr << "Output path at " << BOLD << currentOutputPath << END << " must not be a directory!" << tfendl;
-						return false;
-					} else if (exists && !overwrite) {
-						std::string in;
-						while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
-							tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
-							std::cin >> in;
-						}
-						if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
-							tfout << "Output file already exists. Aborting." << tfendl;
-							return false;
-						}
-					} else if (exists) {
-						tfout << "Output file already exists, overwriting..." << tfendl;
-					}
-					return true;
-				};
-
 				// Extract all VTF image data
 				::ElapsedTime extractStopwatch;
 				std::vector<bool> extractionSuccessful;
@@ -1413,13 +1492,17 @@ int main(int argc, const char* const argv[]) {
 									if (extractAllMips && vtf.getMipCount() > 1) {
 										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
 									}
-									extractionSuccessful.push_back(checkFileDoesntExist(outputPathFixupMip.string()) && vtf.saveImageToFile(outputPathFixupMip.string(), mip, frame, face, slice, fileFormat));
+									bool notSuccess;
+									checkFileDoesntExist(outputPathFixupMip.string(), notSuccess);
+									extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPathFixupMip.string(), mip, frame, face, slice, fileFormat));
 								}
 							}
 						}
 					}
 				} else {
-					extractionSuccessful.push_back(checkFileDoesntExist(outputPath) && vtf.saveImageToFile(outputPath, extractMip, extractFrame, extractFace, extractSlice, fileFormat));
+					bool notSuccess;
+					checkFileDoesntExist(outputPath, notSuccess);
+					extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPath, extractMip, extractFrame, extractFace, extractSlice, fileFormat));
 				}
 
 				// Extract VTF
