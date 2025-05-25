@@ -27,6 +27,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Supports new Strata Source VTF version
     - New formats (BC7 / BC6H)
     - New CPU compression (Deflate / Zstandard)
+  - Watch input file or directory for changes and recreate the VTF(s)
 - Edit Mode
   - Edit existing VTFs
   - Change VTF version, format, platform, etc.
@@ -88,7 +89,7 @@ maretf info input.vtf
 ## Full Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [--yes] [--quiet] [--no-recurse]
+Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
               [--filter RESIZE_FILTER] [--flag FLAG]... [--no-automatic-transparency-flags]
               [--no-mips] [--no-thumbnail] [--platform PLATFORM]
