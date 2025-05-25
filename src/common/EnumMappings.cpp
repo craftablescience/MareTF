@@ -122,18 +122,22 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORMAT_E{
 	vtfpp::ImageConversion::FileFormat::DEFAULT,
 	vtfpp::ImageConversion::FileFormat::PNG,
-	vtfpp::ImageConversion::FileFormat::JPEG,
+	vtfpp::ImageConversion::FileFormat::JPG,
+	vtfpp::ImageConversion::FileFormat::JPG,
 	vtfpp::ImageConversion::FileFormat::BMP,
 	vtfpp::ImageConversion::FileFormat::TGA,
+	vtfpp::ImageConversion::FileFormat::QOI,
 	vtfpp::ImageConversion::FileFormat::HDR,
 	vtfpp::ImageConversion::FileFormat::EXR,
 };
 const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
 	"DEFAULT",
 	"PNG",
+	"JPG",
 	"JPEG",
 	"BMP",
 	"TGA",
+	"QOI",
 	"HDR",
 	"EXR",
 };

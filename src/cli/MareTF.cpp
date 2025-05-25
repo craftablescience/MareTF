@@ -7,7 +7,10 @@
 #include <functional>
 #include <exception>
 #include <random>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 
 #include <argparse/argparse.hpp>
@@ -29,7 +32,7 @@ constexpr int CTRL_BREAK_EVENT = 1;
 extern "C" __declspec(dllimport) int __stdcall SetConsoleCtrlHandler(ConsoleCtrlHandler, int);
 #endif
 
-using namespace std::chrono_literals;
+using namespace std::literals;
 
 namespace {
 
@@ -50,6 +53,43 @@ std::string_view randomDeviantArtTFTrope() {
 	static std::mt19937 generator(device());
 	std::uniform_int_distribution<> dist{0, DEVIANTART_TF_TROPES.size() - 1};
 	return DEVIANTART_TF_TROPES.at(dist(generator));
+}
+
+bool fileIsASupportedImageFileFormat(std::string_view extension) {
+	static constexpr std::array<std::string_view, 14> SUPPORTED_EXTENSIONS{
+		".apng",
+		".bmp",
+		".exr",
+		".gif",
+		".hdr",
+		".jpeg",
+		".jpg",
+		".pic",
+		".png",
+		".pgm",
+		".ppm",
+		".psd",
+		".qoi",
+		".tga",
+	};
+	return std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(extension)) != SUPPORTED_EXTENSIONS.end();
+}
+
+std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat) {
+	switch (fileFormat) {
+		using enum vtfpp::ImageConversion::FileFormat;
+		case DEFAULT:
+			// We should not be here!
+			break;
+		case PNG: return ".png";
+		case JPG: return ".jpg";
+		case BMP: return ".bmp";
+		case TGA: return ".tga";
+		case QOI: return ".qoi";
+		case HDR: return ".hdr";
+		case EXR: return ".exr";
+	}
+	return "";
 }
 
 template<typename duration = std::chrono::milliseconds>
@@ -986,17 +1026,16 @@ int main(int argc, const char* const argv[]) {
 				tfout << BOLD << randomDeviantArtTFTrope() << "..." << END << tfendl;
 				out = create(inputPath);
 			} else if (std::filesystem::is_directory(inputPath)) {
-				static constexpr std::array<std::string_view, 13> SUPPORTED_EXTENSIONS{".apng", ".bmp", ".exr", ".gif", ".hdr", ".jpeg", ".jpg", ".pic", ".png", ".pgm", ".ppm", ".psd", ".tga"};
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(dirEntry.path().extension().string())) != SUPPORTED_EXTENSIONS.end()) {
+						if (fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
 							outputPath = "";
 							out = out || create(dirEntry.path().string());
 						}
 					}
 				} else {
 					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(dirEntry.path().extension().string())) != SUPPORTED_EXTENSIONS.end()) {
+						if (fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
 							outputPath = "";
 							out = out || create(dirEntry.path().string());
 						}
@@ -1012,10 +1051,15 @@ int main(int argc, const char* const argv[]) {
 
 			if (watch) {
 				// todo: watch should skip files that already exist on the first pass, and this should be documented
+				overwrite = true;
 
 				efsw::FileWatcher fileWatcher;
+				const bool watchingSingleFile = std::filesystem::is_regular_file(inputPath);
+
+				std::unordered_map<std::string, std::pair<unsigned int, efsw::Action>> fileActions;
 				::MareTFFileWatchListener fileUpdateListener{
 					[&](efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) {
+						const auto path = dir + filename;
 						switch (action) {
 							case efsw::Actions::Add:
 								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Added" << tfendl;
@@ -1046,7 +1090,7 @@ int main(int argc, const char* const argv[]) {
 				}), true);
 #else
 				struct sigaction sigIntHandler{};
-				sigIntHandler.sa_handler = [](int) {
+				sigIntHandler.sa_handler = +[](int) {
 					tfout << tfendl << "Closing..." << tfendl;
 					std::exit(0);
 				};
@@ -1058,7 +1102,9 @@ int main(int argc, const char* const argv[]) {
 
 				fileWatcher.watch();
 				for (;;) {
-					std::this_thread::sleep_for(2000ms);
+					// todo: collapse all events. if a file is modified, wait until all modifications complete
+
+					std::this_thread::sleep_for(250ms);
 				}
 			}
 
@@ -1316,31 +1362,7 @@ int main(int argc, const char* const argv[]) {
 				if (outputPath.empty()) {
 					const std::filesystem::path inputPathPath{currentInputPath};
 					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string();
-					switch (fileFormat) {
-						using enum vtfpp::ImageConversion::FileFormat;
-						default:
-						case DEFAULT:
-							// We should not be here!
-							break;
-						case PNG:
-							outputPath += ".png";
-							break;
-						case JPEG:
-							outputPath += ".jpg";
-							break;
-						case BMP:
-							outputPath += ".bmp";
-							break;
-						case TGA:
-							outputPath += ".tga";
-							break;
-						case HDR:
-							outputPath += ".hdr";
-							break;
-						case EXR:
-							outputPath += ".exr";
-							break;
-					}
+					outputPath.append(supportedImageFileFormatExtension(fileFormat));
 				}
 
 				// Check output doesn't exist
