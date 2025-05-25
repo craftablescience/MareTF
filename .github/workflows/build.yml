@@ -33,7 +33,7 @@ jobs:
           spectre: true
 
       - name: Configure CMake
-        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=NSIS -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64" -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=NSIS -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
 
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'
@@ -91,7 +91,7 @@ jobs:
           platform: x64
 
       - name: Configure CMake
-        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=${{matrix.cpack_generator}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64" -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=${{matrix.cpack_generator}} -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
 
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'

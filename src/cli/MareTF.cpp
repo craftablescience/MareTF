@@ -1,11 +1,17 @@
 #include <algorithm>
+#include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <chrono>
 #include <filesystem>
+#include <functional>
 #include <exception>
 #include <random>
+#include <thread>
+#include <utility>
 
 #include <argparse/argparse.hpp>
+#include <efsw/efsw.hpp>
 #include <kvpp/KV1.h>
 #include <sourcepp/FS.h>
 #include <sourcepp/String.h>
@@ -16,8 +22,14 @@
 
 #ifdef _WIN32
 #define CP_UTF8 65001
-extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
+extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned long);
+using ConsoleCtrlHandler = int(__stdcall *)(unsigned long);
+constexpr int CTRL_C_EVENT = 0;
+constexpr int CTRL_BREAK_EVENT = 1;
+extern "C" __declspec(dllimport) int __stdcall SetConsoleCtrlHandler(ConsoleCtrlHandler, int);
 #endif
+
+using namespace std::chrono_literals;
 
 namespace {
 
@@ -53,6 +65,22 @@ public:
 
 protected:
 	std::chrono::time_point<clock, duration> start;
+};
+
+class MareTFFileWatchListener : public efsw::FileWatchListener {
+public:
+	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, std::string)>;
+
+	explicit MareTFFileWatchListener(Callback callback_)
+		: efsw::FileWatchListener{}
+		, callback{std::move(callback_)} {}
+
+	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) override {
+		this->callback(watchID, dir, filename, action, oldFilename);
+	}
+
+private:
+	Callback callback;
 };
 
 struct tfout_t {
@@ -107,7 +135,9 @@ int main(int argc, const char* const argv[]) {
 	cli
 		.add_argument("mode")
 		.metavar("MODE")
-		.help(R"(The mode to run the program in. This determines what arguments are processed. Valid options: "create", "edit", "extract", and "info". "convert" is also permissible and is an alias of "create" for vtex2 compatibility.)")
+		.help("The mode to run the program in. This determines what arguments are processed. Valid options:"
+		      R"( "create", "edit", "extract", and "info". "convert" is also permissible and is an alias of "create")"
+		      " for vtex2 compatibility.")
 		.choices("create", "convert", "edit", "extract", "info")
 		.required()
 		.store_into(mode);
@@ -129,7 +159,7 @@ int main(int argc, const char* const argv[]) {
 
 	bool overwrite;
 	cli
-		.add_argument("-y")
+		.add_argument("-y", "--yes")
 		.help("Automatically say yes to any prompts.")
 		.flag()
 		.store_into(overwrite);
@@ -160,6 +190,14 @@ int main(int argc, const char* const argv[]) {
 	//region Create Mode Arguments
 
 	auto& createCLI = cli.add_group(R"("create" mode)");
+
+	bool watch;
+	createCLI
+		.add_argument("--watch")
+		.help("After creation is complete, watch the input file or directory for any changes and re-TF the VTF(s)."
+		      " --yes is implied after the first conversion pass.")
+		.flag()
+		.store_into(watch);
 
 	std::string version{"7.4"};
 	createCLI
@@ -318,7 +356,8 @@ int main(int argc, const char* const argv[]) {
 	createCLI
 		.add_argument("--gamma-correct-amount")
 		.metavar("GAMMA")
-		.help("The gamma to use in gamma correction. A value of 2.2 is assumed by a good deal of code in Source engine, change this if you know what you're doing.")
+		.help("The gamma to use in gamma correction. A value of 2.2 is assumed by a good deal of code in Source"
+		      " engine, change this if you know what you're doing.")
 		.scan<'g', float>()
 		.default_value(gammaCorrectionAmount).store_into(gammaCorrectionAmount);
 
@@ -942,13 +981,12 @@ int main(int argc, const char* const argv[]) {
 				throw std::invalid_argument{"Input path does not exist!"};
 			}
 
+			int out = EXIT_SUCCESS;
 			if (std::filesystem::is_regular_file(inputPath)) {
 				tfout << BOLD << randomDeviantArtTFTrope() << "..." << END << tfendl;
-				return create(inputPath);
-			}
-			if (std::filesystem::is_directory(inputPath)) {
+				out = create(inputPath);
+			} else if (std::filesystem::is_directory(inputPath)) {
 				static constexpr std::array<std::string_view, 13> SUPPORTED_EXTENSIONS{".apng", ".bmp", ".exr", ".gif", ".hdr", ".jpeg", ".jpg", ".pic", ".png", ".pgm", ".ppm", ".psd", ".tga"};
-				int out = EXIT_SUCCESS;
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
 						if (std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(dirEntry.path().extension().string())) != SUPPORTED_EXTENSIONS.end()) {
@@ -964,9 +1002,67 @@ int main(int argc, const char* const argv[]) {
 						}
 					}
 				}
+			} else {
+				throw std::invalid_argument{"Input path is not a file or directory!"};
+			}
+
+			if (out != EXIT_SUCCESS) {
 				return out;
 			}
-			throw std::invalid_argument{"Input path is not a file or directory!"};
+
+			if (watch) {
+				// todo: watch should skip files that already exist on the first pass, and this should be documented
+
+				efsw::FileWatcher fileWatcher;
+				::MareTFFileWatchListener fileUpdateListener{
+					[&](efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) {
+						switch (action) {
+							case efsw::Actions::Add:
+								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Added" << tfendl;
+								break;
+							case efsw::Actions::Delete:
+								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Delete" << tfendl;
+								break;
+							case efsw::Actions::Modified:
+								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Modified" << tfendl;
+								break;
+							case efsw::Actions::Moved:
+								tfout << "DIR (" << dir << ") FILE (" << filename << ") has event Moved from (" << oldFilename << ")" << tfendl;
+								break;
+							default:
+								break;
+						}
+					}
+				};
+				auto watchID = fileWatcher.addWatch(inputPath, &fileUpdateListener, true);
+
+				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
+#ifdef _WIN32
+				SetConsoleCtrlHandler(static_cast<ConsoleCtrlHandler>(+[](unsigned long type) -> int {
+					if (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT) {
+						tfout << tfendl << "Closing..." << tfendl;
+					}
+					return false;
+				}), true);
+#else
+				struct sigaction sigIntHandler{};
+				sigIntHandler.sa_handler = [](int) {
+					tfout << tfendl << "Closing..." << tfendl;
+					std::exit(0);
+				};
+				sigemptyset(&sigIntHandler.sa_mask);
+				sigIntHandler.sa_flags = 0;
+
+				sigaction(SIGINT, &sigIntHandler, nullptr);
+#endif
+
+				fileWatcher.watch();
+				for (;;) {
+					std::this_thread::sleep_for(2000ms);
+				}
+			}
+
+			return EXIT_SUCCESS;
 		}
 		if (mode == "edit") {
 			const auto edit = [&](const std::string& currentInputPath) {

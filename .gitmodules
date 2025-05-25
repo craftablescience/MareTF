@@ -7,3 +7,6 @@
 [submodule "ext/sourcepp"]
 	path = ext/sourcepp
 	url = https://github.com/craftablescience/sourcepp
+[submodule "ext/efsw"]
+	path = ext/efsw
+	url = https://github.com/SpartanJ/efsw.git

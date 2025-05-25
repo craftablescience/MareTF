@@ -79,6 +79,7 @@ maretf info input.vtf
   - The font used in the GUI is [Celestia Medium Redux](http://www.mattyhex.net/CMR), licensed under public domain
 - CLI Dependencies:
   - [argparse](https://github.com/p-ranav/argparse)
+  - [efsw](https://github.com/SpartanJ/efsw)
   - [sourcepp](https://github.com/craftablescience/sourcepp)
 - GUI Dependencies:
   - [sourcepp](https://github.com/craftablescience/sourcepp)
@@ -87,10 +88,10 @@ maretf info input.vtf
 ## Full Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [-y] [--quiet] [--no-recurse] [--no-pretty-formatting]
-              [--version X.Y] [--format IMAGE_FORMAT] [--filter RESIZE_FILTER]
-              [--flag FLAG]... [--no-automatic-transparency-flags] [--no-mips]
-              [--no-thumbnail] [--platform PLATFORM]
+Usage: maretf [--help] [--output PATH] [--yes] [--quiet] [--no-recurse]
+              [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
+              [--filter RESIZE_FILTER] [--flag FLAG]... [--no-automatic-transparency-flags]
+              [--no-mips] [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
               [--opengl] [--width-resize-method RESIZE_METHOD]
@@ -128,7 +129,7 @@ Optional arguments:
   -o, --output PATH                            The path to the output file (if the current
                                                mode outputs a file). Ignored if the input
                                                path is a directory.
-  -y                                           Automatically say yes to any prompts.
+  -y, --yes                                    Automatically say yes to any prompts.
   -q, --quiet                                  Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
                                                successfully).
@@ -137,6 +138,10 @@ Optional arguments:
   --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
 
 "create" mode (detailed usage):
+  --watch                                      After creation is complete, watch the input
+                                               file or directory for any changes and re-TF
+                                               the VTF(s). --yes is implied after the first
+                                               conversion pass.
   -v, --version                                Major and minor version, split by a period.
                                                Ignored if platform is specified as anything
                                                other than PC. Note that older branches of the
