@@ -151,6 +151,7 @@ const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_
 	vtfpp::ImageConversion::ResizeFilter::MITCHELL,
 	vtfpp::ImageConversion::ResizeFilter::POINT_SAMPLE,
 	vtfpp::ImageConversion::ResizeFilter::KAISER,
+	vtfpp::ImageConversion::ResizeFilter::NICE,
 };
 const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_S{
 	"DEFAULT",
@@ -161,6 +162,7 @@ const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_S{
 	"MITCHELL",
 	"POINT_SAMPLE",
 	"KAISER",
+	"NICE",
 };
 
 const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E{
