@@ -35,7 +35,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Add, overwrite, or remove resources
 - Extract Mode
   - Save the image data contained within VTFs as image files
-    - Save as PNG/JPEG/BMP/TGA/HDR/EXR
+    - Save as PNG/JPEG/BMP/TGA/QOI/HDR/EXR
     - Defaults to PNG or EXR based on the image format
 - Info Mode
   - Print out all VTF metadata and non-image resource data
