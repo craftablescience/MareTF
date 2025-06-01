@@ -373,6 +373,13 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(invertGreenChannelAlt);
 
+	bool hdri;
+	createCLI
+		.add_argument("--hdri")
+		.help("Interpret the given image as an equirectangular HDRI and create a cubemap.")
+		.flag()
+		.store_into(hdri);
+
 	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	auto& widthResizeMethodArg = createCLI
 			.add_argument("--width-resize-method")
@@ -1032,8 +1039,60 @@ int main(int argc, const char* const argv[]) {
 				// Set inversion of green channel
 				options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
 
-				// Bake VTF
+				// Start stopwatch
 				::ElapsedTime stopwatch;
+
+				// Special case for HDRI -> cubemap conversion
+				if (hdri) {
+					options.isCubeMap = true;
+
+					// Compute mips if desired after the cubemap is constructed
+					options.computeMips = false;
+
+					// Load image
+					vtfpp::ImageFormat hdriFormat;
+					int hdriWidth, hdriHeight, hdriFrameCount;
+					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
+					if (hdriData.empty() || !hdriWidth || !hdriHeight || !hdriFrameCount) {
+						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+						return EXIT_FAILURE;
+					}
+
+					// Split HDRI
+					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight);
+					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
+						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
+						return EXIT_FAILURE;
+					}
+
+					// Create VTF
+					vtfpp::VTF vtf = vtfpp::VTF::create(hdriFormat, hdriHeight, hdriHeight, options);
+					vtf.setFaceCount(true);
+
+					// Set faces
+					for (int face = 0; face < 6; face++) {
+						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face, 0)) {
+							tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
+							return EXIT_FAILURE;
+						}
+					}
+
+					// Now compute mips after faces exist
+					if (!noMips) {
+						vtf.computeMips(options.filter);
+					}
+
+					// Bake VTF
+					if (!vtf.bake(outputPath)) {
+						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << "." << tfendl;
+						return EXIT_FAILURE;
+					}
+					const auto elapsed = stopwatch.get().count();
+					tfout << BOLD << currentInputPath << END << " was CUBE'd in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 📦") << tfendl;
+					return EXIT_SUCCESS;
+				}
+
+				// Bake VTF
 				if (!vtfpp::VTF::create(currentInputPath, outputPath, options)) {
 					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 					return EXIT_FAILURE;
@@ -1253,7 +1312,7 @@ int main(int argc, const char* const argv[]) {
 					if (setFormatActual == vtfpp::VTF::FORMAT_UNCHANGED) {
 						setFormatActual = vtf.getFormat();
 					} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
-						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion());
+						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1);
 					}
 				}
 
@@ -1508,7 +1567,7 @@ int main(int argc, const char* const argv[]) {
 				// Extract VTF
 				int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0);
 				if (successCount < extractionSuccessful.size()) {
-					tferr << "Failed to save " << BOLD << (extractionSuccessful.size() - successCount) << END << " of " << BOLD << extractionSuccessful.size() << END << " files." << tfendl;
+					tferr << "Failed to save " << CYAN << (extractionSuccessful.size() - successCount) << END << " of " << CYAN << extractionSuccessful.size() << END << " files." << tfendl;
 					return EXIT_FAILURE;
 				}
 				tfout << "Saved VTF image data in " << CYAN << extractStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
