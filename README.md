@@ -21,6 +21,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Directly convert floating point images (EXR/HDR)
   - Kaiser mipmap filtering selected by default
   - Create non-power of two textures
+  - Create cubemaps from HDRIs
   - Create console VTFs
     - Xbox 360
     - PlayStation 3
@@ -95,7 +96,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--no-mips] [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
-              [--opengl] [--width-resize-method RESIZE_METHOD]
+              [--opengl] [--hdri] [--hdri-no-filter] [--width-resize-method RESIZE_METHOD]
               [--height-resize-method RESIZE_METHOD] [--gamma-correct]
               [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt] [--clampu]
               [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
@@ -189,6 +190,10 @@ Optional arguments:
                                                normal maps.
   --opengl                                     Alias of --invert-green, added for vtex2
                                                compatibility.
+  --hdri                                       Interpret the given image as an
+                                               equirectangular HDRI and create a cubemap.
+  --hdri-no-filter                             When creating a cubemap from an input HDRI, do
+                                               not perform bilinear filtering.
   --width-resize-method                        How to resize the texture's width to match a
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
   --height-resize-method                       How to resize the texture's height to match a
