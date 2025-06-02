@@ -6,7 +6,7 @@ endif()
 # set up project
 project(maretf
         DESCRIPTION "A work in progress command-line utility to work with VTF files."
-        VERSION 0.5.0
+        VERSION 0.6.0
         HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
 set(PROJECT_NAME_PRETTY "MareTF")
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
