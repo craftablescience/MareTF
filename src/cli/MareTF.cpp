@@ -380,6 +380,13 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(hdri);
 
+	bool hdriNoFilter;
+	createCLI
+		.add_argument("--hdri-no-filter")
+		.help("When creating a cubemap from an input HDRI, do not perform bilinear filtering.")
+		.flag()
+		.store_into(hdriNoFilter);
+
 	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	auto& widthResizeMethodArg = createCLI
 			.add_argument("--width-resize-method")
@@ -1059,7 +1066,7 @@ int main(int argc, const char* const argv[]) {
 					}
 
 					// Split HDRI
-					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight);
+					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, 0, !hdriNoFilter);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
 						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
 						return EXIT_FAILURE;
