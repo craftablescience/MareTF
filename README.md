@@ -17,8 +17,11 @@ A utility to create, edit, and display every type of VTF file ever made.
 ## Features
 
 - Create Mode
-  - Directly convert animated images (APNG/GIF)
-  - Directly convert floating point images (EXR/HDR)
+  - Directly convert a wide range of input image formats
+    - Animated images (APNG/GIF)
+    - Floating point images (EXR/HDR)
+    - Standard images (PNG/JPG/TGA/WebP)
+    - Esoteric images (QOI/PSD/PGM/PPM/PIC/BMP)
   - Kaiser mipmap filtering selected by default
   - Create non-power of two textures
   - Create cubemaps from HDRIs
@@ -36,7 +39,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Add, overwrite, or remove resources
 - Extract Mode
   - Save the image data contained within VTFs as image files
-    - Save as PNG/JPEG/BMP/TGA/QOI/HDR/EXR
+    - Save as PNG/JPEG/BMP/TGA/WebP/QOI/HDR/EXR
     - Defaults to PNG or EXR based on the image format
 - Info Mode
   - Print out all VTF metadata and non-image resource data
@@ -422,6 +425,7 @@ FILE_FORMAT
  • JPEG
  • BMP
  • TGA
+ • WEBP
  • QOI
  • HDR
  • EXR

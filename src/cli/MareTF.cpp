@@ -59,7 +59,7 @@ std::string_view randomDeviantArtTFTrope() {
 }
 
 bool fileIsASupportedImageFileFormat(std::string_view extension) {
-	static constexpr std::array<std::string_view, 14> SUPPORTED_EXTENSIONS{
+	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
 		".apng",
 		".bmp",
 		".exr",
@@ -74,6 +74,7 @@ bool fileIsASupportedImageFileFormat(std::string_view extension) {
 		".psd",
 		".qoi",
 		".tga",
+		".webp",
 	};
 	return std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(extension)) != SUPPORTED_EXTENSIONS.end();
 }
@@ -84,13 +85,14 @@ std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileF
 		case DEFAULT:
 			// We should not be here!
 			break;
-		case PNG: return ".png";
-		case JPG: return ".jpg";
-		case BMP: return ".bmp";
-		case TGA: return ".tga";
-		case QOI: return ".qoi";
-		case HDR: return ".hdr";
-		case EXR: return ".exr";
+		case PNG:  return ".png";
+		case JPG:  return ".jpg";
+		case BMP:  return ".bmp";
+		case TGA:  return ".tga";
+		case WEBP: return ".webp";
+		case QOI:  return ".qoi";
+		case HDR:  return ".hdr";
+		case EXR:  return ".exr";
 	}
 	return "";
 }
