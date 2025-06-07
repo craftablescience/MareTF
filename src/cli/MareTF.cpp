@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <functional>
 #include <exception>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <ranges>
@@ -18,6 +19,7 @@
 
 #include <argparse/argparse.hpp>
 #include <efsw/efsw.hpp>
+#include <indicators/progress_bar.hpp>
 #include <kvpp/KV1.h>
 #include <sourcepp/FS.h>
 #include <sourcepp/String.h>
@@ -992,13 +994,34 @@ int main(int argc, const char* const argv[]) {
 					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
 				}
 
-				// Set default flags based on input filename
-				if (const auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
+				// Set default flags or animation state based on input filename
+				int frameNumberStart = 0;
+				int frameNumberCount = 0;
+				if (auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
 					addSRGBFlag(options);
 				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
 					options.flags |= vtfpp::VTF::FLAG_NORMAL;
 				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
 					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+				} else if (!hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
+					// At least 2 digits to avoid false positives
+					frameNumberCount = 2;
+					inputStem.pop_back();
+					inputStem.pop_back();
+					while (std::isdigit(inputStem.back())) {
+						frameNumberCount++;
+						inputStem.pop_back();
+					}
+					{
+						// Set start number, might not always be zero
+						auto temp = std::filesystem::path{currentInputPath}.stem().string();
+						temp = temp.substr(temp.size() - frameNumberCount, temp.size());
+						sourcepp::string::toInt(temp, frameNumberStart);
+					}
+					options.initialFrameCount = 1;
+					while (std::filesystem::exists(std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()))) {
+						options.initialFrameCount++;
+					}
 				}
 
 				// Set default transparency flags
@@ -1058,6 +1081,10 @@ int main(int argc, const char* const argv[]) {
 					// Compute mips if desired after the cubemap is constructed
 					options.computeMips = false;
 
+					// Another time-saver
+					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
 					// Load image
 					vtfpp::ImageFormat hdriFormat;
 					int hdriWidth, hdriHeight, hdriFrameCount;
@@ -1080,7 +1107,7 @@ int main(int argc, const char* const argv[]) {
 
 					// Set faces
 					for (int face = 0; face < 6; face++) {
-						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face, 0)) {
+						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face)) {
 							tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
 							return EXIT_FAILURE;
 						}
@@ -1091,6 +1118,13 @@ int main(int argc, const char* const argv[]) {
 						vtf.computeMips(options.filter);
 					}
 
+					// And now convert to output format
+					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1));
+					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+						vtf.setFormat(outputFormatBackup);
+					}
+
 					// Bake VTF
 					if (!vtf.bake(outputPath)) {
 						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << "." << tfendl;
@@ -1098,6 +1132,69 @@ int main(int argc, const char* const argv[]) {
 					}
 					const auto elapsed = stopwatch.get().count();
 					tfout << BOLD << currentInputPath << END << " was CUBE'd in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 📦") << tfendl;
+					return EXIT_SUCCESS;
+				}
+
+				// Special case for animated VTFs
+				if (options.initialFrameCount > 1) {
+					// Compute mips later
+					options.computeMips = false;
+
+					// Another time-saver
+					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+					// Create initial VTF
+					auto vtf = vtfpp::VTF::create(currentInputPath, options);
+					if (!vtf) {
+						tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+						return EXIT_FAILURE;
+					}
+
+					// Set frames
+					auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+					auto currentInputPathBase = currentInputPathBasePath.string();
+					currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+					std::unique_ptr<indicators::ProgressBar> bar;
+					if (!noPrettyFormatting && !quiet) {
+						bar = std::make_unique<indicators::ProgressBar>(
+							indicators::option::PostfixText{"Adding frames..."},
+							indicators::option::ShowPercentage{true},
+							indicators::option::MaxProgress{options.initialFrameCount}
+						);
+					}
+					for (int frame = frameNumberStart; frame < options.initialFrameCount; frame++) {
+						if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
+							tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
+							return EXIT_FAILURE;
+						}
+						if (bar) {
+							bar->tick();
+						}
+					}
+					if (bar) {
+						bar->mark_as_completed();
+					}
+
+					// Now compute mips after frames exist
+					if (!noMips) {
+						vtf.computeMips(options.filter);
+					}
+
+					// And now convert to output format
+					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1));
+					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+						vtf.setFormat(outputFormatBackup);
+					}
+
+					// Bake VTF
+					if (!vtf.bake(outputPath)) {
+						tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << "." << tfendl;
+						return EXIT_FAILURE;
+					}
+					const auto elapsed = stopwatch.get().count();
+					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 					return EXIT_SUCCESS;
 				}
 

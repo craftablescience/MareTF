@@ -7,6 +7,9 @@
 [submodule "ext/efsw"]
 	path = ext/efsw
 	url = https://github.com/SpartanJ/efsw
+[submodule "ext/indicators"]
+	path = ext/indicators
+	url = https://github.com/p-ranav/indicators
 [submodule "ext/sourcepp"]
 	path = ext/sourcepp
 	url = https://github.com/craftablescience/sourcepp

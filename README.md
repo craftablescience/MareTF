@@ -85,6 +85,7 @@ maretf info input.vtf
 - CLI Dependencies:
   - [argparse](https://github.com/p-ranav/argparse)
   - [efsw](https://github.com/SpartanJ/efsw)
+  - [indicators](https://github.com/p-ranav/indicators)
   - [sourcepp](https://github.com/craftablescience/sourcepp)
 - GUI Dependencies:
   - [sourcepp](https://github.com/craftablescience/sourcepp)

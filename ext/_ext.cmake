@@ -7,6 +7,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/argparse")
 # efsw
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/efsw")
 
+# indicators
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/indicators")
+
 # sourcepp
 set(SOURCEPP_LIBS_START_ENABLED OFF CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
