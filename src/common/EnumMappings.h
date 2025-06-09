@@ -4,9 +4,9 @@
 #include <concepts>
 #include <optional>
 #include <string_view>
-#include <tuple>
 #include <vector>
 
+#include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
 namespace not_magic_enum {
@@ -116,7 +116,7 @@ template<SupportedEnum E>
 [[nodiscard]] std::optional<E> enum_cast(std::string_view value) {
 	const auto& enums = detail::e<E>();
 	const auto& strs = detail::s<E>();
-	if (const auto it = std::find(strs.begin(), strs.end(), value); it != strs.end()) {
+	if (const auto it = std::find(strs.begin(), strs.end(), sourcepp::string::toUpper(value)); it != strs.end()) {
 		return {enums.at(std::distance(strs.begin(), it))};
 	}
 	return std::nullopt;

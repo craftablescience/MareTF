@@ -99,6 +99,13 @@ std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileF
 	return "";
 }
 
+template<not_magic_enum::SupportedEnum E>
+void enumValueValidityCheck(std::string_view enumName, const std::string& arg) {
+	if (!not_magic_enum::enum_cast<E>(arg)) {
+		throw std::runtime_error{"Invalid " + std::string{enumName} + " enum value: " + arg};
+	}
+}
+
 template<typename duration = std::chrono::milliseconds>
 class ElapsedTime {
 	using clock = std::chrono::steady_clock;
@@ -262,39 +269,31 @@ int main(int argc, const char* const argv[]) {
 		.default_value(version).store_into(version);
 
 	std::string format{not_magic_enum::enum_name(vtfpp::VTF::FORMAT_DEFAULT)};
-	auto& formatArg = createCLI
+	createCLI
 		.add_argument("-f", "--format")
 		.metavar("IMAGE_FORMAT")
-		.help("Output format.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
-		formatArg.add_choice(name);
-	}
-	formatArg.default_value(format).store_into(format);
+		.help("Output format.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
+		.default_value(format).store_into(format);
 
 	std::string filter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
-	auto& filterArg = createCLI
+	createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
 		.help("The resize filter used to generate mipmaps and when resizing the base texture to match a power of 2"
-		      " (if necessary).");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
-		filterArg.add_choice(name);
-	}
-	filterArg.default_value(filter).store_into(filter);
+		      " (if necessary).")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
+		.default_value(filter).store_into(filter);
 
 	std::vector<std::string> flags;
-	auto& flagsArg = createCLI
+	createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
 		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied"
 		      " automatically based on the VTF properties.")
-		.append();
-	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
-			flagsArg.add_choice(name);
-		}
-	}
-	flagsArg.store_into(flags);
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.append()
+		.store_into(flags);
 
 	bool noTransparencyFlags;
 	createCLI
@@ -318,26 +317,22 @@ int main(int argc, const char* const argv[]) {
 		.store_into(noThumbnail);
 
 	std::string platform{not_magic_enum::enum_name(vtfpp::VTF::Platform::PLATFORM_PC)};
-	auto& platformArg = createCLI
+	createCLI
 		.add_argument("-p", "--platform")
 		.metavar("PLATFORM")
-		.help("Set the platform (PC/console) to build for.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::VTF::Platform>()) {
-		platformArg.add_choice(name);
-	}
-	platformArg.default_value(platform).store_into(platform);
+		.help("Set the platform (PC/console) to build for.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Platform>, "PLATFORM"))
+		.default_value(platform).store_into(platform);
 
 	std::string compressionMethod{not_magic_enum::enum_name(vtfpp::CompressionMethod::ZSTD)};
-	auto& compressionMethodArg = createCLI
+	createCLI
 		.add_argument("-m", "--compression-method")
 		.metavar("COMPRESSION_METHOD")
 		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
 		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
-		      " LZMA is supported for console VTFs.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
-		compressionMethodArg.add_choice(name);
-	}
-	compressionMethodArg.default_value(compressionMethod).store_into(compressionMethod);
+		      " LZMA is supported for console VTFs.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::CompressionMethod>, "COMPRESSION_METHOD"))
+		.default_value(compressionMethod).store_into(compressionMethod);
 
 	int compressionLevel = 6;
 	createCLI
@@ -392,24 +387,20 @@ int main(int argc, const char* const argv[]) {
 		.store_into(hdriNoFilter);
 
 	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
-	auto& widthResizeMethodArg = createCLI
-			.add_argument("--width-resize-method")
-			.metavar("RESIZE_METHOD")
-			.help("How to resize the texture's width to match a power of 2.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeMethod>()) {
-		widthResizeMethodArg.add_choice(name);
-	}
-	widthResizeMethodArg.default_value(widthResizeMethod).store_into(widthResizeMethod);
+	createCLI
+		.add_argument("--width-resize-method")
+		.metavar("RESIZE_METHOD")
+		.help("How to resize the texture's width to match a power of 2.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
+		.default_value(widthResizeMethod).store_into(widthResizeMethod);
 
 	std::string heightResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
-	auto& heightResizeMethodArg = createCLI
-			.add_argument("--height-resize-method")
-			.metavar("RESIZE_METHOD")
-			.help("How to resize the texture's height to match a power of 2.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeMethod>()) {
-		heightResizeMethodArg.add_choice(name);
-	}
-	heightResizeMethodArg.default_value(heightResizeMethod).store_into(heightResizeMethod);
+	createCLI
+		.add_argument("--height-resize-method")
+		.metavar("RESIZE_METHOD")
+		.help("How to resize the texture's height to match a power of 2.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
+		.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
 	bool gammaCorrection;
 	createCLI
@@ -505,15 +496,13 @@ int main(int argc, const char* const argv[]) {
 		.store_into(setVersion);
 
 	std::string setFormat;
-	auto& setFormatArg = editCLI
+	editCLI
 		.add_argument("--set-format")
 		.metavar("IMAGE_FORMAT")
 		.help("Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing"
-		      " information. Recommended to pair this with the recompute transparency flags argument.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageFormat>()) {
-		setFormatArg.add_choice(name);
-	}
-	setFormatArg.store_into(setFormat);
+		      " information. Recommended to pair this with the recompute transparency flags argument.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
+		.store_into(setFormat);
 
 	int setWidth = 0;
 	editCLI
@@ -532,41 +521,31 @@ int main(int argc, const char* const argv[]) {
 		.store_into(setHeight);
 
 	std::string editFilter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
-	auto& editFilterArg = editCLI
+	editCLI
 		.add_argument("--edit-filter")
 		.metavar("RESIZE_FILTER")
 		.help("Use this resize filter for all resizing operations that accept a filter parameter,"
-		      " including mipmap generation.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::ResizeFilter>()) {
-		editFilterArg.add_choice(name);
-	}
-	editFilterArg.default_value(editFilter).store_into(editFilter);
+		      " including mipmap generation.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
+		.default_value(editFilter).store_into(editFilter);
 
 	std::vector<std::string> addFlags;
-	auto& addFlagsArg = editCLI
+	editCLI
 		.add_argument("--add-flag")
 		.metavar("FLAG")
 		.help("Flags to add. ENVMAP and NO_MIP flags are ignored.")
-		.append();
-	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
-			addFlagsArg.add_choice(name);
-		}
-	}
-	addFlagsArg.store_into(addFlags);
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.append()
+		.store_into(addFlags);
 
 	std::vector<std::string> removeFlags;
-	auto& removeFlagsArg = editCLI
+	editCLI
 		.add_argument("--remove-flag")
 		.metavar("FLAG")
 		.help("Flags to remove. ENVMAP and NO_MIP flags are ignored.")
-		.append();
-	for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-		if (!(flag & vtfpp::VTF::FLAG_MASK_INTERNAL)) {
-			removeFlagsArg.add_choice(name);
-		}
-	}
-	removeFlagsArg.store_into(removeFlags);
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.append()
+		.store_into(removeFlags);
 
 	bool recomputeTransparencyFlags;
 	editCLI
@@ -613,26 +592,22 @@ int main(int argc, const char* const argv[]) {
 		.store_into(recomputeReflectivity);
 
 	std::string setPlatform;
-	auto& setPlatformArg = editCLI
+	editCLI
 		.add_argument("--set-platform")
 		.metavar("PLATFORM")
-		.help("Set the VTF platform.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::VTF::Platform>()) {
-		setPlatformArg.add_choice(name);
-	}
-	setPlatformArg.store_into(setPlatform);
+		.help("Set the VTF platform.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Platform>, "PLATFORM"))
+		.store_into(setPlatform);
 
 	std::string setCompressionMethod;
-	auto& setCompressionMethodArg = editCLI
+	editCLI
 		.add_argument("--set-compression-method")
 		.metavar("COMPRESSION_METHOD")
 		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
 		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
-		      " LZMA is supported for console VTFs.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::CompressionMethod>()) {
-		setCompressionMethodArg.add_choice(name);
-	}
-	setCompressionMethodArg.store_into(compressionMethod);
+		      " LZMA is supported for console VTFs.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::CompressionMethod>, "COMPRESSION_METHOD"))
+		.store_into(compressionMethod);
 
 	int setCompressionLevel;
 	editCLI
@@ -753,14 +728,12 @@ int main(int argc, const char* const argv[]) {
 	auto& extractCLI = cli.add_group(R"("extract" mode)");
 
 	std::string extractFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
-	auto& extractFormatArg = extractCLI
+	extractCLI
 		.add_argument("--extract-format")
 		.metavar("FILE_FORMAT")
-		.help("Output file format.");
-	for (auto name : not_magic_enum::enum_names<vtfpp::ImageConversion::FileFormat>()) {
-		extractFormatArg.add_choice(name);
-	}
-	extractFormatArg.default_value(extractFormat).store_into(extractFormat);
+		.help("Output file format.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::FileFormat>, "FILE_FORMAT"))
+		.default_value(extractFormat).store_into(extractFormat);
 
 	int extractMip = 0;
 	editCLI
