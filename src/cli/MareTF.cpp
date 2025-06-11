@@ -1194,14 +1194,14 @@ int main(int argc, const char* const argv[]) {
 			} else if (std::filesystem::is_directory(inputPath)) {
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
+						if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
 							outputPath = "";
 							out = out || create(dirEntry.path().string());
 						}
 					}
 				} else {
 					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
+						if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
 							outputPath = "";
 							out = out || create(dirEntry.path().string());
 						}
@@ -1322,7 +1322,7 @@ int main(int argc, const char* const argv[]) {
 						const auto pathsView = fileActions | std::views::keys;
 						std::vector<std::string> paths{pathsView.begin(), pathsView.end()};
 						for (const auto& path : paths) {
-							if (fileActions[path].first.get() < 750ms || !fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
+							if (fileActions[path].first.get() < 750ms || !::fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
 								continue;
 							}
 							switch (fileActions[path].second) {
