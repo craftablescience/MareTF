@@ -30,7 +30,7 @@
 
 #ifdef _WIN32
 #define CP_UTF8 65001
-extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned long);
+extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
 using ConsoleCtrlHandler = int(__stdcall *)(unsigned long);
 constexpr int CTRL_C_EVENT = 0;
 constexpr int CTRL_BREAK_EVENT = 1;
