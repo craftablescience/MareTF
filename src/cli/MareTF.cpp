@@ -17,6 +17,11 @@
 #include <unordered_map>
 #include <utility>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include <argparse/argparse.hpp>
 #include <efsw/efsw.hpp>
 #include <indicators/progress_bar.hpp>
@@ -27,15 +32,6 @@
 
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
-
-#ifdef _WIN32
-#define CP_UTF8 65001
-extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int);
-using ConsoleCtrlHandler = int(__stdcall *)(unsigned long);
-constexpr int CTRL_C_EVENT = 0;
-constexpr int CTRL_BREAK_EVENT = 1;
-extern "C" __declspec(dllimport) int __stdcall SetConsoleCtrlHandler(ConsoleCtrlHandler, int);
-#endif
 
 using namespace std::literals;
 
