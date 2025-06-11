@@ -1297,7 +1297,7 @@ int main(int argc, const char* const argv[]) {
 
 				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
 #ifdef _WIN32
-				SetConsoleCtrlHandler(static_cast<ConsoleCtrlHandler>(+[](unsigned long type) -> int {
+				SetConsoleCtrlHandler(static_cast<PHANDLER_ROUTINE>(+[](unsigned long type) -> int {
 					if (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT) {
 						tfout << tfendl << "Closing..." << tfendl;
 					}
