@@ -26,10 +26,6 @@ if(WIN32 AND MARETF_BUILD_GUI)
 elseif(UNIX AND MARETF_BUILD_GUI)
     # Use system Qt - no install rules
 
-    # Celestia Medium Redux font
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/CelestiaMediumRedux.ttf"
-            DESTINATION "share/fonts/truetype")
-
     # Desktop file
     configure_file(
             "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"

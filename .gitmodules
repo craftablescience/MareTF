@@ -4,6 +4,9 @@
 [submodule "ext/argparse"]
 	path = ext/argparse
 	url = https://github.com/p-ranav/argparse
+[submodule "ext/discord"]
+	path = ext/discord
+	url = git@github.com:craftablescience/discord-rpc-clean.git
 [submodule "ext/efsw"]
 	path = ext/efsw
 	url = https://github.com/SpartanJ/efsw

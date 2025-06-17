@@ -43,7 +43,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static ind
 
 # maretf_gui
 if(MARETF_BUILD_GUI)
-    add_executable(${PROJECT_NAME}_gui WIN32
+    add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.h"
@@ -51,8 +51,8 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
     cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
-    target_link_libraries(${PROJECT_NAME}_gui PRIVATE Qt::Core Qt::Gui Qt::Widgets sourcepp::kvpp sourcepp::vtfpp)
-    target_include_directories(${PROJECT_NAME}_gui PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets")
+    target_use_qt(${PROJECT_NAME}_gui)
+    target_link_libraries(${PROJECT_NAME}_gui PRIVATE discord-rpc sourcepp::vtfpp)
 endif()
 
 # installer
