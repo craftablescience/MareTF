@@ -35,6 +35,8 @@ cs_include_directory(ext)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
 add_executable(${PROJECT_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
@@ -47,6 +49,8 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")

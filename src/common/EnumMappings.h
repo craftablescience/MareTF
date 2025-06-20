@@ -9,6 +9,13 @@
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
+namespace vtfpp {
+
+// For templates
+enum VTFFlags {};
+
+} // namespace vtfpp
+
 namespace not_magic_enum {
 
 template<typename E>
@@ -18,7 +25,7 @@ concept SupportedEnum = std::same_as<E, vtfpp::ImageFormat>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeMethod>
                      || std::same_as<E, vtfpp::CompressionMethod>
                      || std::same_as<E, vtfpp::Resource::Type>
-                     || std::same_as<E, vtfpp::VTF::Flags>
+                     || std::same_as<E, vtfpp::VTFFlags>
                      || std::same_as<E, vtfpp::VTF::Platform>;
 
 namespace detail {
@@ -41,8 +48,8 @@ extern const std::vector<std::string_view>         COMPRESSION_METHOD_S;
 extern const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E;
 extern const std::vector<std::string_view>      RESOURCE_TYPE_S;
 
-extern const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E;
-extern const std::vector<std::string_view>  VTF_FLAGS_S;
+extern const std::vector<vtfpp::VTFFlags>  VTF_FLAGS_E;
+extern const std::vector<std::string_view> VTF_FLAGS_S;
 
 extern const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E;
 extern const std::vector<std::string_view>     VTF_PLATFORM_S;
@@ -61,7 +68,7 @@ template<SupportedEnum E>
 		return COMPRESSION_METHOD_E;
 	} else if constexpr (std::same_as<E, vtfpp::Resource::Type>) {
 		return RESOURCE_TYPE_E;
-	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
+	} else if constexpr (std::same_as<E, vtfpp::VTFFlags>) {
 		return VTF_FLAGS_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return VTF_PLATFORM_E;
@@ -85,7 +92,7 @@ template<SupportedEnum E>
 		return COMPRESSION_METHOD_S;
 	} else if constexpr (std::same_as<E, vtfpp::Resource::Type>) {
 		return RESOURCE_TYPE_S;
-	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
+	} else if constexpr (std::same_as<E, vtfpp::VTFFlags>) {
 		return VTF_FLAGS_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return VTF_PLATFORM_S;

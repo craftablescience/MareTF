@@ -30,6 +30,7 @@
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
+#include "../common/Common.h"
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
 
@@ -285,9 +286,9 @@ int main(int argc, const char* const argv[]) {
 	createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
-		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are applied"
+		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied"
 		      " automatically based on the VTF properties.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
 		.append()
 		.store_into(flags);
 
@@ -530,7 +531,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--add-flag")
 		.metavar("FLAG")
 		.help("Flags to add. ENVMAP and NO_MIP flags are ignored.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
 		.append()
 		.store_into(addFlags);
 
@@ -539,7 +540,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--remove-flag")
 		.metavar("FLAG")
 		.help("Flags to remove. ENVMAP and NO_MIP flags are ignored.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
 		.append()
 		.store_into(removeFlags);
 
@@ -814,7 +815,7 @@ int main(int argc, const char* const argv[]) {
 		enumInfo += '\n';
 	};
 	addEnumInfo.template operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
-	addEnumInfo.template operator()<vtfpp::VTF::Flags>("FLAG");
+	addEnumInfo.template operator()<vtfpp::VTFFlags>("FLAG");
 	addEnumInfo.template operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.template operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
 	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
@@ -910,8 +911,12 @@ int main(int argc, const char* const argv[]) {
 				if (version.size() != 3) {
 					throw std::runtime_error{"Invalid version!"};
 				}
-				sourcepp::string::toInt(std::string_view{&version[0], 1}, options.majorVersion);
-				sourcepp::string::toInt(std::string_view{&version[2], 1}, options.minorVersion);
+				uint32_t majorVersion = 0;
+				sourcepp::string::toInt(std::string_view{&version[0], 1}, majorVersion);
+				if (majorVersion != 7) {
+					throw std::runtime_error{"Invalid version!"};
+				}
+				sourcepp::string::toInt(std::string_view{&version[2], 1}, options.version);
 
 				// Set format
 				if (format == "UNCHANGED") {
@@ -920,7 +925,7 @@ int main(int argc, const char* const argv[]) {
 					options.outputFormat = vtfpp::VTF::FORMAT_DEFAULT;
 				} else {
 					options.outputFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(format);
-					if (options.majorVersion == 7 && options.minorVersion == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
+					if (options.version == 6 && !!vtfpp::ImageFormatDetails::red(options.outputFormat) + !!vtfpp::ImageFormatDetails::green(options.outputFormat) + !!vtfpp::ImageFormatDetails::blue(options.outputFormat) + !!vtfpp::ImageFormatDetails::alpha(options.outputFormat) == 3) {
 						tfout << RED << "Formats with 3 channels are not supported on DX11 and will be converted to a format with 4 channels at runtime. Consider using a compressed format such as BC7, or a format with 4 channels such as RGBA8888 or BGRX8888." << END << tfendl;
 					}
 				}
@@ -930,10 +935,10 @@ int main(int argc, const char* const argv[]) {
 
 				// Set flags
 				for (const auto& flag : flags) {
-					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
+					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag);
 				}
 				static constexpr auto addSRGBFlag = [](vtfpp::VTF::CreationOptions& opts) {
-					opts.flags |= opts.minorVersion > 3 ? vtfpp::VTF::FLAG_SRGB : vtfpp::VTF::FLAG_PWL_CORRECTED;
+					opts.flags |= opts.version < 4 ? 0 : opts.version > 4 ? static_cast<uint32_t>(vtfpp::VTF::FLAG_V5_SRGB) : static_cast<uint32_t>(vtfpp::VTF::FLAG_V4_SRGB);
 				};
 				if (srgb) {
 					addSRGBFlag(options);
@@ -944,8 +949,8 @@ int main(int argc, const char* const argv[]) {
 				if (clamp_t) {
 					options.flags |= vtfpp::VTF::FLAG_CLAMP_T;
 				}
-				if (clamp_u) {
-					options.flags |= vtfpp::VTF::FLAG_CLAMP_U;
+				if (clamp_u && options.version >= 2) {
+					options.flags |= vtfpp::VTF::FLAG_V2_CLAMP_U;
 				}
 				if (point_sample) {
 					options.flags |= vtfpp::VTF::FLAG_POINT_SAMPLE;
@@ -959,8 +964,8 @@ int main(int argc, const char* const argv[]) {
 				if (normal) {
 					options.flags |= vtfpp::VTF::FLAG_NORMAL;
 				}
-				if (ssbump) {
-					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+				if (ssbump && options.version >= 3) {
+					options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 				}
 
 				// Set default flags or animation state based on input filename
@@ -971,7 +976,9 @@ int main(int argc, const char* const argv[]) {
 				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
 					options.flags |= vtfpp::VTF::FLAG_NORMAL;
 				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
-					options.flags |= vtfpp::VTF::FLAG_SSBUMP;
+					if (options.version >= 3) {
+						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
+					}
 				} else if (!hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
 					// At least 2 digits to avoid false positives
 					frameNumberCount = 2;
@@ -1089,7 +1096,7 @@ int main(int argc, const char* const argv[]) {
 
 					// And now convert to output format
 					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1));
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1));
 					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 						vtf.setFormat(outputFormatBackup);
 					}
@@ -1152,7 +1159,7 @@ int main(int argc, const char* const argv[]) {
 
 					// And now convert to output format
 					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1));
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1));
 					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 						vtf.setFormat(outputFormatBackup);
 					}
@@ -1387,7 +1394,7 @@ int main(int argc, const char* const argv[]) {
 					if (setFormatActual == vtfpp::VTF::FORMAT_UNCHANGED) {
 						setFormatActual = vtf.getFormat();
 					} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
-						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getMajorVersion(), vtf.getMinorVersion(), vtf.getFaceCount() > 1);
+						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1);
 					}
 				}
 
@@ -1400,16 +1407,19 @@ int main(int argc, const char* const argv[]) {
 				if (cli.is_used("--set-version")) {
 					uint32_t setMajorVersion, setMinorVersion;
 					sourcepp::string::toInt(std::string_view{&setVersion[0], 1}, setMajorVersion);
+					if (setMajorVersion != 7) {
+						throw std::runtime_error{"Invalid version!"};
+					}
 					sourcepp::string::toInt(std::string_view{&setVersion[2], 1}, setMinorVersion);
-					vtf.setVersion(setMajorVersion, setMinorVersion);
+					vtf.setVersion(setMinorVersion);
 				}
 
 				// Add/remove flags
 				for (const auto& flag : addFlags) {
-					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag));
 				}
 				for (const auto& flag : removeFlags) {
-					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
+					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag));
 				}
 
 				// Set size
@@ -1697,7 +1707,7 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "Platform: " << CYAN << not_magic_enum::enum_name(vtf.getPlatform()) << END << tfendl;
 
 					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_PC) {
-						tfout << BOLD << "Version:  " << CYAN << vtf.getMajorVersion() << '.' << vtf.getMinorVersion() << END << tfendl;
+						tfout << BOLD << "Version:  " << CYAN << 7 << '.' << vtf.getVersion() << END << tfendl;
 					}
 
 					tfout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << tfendl;
@@ -1711,13 +1721,14 @@ int main(int argc, const char* const argv[]) {
 
 					tfout << BOLD << "Flags:         " << END;
 					bool first = true;
-					for (auto [flag, name] : not_magic_enum::enum_entries<vtfpp::VTF::Flags>()) {
-						if (vtf.getFlags() & flag) {
+					const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
+					for (int i = 0; i < 32; i++) {
+						if (vtf.getFlags() & 1 << i) {
 							if (!first) {
 								tfout << " | ";
 							}
 							first = false;
-							tfout << CYAN << name << END;
+							tfout << CYAN << prettyFlagNames[i] << END;
 						}
 					}
 					tfout << tfendl;
@@ -1854,8 +1865,8 @@ int main(int argc, const char* const argv[]) {
 
 					// File format
 					kv["format"]["platform"] = not_magic_enum::enum_name(vtf.getPlatform());
-					kv["format"]["version_major"] = static_cast<int>(vtf.getMajorVersion());
-					kv["format"]["version_minor"] = static_cast<int>(vtf.getMinorVersion());
+					kv["format"]["version_major"] = 7;
+					kv["format"]["version_minor"] = static_cast<int>(vtf.getVersion());
 
 					// Image
 					kv["image"]["format"] = not_magic_enum::enum_name(vtf.getFormat());

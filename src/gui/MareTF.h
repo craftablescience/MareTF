@@ -27,7 +27,11 @@ public:
 
 	void loadTexture(const QString& path_);
 
-	QIcon getIcon() const;
+	[[nodiscard]] QIcon getIcon() const;
+
+	[[nodiscard]] const vtfpp::VTF& getVTF() const;
+
+	[[nodiscard]] vtfpp::VTF& getVTF();
 
 	explicit operator bool() const;
 
@@ -60,7 +64,7 @@ public:
 
 	void loadTexture(const QString& path) const;
 
-	void regenerateTitle();
+	void regenerateDetails();
 
 protected:
 	QTabWidget* textureTabs;

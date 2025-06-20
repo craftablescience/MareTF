@@ -13,6 +13,7 @@
 #include <QPainter>
 #include <QTabWidget>
 
+#include "../common/Common.h"
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
 
@@ -42,7 +43,7 @@ void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 	static const QPixmap envSunImage{":/env_sun.png"};
 	static constexpr auto envSunScaleFactor = 0.1;
 	const auto envSunScale = envSunScaleFactor * this->width() > envSunScaleFactor * this->height() ? envSunScaleFactor * this->width() : envSunScaleFactor * this->height();
-	painter.drawPixmap(0.75 * this->width() - envSunScaleFactor / 2, 0.1 * this->height() - envSunScaleFactor / 2, envSunScale, envSunScale, envSunImage);
+	painter.drawPixmap(static_cast<int>(0.75 * this->width() - envSunScaleFactor / 2), static_cast<int>(0.1 * this->height() - envSunScaleFactor / 2), static_cast<int>(envSunScale), static_cast<int>(envSunScale), envSunImage);
 
 	static const QPixmap backgroundLandscapeImage{":/background_landscape.png"};
 	painter.drawPixmap(0, 0, this->width(), this->height(), backgroundLandscapeImage);
@@ -50,7 +51,7 @@ void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 	static const QPixmap oliveShadeSleepImage{":/olive_shade_sleep.png"};
 	static constexpr auto oliveShadeScaleFactor = 0.25;
 	const auto oliveShadeScale = oliveShadeScaleFactor * this->width() > oliveShadeScaleFactor * this->height() ? oliveShadeScaleFactor * this->width() : oliveShadeScaleFactor * this->height();
-	painter.drawPixmap(0.55 * this->width() - oliveShadeScale / 2, 0.8 * this->height() - oliveShadeScale, oliveShadeScale, oliveShadeScale, oliveShadeSleepImage);
+	painter.drawPixmap(static_cast<int>(0.55 * this->width() - oliveShadeScale / 2), static_cast<int>(0.8 * this->height() - oliveShadeScale), static_cast<int>(oliveShadeScale), static_cast<int>(oliveShadeScale), oliveShadeSleepImage);
 }
 
 QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget(parent) {}
@@ -71,6 +72,14 @@ QIcon QMareTextureWidget::getIcon() const {
 	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio)};
 }
 
+const vtfpp::VTF& QMareTextureWidget::getVTF() const {
+	return this->vtf;
+}
+
+vtfpp::VTF& QMareTextureWidget::getVTF() {
+	return this->vtf;
+}
+
 QMareTextureWidget::operator bool() const {
 	return !this->path.isEmpty() && !this->textureCurrent.isNull();
 }
@@ -83,8 +92,8 @@ void QMareTextureWidget::mouseMoveEvent(QMouseEvent* e) {
 	QPointF diff{e->position() - this->mousePressPosition};
 	diff /= this->textureZoom;
 
-	this->textureOffset.setX(std::clamp<double>(this->textureOffset.x() + diff.x(), this->width() / -2, this->width() / 2));
-	this->textureOffset.setY(std::clamp<double>(this->textureOffset.y() + diff.y(), this->height() / -2, this->height() / 2));
+	this->textureOffset.setX(std::clamp<double>(this->textureOffset.x() + diff.x(), static_cast<float>(this->width()) / -2.f, static_cast<float>(this->width()) / 2.f));
+	this->textureOffset.setY(std::clamp<double>(this->textureOffset.y() + diff.y(), static_cast<float>(this->height()) / -2.f, static_cast<float>(this->height()) / 2.f));
 
 	this->mousePressPosition = e->position();
 
@@ -127,10 +136,10 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 	}
 
 	const QRect targetRect{
-		static_cast<int>(this->textureOffset.x() * this->textureZoom + this->width() / 2 - actualWidth * this->textureZoom / 2),
-		static_cast<int>(this->textureOffset.y() * this->textureZoom + this->height() / 2 - actualHeight * this->textureZoom / 2),
-		static_cast<int>(actualWidth * this->textureZoom),
-		static_cast<int>(actualHeight * this->textureZoom),
+		static_cast<int>(this->textureOffset.x() * this->textureZoom + static_cast<float>(this->width()) / 2.f - static_cast<float>(actualWidth) * this->textureZoom / 2),
+		static_cast<int>(this->textureOffset.y() * this->textureZoom + static_cast<float>(this->height()) / 2.f - static_cast<float>(actualHeight) * this->textureZoom / 2),
+		static_cast<int>(static_cast<float>(actualWidth) * this->textureZoom),
+		static_cast<int>(static_cast<float>(actualHeight) * this->textureZoom),
 	};
 
 	QPainter painter{this};
@@ -147,7 +156,7 @@ void QMareTextureWidget::resizeEvent(QResizeEvent* e) {
 }
 
 void QMareTextureWidget::wheelEvent(QWheelEvent* e) {
-	this->textureZoom += e->angleDelta().y() / 360.f;
+	this->textureZoom += static_cast<float>(e->angleDelta().y()) / 360.f;
 	this->textureZoom = qMax(1.f, this->textureZoom);
 
 	this->update();
@@ -157,7 +166,6 @@ void QMareTextureWidget::wheelEvent(QWheelEvent* e) {
 QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	// Window setup ------------------------------------------
 
-	this->regenerateTitle();
 	this->setWindowIcon(QIcon(":/logo.png"));
 	this->resize(this->screen()->availableGeometry().size() * 0.7);
 
@@ -177,6 +185,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->textureTabs->setTabsClosable(true);
 	this->setCentralWidget(this->textureTabs);
 
+	connect(this->textureTabs, &QTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);
 	connect(this->textureTabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
 		// todo: save confirmation
 		this->textureTabs->removeTab(index);
@@ -189,13 +198,13 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* infoDock = new QDockWidget{tr("Info"), this};
 	// widget here
 	infoDock->setWidget(new QWidget);
-	this->addDockWidget(Qt::RightDockWidgetArea, infoDock);
+	this->addDockWidget(Qt::LeftDockWidgetArea, infoDock);
 	viewMenu->addAction(infoDock->toggleViewAction());
 
 	auto* resDock = new QDockWidget{tr("Resources"), this};
 	// widget here
 	resDock->setWidget(new QWidget);
-	this->addDockWidget(Qt::RightDockWidgetArea, resDock);
+	this->addDockWidget(Qt::LeftDockWidgetArea, resDock);
 	this->tabifyDockWidget(infoDock, resDock);
 	infoDock->raise();
 	viewMenu->addAction(resDock->toggleViewAction());
@@ -203,19 +212,13 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* flagsDock = new QDockWidget{tr("Flags"), this};
 	flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	this->flagsChecks = new QListWidget{flagsDock};
-	for (const auto& flagName : not_magic_enum::enum_names<vtfpp::VTF::Flags>()) {
-		auto* flagItem = new QListWidgetItem{QString{flagName.data()}.replace('_', ' '), this->flagsChecks};
-		flagItem->setCheckState(Qt::Unchecked);
-		// todo: this sucks, and XBOX flags are duplicates - also use pre-7.4 names based on version
-		// basically just populate this differently per VTF version/platform - repopulate on every tab change
-		if (flagItem->text() == "NO MIP" || flagItem->text() == "ENVMAP") {
-			flagItem->setFlags(flagItem->flags() & ~Qt::ItemIsEnabled);
-		}
-		this->flagsChecks->addItem(flagItem);
-	}
 	flagsDock->setWidget(this->flagsChecks);
 	this->addDockWidget(Qt::RightDockWidgetArea, flagsDock);
 	viewMenu->addAction(flagsDock->toggleViewAction());
+
+	// Final setup ------------------------------------------
+
+	this->regenerateDetails();
 }
 
 void QMareTextureWindow::loadTexture(const QString& path) const {
@@ -226,17 +229,38 @@ void QMareTextureWindow::loadTexture(const QString& path) const {
 		this->textureTabs->setTabIcon(index, widget->getIcon());
 	} else {
 		widget->deleteLater();
+		// todo: show failure popup
 	}
 }
 
-void QMareTextureWindow::regenerateTitle() {
-	this->setWindowTitle(PROJECT_TITLE);
-	// todo
-	//if (this->path.isEmpty()) {
-	//	this->setWindowTitle(PROJECT_TITLE);
-	//} else {
-	//	this->setWindowTitle(QString{PROJECT_TITLE} + " | " + this->path + "[*]");
-	//}
+void QMareTextureWindow::regenerateDetails() {
+	const auto activeIndex = this->textureTabs->currentIndex();
+	QMareTextureWidget* activeTexture = nullptr;
+	if (activeIndex >= 0) {
+		activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(activeIndex));
+	}
+	if (!activeTexture) {
+		this->setWindowTitle(PROJECT_TITLE);
+		return;
+	}
+	const vtfpp::VTF& vtf = activeTexture->getVTF();
+
+	this->setWindowTitle(QString{PROJECT_TITLE} + " | " + this->textureTabs->tabText(activeIndex) + "[*]");
+
+	this->flagsChecks->clear();
+	const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
+	for (int i = 0; i < 32; i++) {
+		auto* flagItem = new QListWidgetItem{prettyFlagNames[i].data(), this->flagsChecks};
+		flagItem->setCheckState(activeTexture->getVTF().getFlags() & (vtf.getFlags() & 1 << i) ? Qt::Checked : Qt::Unchecked);
+		// basically just populate this differently per VTF version/platform - repopulate on every tab change
+		if (1 << i & vtfpp::VTF::FLAGS_MASK_INTERNAL) {
+			flagItem->setFlags(flagItem->flags() & ~Qt::ItemIsEnabled);
+		}
+		if (flagItem->text().startsWith("Unused")) {
+			flagItem->setForeground(Qt::gray);
+		}
+		this->flagsChecks->addItem(flagItem);
+	}
 }
 
 int main(int argc, char* argv[]) {
@@ -252,6 +276,7 @@ int main(int argc, char* argv[]) {
 
 	// Discord integration
 	// todo: make optional
+#if 0
 	MSVC_SEH_IGNORE_BEGIN()
 		DiscordEventHandlers handlers{};
 		Discord_Initialize("1384260711202422845", &handlers, true, nullptr);
@@ -267,11 +292,12 @@ int main(int argc, char* argv[]) {
 
 		std::atexit(&Discord_Shutdown);
 	MSVC_SEH_IGNORE_END()
+#endif
 
 // random bullshit go
 
-	auto* emptyWindow = new QMareEmptyWindow;
-	emptyWindow->show();
+	//auto* emptyWindow = new QMareEmptyWindow;
+	//emptyWindow->show();
 
 	auto* window = new QMareTextureWindow;
 	window->loadTexture("/home/lxlewis/Downloads/test.vtf");
