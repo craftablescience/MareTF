@@ -97,7 +97,7 @@ maretf info input.vtf
 Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
               [--filter RESIZE_FILTER] [--flag FLAG]... [--no-automatic-transparency-flags]
-              [--no-mips] [--no-thumbnail] [--platform PLATFORM]
+              [--no-mips] [--no-animation] [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
               [--opengl] [--hdri] [--hdri-no-filter] [--width-resize-method RESIZE_METHOD]
@@ -172,6 +172,7 @@ Optional arguments:
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
   --no-mips                                    Disable mipmap generation.
+  --no-animation                               Disable addition of extra frames.
   --no-thumbnail                               Disable thumbnail generation.
   -p, --platform                               Set the platform (PC/console) to build for.
                                                [nargs=0..1] [default: "PC"]

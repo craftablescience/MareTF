@@ -306,6 +306,13 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(noMips);
 
+	bool noAnimation;
+	createCLI
+		.add_argument("--no-animation")
+		.help("Disable addition of extra frames.")
+		.flag()
+		.store_into(noAnimation);
+
 	bool noThumbnail;
 	createCLI
 		.add_argument("--no-thumbnail")
@@ -979,7 +986,7 @@ int main(int argc, const char* const argv[]) {
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 					}
-				} else if (!hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
+				} else if (!noAnimation && !hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
 					// At least 2 digits to avoid false positives
 					frameNumberCount = 2;
 					inputStem.pop_back();
