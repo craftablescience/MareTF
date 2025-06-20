@@ -572,8 +572,6 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(removeMips);
 
-	// todo: add/remove/set for frame, face, slice
-
 	bool recomputeThumbnail;
 	editCLI
 		.add_argument("--recompute-thumbnail")
