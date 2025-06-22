@@ -1754,19 +1754,23 @@ int main(int argc, const char* const argv[]) {
 						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
 
-					tfout << BOLD << "Flags:         " << END << CYAN << "0x" << std::hex << vtf.getFlags() << std::dec << END << " (";
-					bool first = true;
-					const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
-					for (int i = 0; i < prettyFlagNames.size(); i++) {
-						if (vtf.getFlags() & 1 << i) {
-							if (!first) {
-								tfout << " | ";
+					tfout << BOLD << "Flags:         " << END << CYAN << "0x" << std::hex << vtf.getFlags() << std::dec << END;
+					if (vtf.getFlags()) {
+						tfout << " (";
+						bool first = true;
+						const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
+						for (int i = 0; i < prettyFlagNames.size(); i++) {
+							if (vtf.getFlags() & 1 << i) {
+								if (!first) {
+									tfout << " | ";
+								}
+								first = false;
+								tfout << CYAN << prettyFlagNames[i] << END;
 							}
-							first = false;
-							tfout << CYAN << prettyFlagNames[i] << END;
 						}
+						tfout << ')';
 					}
-					tfout << ')' << tfendl;
+					tfout << tfendl;
 
 					tfout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << tfendl;
 					tfout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << tfendl;
@@ -1914,23 +1918,27 @@ int main(int argc, const char* const argv[]) {
 						const auto hotspots = hotspotResource->getDataAsHotspotData();
 						if (hotspots) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
-							tfout << BOLD << "Version: " << END << CYAN << hotspots.getVersion() << END << tfendl;
-							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << hotspots.getFlags() << std::dec << END << tfendl;
+							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
+							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END << tfendl;
 							for (int i = 0; i < hotspots.getRects().size(); i++) {
 								const auto& rect = hotspots.getRects().at(i);
-								tfout << BOLD << "Rect " << END << CYAN << i << END << BOLD << ':' << END << tfendl;
-								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << "0x" << std::hex << rect.flags << std::dec << END << " (";
-								first = true;
-								for (auto [hotspotFlag, hotspotName] : not_magic_enum::enum_entries<vtfpp::HOT::Rect::Flags>()) {
-									if (rect.flags & hotspotFlag) {
-										if (!first) {
-											tfout << " | ";
+								tfout << BOLD << "Rect " << END << CYAN << (i + 1) << END << BOLD << ':' << END << tfendl;
+								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << "0x" << std::hex << static_cast<int>(rect.flags) << std::dec << END;
+								if (rect.flags) {
+									tfout << " (";
+									bool first = true;
+									for (auto [hotspotFlag, hotspotName] : not_magic_enum::enum_entries<vtfpp::HOT::Rect::Flags>()) {
+										if (rect.flags & hotspotFlag) {
+											if (!first) {
+												tfout << " | ";
+											}
+											first = false;
+											tfout << CYAN << hotspotName << END;
 										}
-										first = false;
-										tfout << CYAN << hotspotName << END;
 									}
+									tfout << ')';
 								}
-								tfout << ')' << tfendl;
+								tfout << tfendl;
 								tfout << '\t' << BOLD << "Bounds: " << END << '(' << CYAN << rect.x1 << END << ", " << CYAN << rect.y1 << END << "), (" << CYAN << rect.x2 << END << ", " << CYAN << rect.y2 << END << ')' << tfendl;
 							}
 						}
