@@ -679,21 +679,21 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(removeLODResource);
 
-	int setTSOResource;
+	int setTS0Resource;
 	editCLI
-		.add_argument("--set-tso-resource")
+		.add_argument("--set-ts0-resource")
 		.metavar("COMBINED_FLAGS")
-		.help("Set the TSO (extended flags) resource. You'll have to do the math to combine the flags"
+		.help("Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags"
 		      " into one integer yourself.")
 		.scan<'d', int>()
-		.store_into(setTSOResource);
+		.store_into(setTS0Resource);
 
-	bool removeTSOResource;
+	bool removeTS0Resource;
 	editCLI
-		.add_argument("--remove-tso-resource")
-		.help("Remove the TSO (extended flags) resource. If set TSO resource is specified, this argument is ignored.")
+		.add_argument("--remove-ts0-resource")
+		.help("Remove the TS0 (extended flags) resource. If set TS0 resource is specified, this argument is ignored.")
 		.flag()
-		.store_into(removeTSOResource);
+		.store_into(removeTS0Resource);
 
 	std::string setKVDResource;
 	editCLI
@@ -1546,10 +1546,10 @@ int main(int argc, const char* const argv[]) {
 					vtf.removeLODResource();
 				}
 
-				// Modify TSO resource
-				if (cli.is_used("--set-tso-resource")) {
-					vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTSOResource));
-				} else if (removeTSOResource) {
+				// Modify TS0 resource
+				if (cli.is_used("--set-ts0-resource")) {
+					vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTS0Resource));
+				} else if (removeTS0Resource) {
 					vtf.removeExtendedFlagsResource();
 				}
 
@@ -1822,7 +1822,7 @@ int main(int argc, const char* const argv[]) {
 
 					tfout << BOLD << "CRC:            ";
 					if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << crcResource->getDataAsCRC() << " (base 10)";
+						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << crcResource->getDataAsCRC() << std::dec;
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -1865,8 +1865,8 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "Extended Flags: ";
-					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
+					if (const auto* ts0Resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0Resource->getDataAsExtendedFlags() << std::dec;
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -2030,8 +2030,8 @@ int main(int argc, const char* const argv[]) {
 							kv["resources"]["hotspot_data"]["malformed"] = true;
 						}
 					}
-					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						kv["resources"]["tso"] = static_cast<int>(tsoResource->getDataAsExtendedFlags());
+					if (const auto* ts0Resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						kv["resources"]["ts0"] = static_cast<int>(ts0Resource->getDataAsExtendedFlags());
 					}
 
 					// ...and print it all out

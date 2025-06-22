@@ -113,8 +113,8 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--set-start-frame FRAME_INDEX] [--set-bumpmap-scale SCALE]
               [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
               [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
-              [--remove-lod-resource] [--set-tso-resource COMBINED_FLAGS]
-              [--remove-tso-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
+              [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-resource PATH] [--remove-hotspot-resource]
               [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
               [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
@@ -280,11 +280,11 @@ Optional arguments:
                                                separated by a period.
   --remove-lod-resource                        Remove the LOD resource. If set LOD resource
                                                is specified, this argument is ignored.
-  --set-tso-resource COMBINED_FLAGS            Set the TSO (extended flags) resource. You'll
+  --set-ts0-resource COMBINED_FLAGS            Set the TS0 (extended flags) resource. You'll
                                                have to do the math to combine the flags into
                                                one integer yourself.
-  --remove-tso-resource                        Remove the TSO (extended flags) resource. If
-                                               set TSO resource is specified, this argument
+  --remove-ts0-resource                        Remove the TS0 (extended flags) resource. If
+                                               set TS0 resource is specified, this argument
                                                is ignored.
   --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data)
                                                resource. Path should point to a text file.
