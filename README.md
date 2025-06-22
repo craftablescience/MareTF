@@ -116,6 +116,10 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
               [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-resource PATH] [--remove-hotspot-resource]
+              [--add-hotspot-rect LEFT TOP RIGHT BOTTOM...]...
+              [--add-hotspot-rect-rotatable LEFT TOP RIGHT BOTTOM...]...
+              [--add-hotspot-rect-reflectable LEFT TOP RIGHT BOTTOM...]...
+              [--add-hotspot-rect-rotatable-reflectable LEFT TOP RIGHT BOTTOM...]...
               [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
               [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
               [--extract-face FACE] [--extract-all-faces] [--extract-slices SLICE]
@@ -292,10 +296,38 @@ Optional arguments:
                                                resource. If set KVD resource is specified,
                                                this argument is ignored.
   --set-hotspot-resource PATH                  Set the HOT (hotspot data) resource. Path
-                                               should point to a valid HOT file. 
+                                               should point to a valid HOT file.
   --remove-hotspot-resource                    Remove the HOT (hotspot data) resource. If set
                                                HOT resource is specified, this argument is
-                                               ignored. 
+                                               ignored.
+  --add-hotspot-rect                           Adds a rect to the HOT (hotspot data)
+                                               resource. The 4 input values are in pixel
+                                               coordinates, and should not have a decimal
+                                               point or be less than zero. The resource is
+                                               added and initialized to default values if not
+                                               present beforehand. [nargs: 4]
+                                               [may be repeated]
+  --add-hotspot-rect-rotatable                 Adds a rect to the HOT (hotspot data)
+                                               resource. The 4 input values are in pixel
+                                               coordinates, and should not have a decimal
+                                               point or be less than zero. The resource is
+                                               added and initialized to default values if not
+                                               present beforehand. Rect is rotatable.
+                                               [nargs: 4] [may be repeated]
+  --add-hotspot-rect-reflectable               Adds a rect to the HOT (hotspot data)
+                                               resource. The 4 input values are in pixel
+                                               coordinates, and should not have a decimal
+                                               point or be less than zero. The resource is
+                                               added and initialized to default values if not
+                                               present beforehand. Rect is reflectable.
+                                               [nargs: 4] [may be repeated]
+  --add-hotspot-rect-rotatable-reflectable     Adds a rect to the HOT (hotspot data)
+                                               resource. The 4 input values are in pixel
+                                               coordinates, and should not have a decimal
+                                               point or be less than zero. The resource is
+                                               added and initialized to default values if not
+                                               present beforehand. Rect is rotatable and
+                                               reflectable. [nargs: 4] [may be repeated]
 
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be

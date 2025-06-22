@@ -725,6 +725,54 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(removeHotspotDataResource);
 
+	std::vector<int> addHotspotRect;
+	editCLI
+		.add_argument("--add-hotspot-rect")
+		.metavar("LEFT TOP RIGHT BOTTOM")
+		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
+		      " should not have a decimal point or be less than zero. The resource is added and initialized to"
+		      " default values if not present beforehand.")
+		.nargs(4)
+		.append()
+		.scan<'d', int>()
+		.store_into(addHotspotRect);
+
+	std::vector<int> addHotspotRectRotatable;
+	editCLI
+		.add_argument("--add-hotspot-rect-rotatable")
+		.metavar("LEFT TOP RIGHT BOTTOM")
+		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
+			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
+			  " default values if not present beforehand. Rect is rotatable.")
+		.nargs(4)
+		.append()
+		.scan<'d', int>()
+		.store_into(addHotspotRectRotatable);
+
+	std::vector<int> addHotspotRectReflectable;
+	editCLI
+		.add_argument("--add-hotspot-rect-reflectable")
+		.metavar("LEFT TOP RIGHT BOTTOM")
+		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
+			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
+			  " default values if not present beforehand. Rect is reflectable.")
+		.nargs(4)
+		.append()
+		.scan<'d', int>()
+		.store_into(addHotspotRectReflectable);
+
+	std::vector<int> addHotspotRectRotatableReflectable;
+	editCLI
+		.add_argument("--add-hotspot-rect-rotatable-reflectable")
+		.metavar("LEFT TOP RIGHT BOTTOM")
+		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
+			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
+			  " default values if not present beforehand. Rect is rotatable and reflectable.")
+		.nargs(4)
+		.append()
+		.scan<'d', int>()
+		.store_into(addHotspotRectRotatableReflectable);
+
 	//endregion
 
 	//region Info Mode Arguments
@@ -1577,6 +1625,34 @@ int main(int argc, const char* const argv[]) {
 					}
 				} else if (removeHotspotDataResource) {
 					vtf.removeHotspotResource();
+				} else if (!addHotspotRect.empty() || !addHotspotRectRotatable.empty() || !addHotspotRectReflectable.empty() || !addHotspotRectRotatableReflectable.empty()) {
+					vtfpp::HOT hotspotsData;
+					if (const auto hotspotsDataResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
+						hotspotsData = hotspotsDataResource->getDataAsHotspotData();
+					}
+					const auto addRectsFrom = [width = vtf.getWidth(), height = vtf.getHeight(), &rects = hotspotsData.getRects()](const std::vector<int>& input, vtfpp::HOT::Rect::Flags flags) {
+						for (int i = 0; i < input.size(); i += 4) {
+							vtfpp::HOT::Rect rect{
+								.flags = flags,
+								.x1 = std::clamp<uint16_t>(input[i + 0], 0, width),
+								.y1 = std::clamp<uint16_t>(input[i + 1], 0, height),
+								.x2 = std::clamp<uint16_t>(input[i + 2], 0, width),
+								.y2 = std::clamp<uint16_t>(input[i + 3], 0, height),
+							};
+							if (rect.x1 > rect.x2) {
+								std::swap(rect.x1, rect.x2);
+							}
+							if (rect.y1 > rect.y2) {
+								std::swap(rect.y1, rect.y2);
+							}
+							rects.push_back(rect);
+						}
+					};
+					addRectsFrom(addHotspotRect, vtfpp::HOT::Rect::FLAG_NONE);
+					addRectsFrom(addHotspotRectRotatable, vtfpp::HOT::Rect::FLAG_ENABLE_ROTATION);
+					addRectsFrom(addHotspotRectReflectable, vtfpp::HOT::Rect::FLAG_ENABLE_REFLECTION);
+					addRectsFrom(addHotspotRectRotatableReflectable, static_cast<vtfpp::HOT::Rect::Flags>(vtfpp::HOT::Rect::FLAG_ENABLE_ROTATION | vtfpp::HOT::Rect::FLAG_ENABLE_REFLECTION));
+					vtf.setHotspotResource(hotspotsData);
 				}
 
 				// Bake VTF
