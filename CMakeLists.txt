@@ -48,7 +48,12 @@ if(MARETF_BUILD_GUI)
     add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"

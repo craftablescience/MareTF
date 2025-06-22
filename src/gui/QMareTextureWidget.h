@@ -1,23 +1,12 @@
 #pragma once
 
-#include <QMainWindow>
-#include <vtfpp/vtfpp.h>
+#include <QWidget>
+#include <vtfpp/VTF.h>
 
-class QListWidget;
 class QMouseEvent;
+class QPaintEvent;
 class QResizeEvent;
-class QTabWidget;
 class QWheelEvent;
-
-class QMareEmptyWindow : public QMainWindow {
-	Q_OBJECT;
-
-public:
-	QMareEmptyWindow();
-
-protected:
-	void paintEvent(QPaintEvent*) override;
-};
 
 class QMareTextureWidget : public QWidget {
 	Q_OBJECT;
@@ -54,19 +43,4 @@ protected:
 	float textureZoom = 1.f;
 
 	QPointF mousePressPosition;
-};
-
-class QMareTextureWindow : public QMainWindow {
-	Q_OBJECT;
-
-public:
-	QMareTextureWindow();
-
-	void loadTexture(const QString& path) const;
-
-	void regenerateDetails();
-
-protected:
-	QTabWidget* textureTabs;
-	QListWidget* flagsChecks;
 };
