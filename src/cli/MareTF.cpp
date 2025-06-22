@@ -1861,7 +1861,7 @@ int main(int argc, const char* const argv[]) {
 						if (!hotspots) {
 							tfout << RED << "Exists, but failed to parse";
 						} else {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << hotspots.getVersion() << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
 						}
 					} else {
 						tfout << RED << "Doesn't exist";
