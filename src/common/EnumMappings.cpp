@@ -2,6 +2,15 @@
 
 namespace not_magic_enum::detail {
 
+const std::vector<vtfpp::HOT::Rect::Flags> HOT_RECT_FLAGS_E{
+	vtfpp::HOT::Rect::FLAG_ENABLE_ROTATION,
+	vtfpp::HOT::Rect::FLAG_ENABLE_REFLECTION,
+};
+const std::vector<std::string_view> HOT_RECT_FLAGS_S{
+	"ENABLE_ROTATION",
+	"ENABLE_REFLECTION",
+};
+
 const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E{
 	vtfpp::VTF::FORMAT_UNCHANGED,
 	vtfpp::VTF::FORMAT_DEFAULT,
@@ -199,6 +208,7 @@ const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E{
 	vtfpp::Resource::TYPE_LOD_CONTROL_INFO,
 	vtfpp::Resource::TYPE_EXTENDED_FLAGS,
 	vtfpp::Resource::TYPE_KEYVALUES_DATA,
+	vtfpp::Resource::TYPE_HOTSPOT_DATA,
 	vtfpp::Resource::TYPE_AUX_COMPRESSION,
 };
 const std::vector<std::string_view> RESOURCE_TYPE_S{
@@ -209,6 +219,7 @@ const std::vector<std::string_view> RESOURCE_TYPE_S{
 	"LOD_CONTROL_INFO",
 	"EXTENDED_FLAGS",
 	"KEYVALUES_DATA",
+	"HOTSPOT_DATA",
 	"AUX_COMPRESSION",
 };
 

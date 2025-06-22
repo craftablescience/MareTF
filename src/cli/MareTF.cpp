@@ -710,6 +710,21 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(removeKVDResource);
 
+	std::string setHotspotDataResource;
+	editCLI
+		.add_argument("--set-hotspot-data-resource")
+		.metavar("PATH")
+		.help("Set the HOT (hotspot data) resource. Path should point to a valid HOT file.")
+		.store_into(setHotspotDataResource);
+
+	bool removeHotspotDataResource;
+	editCLI
+		.add_argument("--remove-hotspot-data-resource")
+		.help("Remove the HOT (hotspot data) resource. If set HOT resource is specified,"
+			  " this argument is ignored.")
+		.flag()
+		.store_into(removeHotspotDataResource);
+
 	//endregion
 
 	//region Info Mode Arguments
@@ -717,7 +732,7 @@ int main(int argc, const char* const argv[]) {
 	auto& infoCLI = cli.add_group(R"("info" mode)");
 
 	std::string infoOutputMode{"human"};
-	createCLI
+	infoCLI
 		.add_argument("--info-output-mode")
 		.help(R"(The mode to output information in. Can be "human" or "kv1".)")
 		.choices("human", "kv1")
@@ -1549,6 +1564,21 @@ int main(int argc, const char* const argv[]) {
 					vtf.removeKeyValuesDataResource();
 				}
 
+				// Modify HOT resource
+				if (cli.is_used("--set-hotspot-data-resource")) {
+					try {
+						vtfpp::HOT hot{setHotspotDataResource};
+						if (!hot) {
+							throw std::overflow_error{""};
+						}
+						vtf.setHotspotResource(hot);
+					} catch (const std::overflow_error&) {
+						tferr << "Failed to parse specified file at " << BOLD << setHotspotDataResource << END << " for hotspot data resource! Check the file exists." << tfendl;
+					}
+				} else if (removeHotspotDataResource) {
+					vtf.removeHotspotResource();
+				}
+
 				// Bake VTF
 				if (!vtf.bake(outputPath)) {
 					tferr << "Failed to save edited VTF at " << BOLD << outputPath << END << "." << tfendl;
@@ -1724,10 +1754,10 @@ int main(int argc, const char* const argv[]) {
 						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
 
-					tfout << BOLD << "Flags:         " << END;
+					tfout << BOLD << "Flags:         " << END << CYAN << "0x" << std::hex << vtf.getFlags() << std::dec << END << " (";
 					bool first = true;
 					const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
-					for (int i = 0; i < 32; i++) {
+					for (int i = 0; i < prettyFlagNames.size(); i++) {
 						if (vtf.getFlags() & 1 << i) {
 							if (!first) {
 								tfout << " | ";
@@ -1736,7 +1766,7 @@ int main(int argc, const char* const argv[]) {
 							tfout << CYAN << prettyFlagNames[i] << END;
 						}
 					}
-					tfout << tfendl;
+					tfout << ')' << tfendl;
 
 					tfout << BOLD << "Mips:          " << CYAN << static_cast<int>(vtf.getMipCount()) << END << tfendl;
 					tfout << BOLD << "Frames:        " << CYAN << vtf.getFrameCount() << END << tfendl;
@@ -1820,6 +1850,20 @@ int main(int argc, const char* const argv[]) {
 					}
 					tfout << END << tfendl;
 
+					tfout << BOLD << "Hotspot Data:   ";
+					const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
+					if (hotspotResource) {
+						const auto hotspots = hotspotResource->getDataAsHotspotData();
+						if (!hotspots) {
+							tfout << RED << "Exists, but failed to parse";
+						} else {
+							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << hotspots.getVersion() << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+						}
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
 					tfout << BOLD << "Extended Flags: ";
 					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 						tfout << GREEN << "Exists" << END << " — " << CYAN << tsoResource->getDataAsExtendedFlags() << " (base 10)";
@@ -1864,6 +1908,32 @@ int main(int argc, const char* const argv[]) {
 					if (kvdResource) {
 						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
 						tfout << kvdResource->getDataAsKeyValuesData() << END << tfendl;
+					}
+
+					if (hotspotResource) {
+						const auto hotspots = hotspotResource->getDataAsHotspotData();
+						if (hotspots) {
+							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
+							tfout << BOLD << "Version: " << END << CYAN << hotspots.getVersion() << END << tfendl;
+							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << hotspots.getFlags() << std::dec << END << tfendl;
+							for (int i = 0; i < hotspots.getRects().size(); i++) {
+								const auto& rect = hotspots.getRects().at(i);
+								tfout << BOLD << "Rect " << END << CYAN << i << END << BOLD << ':' << END << tfendl;
+								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << "0x" << std::hex << rect.flags << std::dec << END << " (";
+								first = true;
+								for (auto [hotspotFlag, hotspotName] : not_magic_enum::enum_entries<vtfpp::HOT::Rect::Flags>()) {
+									if (rect.flags & hotspotFlag) {
+										if (!first) {
+											tfout << " | ";
+										}
+										first = false;
+										tfout << CYAN << hotspotName << END;
+									}
+								}
+								tfout << ')' << tfendl;
+								tfout << '\t' << BOLD << "Bounds: " << END << '(' << CYAN << rect.x1 << END << ", " << CYAN << rect.y1 << END << "), (" << CYAN << rect.x2 << END << ", " << CYAN << rect.y2 << END << ')' << tfendl;
+							}
+						}
 					}
 				} else if (infoOutputMode == "kv1") {
 					kvpp::KV1Writer kv;
@@ -1941,6 +2011,24 @@ int main(int argc, const char* const argv[]) {
 					}
 					if (const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
 						kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
+					}
+					if (const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
+						const auto hotspots = hotspotResource->getDataAsHotspotData();
+						if (hotspots) {
+							kv["resources"]["hotspot_data"]["malformed"] = false;
+							kv["resources"]["hotspot_data"]["version"] = static_cast<int>(hotspots.getVersion());
+							kv["resources"]["hotspot_data"]["flags"] = static_cast<int>(hotspots.getFlags());
+							for (int i = 0; i < hotspots.getRects().size(); i++) {
+								const auto& rect = hotspots.getRects().at(i);
+								kv["resources"]["hotspot_data"]["rects"][i]["flags"] = static_cast<int>(rect.flags);
+								kv["resources"]["hotspot_data"]["rects"][i]["x1"] = static_cast<int>(rect.x1);
+								kv["resources"]["hotspot_data"]["rects"][i]["y1"] = static_cast<int>(rect.y1);
+								kv["resources"]["hotspot_data"]["rects"][i]["x2"] = static_cast<int>(rect.x2);
+								kv["resources"]["hotspot_data"]["rects"][i]["y2"] = static_cast<int>(rect.y2);
+							}
+						} else {
+							kv["resources"]["hotspot_data"]["malformed"] = true;
+						}
 					}
 					if (const auto* tsoResource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 						kv["resources"]["tso"] = static_cast<int>(tsoResource->getDataAsExtendedFlags());

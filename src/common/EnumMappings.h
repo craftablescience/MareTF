@@ -19,7 +19,8 @@ enum VTFFlags {};
 namespace not_magic_enum {
 
 template<typename E>
-concept SupportedEnum = std::same_as<E, vtfpp::ImageFormat>
+concept SupportedEnum = std::same_as<E, vtfpp::HOT::Rect::Flags>
+                     || std::same_as<E, vtfpp::ImageFormat>
                      || std::same_as<E, vtfpp::ImageConversion::FileFormat>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeFilter>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeMethod>
@@ -29,6 +30,9 @@ concept SupportedEnum = std::same_as<E, vtfpp::ImageFormat>
                      || std::same_as<E, vtfpp::VTF::Platform>;
 
 namespace detail {
+
+extern const std::vector<vtfpp::HOT::Rect::Flags> HOT_RECT_FLAGS_E;
+extern const std::vector<std::string_view>        HOT_RECT_FLAGS_S;
 
 extern const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E;
 extern const std::vector<std::string_view>   IMAGE_FORMAT_S;
@@ -56,7 +60,9 @@ extern const std::vector<std::string_view>     VTF_PLATFORM_S;
 
 template<SupportedEnum E>
 [[nodiscard]] const std::vector<E>& e() {
-	if constexpr (std::same_as<E, vtfpp::ImageFormat>) {
+	if constexpr (std::same_as<E, vtfpp::HOT::Rect::Flags>) {
+		return HOT_RECT_FLAGS_E;
+	} else if constexpr (std::same_as<E, vtfpp::ImageFormat>) {
 		return IMAGE_FORMAT_E;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::FileFormat>) {
 		return IMAGE_CONVERSION_FILE_FORMAT_E;
@@ -80,7 +86,9 @@ template<SupportedEnum E>
 
 template<SupportedEnum E>
 [[nodiscard]] const std::vector<std::string_view>& s() {
-	if constexpr (std::same_as<E, vtfpp::ImageFormat>) {
+	if constexpr (std::same_as<E, vtfpp::HOT::Rect::Flags>) {
+		return HOT_RECT_FLAGS_S;
+	} else if constexpr (std::same_as<E, vtfpp::ImageFormat>) {
 		return IMAGE_FORMAT_S;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::FileFormat>) {
 		return IMAGE_CONVERSION_FILE_FORMAT_S;

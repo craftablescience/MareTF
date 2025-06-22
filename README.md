@@ -115,6 +115,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
               [--remove-lod-resource] [--set-tso-resource COMBINED_FLAGS]
               [--remove-tso-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--set-hotspot-resource PATH] [--remove-hotspot-resource]
               [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
               [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
               [--extract-face FACE] [--extract-all-faces] [--extract-slices SLICE]
@@ -290,6 +291,11 @@ Optional arguments:
   --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
                                                resource. If set KVD resource is specified,
                                                this argument is ignored.
+  --set-hotspot-resource PATH                  Set the HOT (hotspot data) resource. Path
+                                               should point to a valid HOT file. 
+  --remove-hotspot-resource                    Remove the HOT (hotspot data) resource. If set
+                                               HOT resource is specified, this argument is
+                                               ignored. 
 
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be
