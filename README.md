@@ -116,10 +116,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
               [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-resource PATH] [--remove-hotspot-resource]
-              [--add-hotspot-rect LEFT TOP RIGHT BOTTOM...]...
-              [--add-hotspot-rect-rotatable LEFT TOP RIGHT BOTTOM...]...
-              [--add-hotspot-rect-reflectable LEFT TOP RIGHT BOTTOM...]...
-              [--add-hotspot-rect-rotatable-reflectable LEFT TOP RIGHT BOTTOM...]...
+              [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
               [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
               [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
               [--extract-face FACE] [--extract-all-faces] [--extract-slices SLICE]
@@ -303,31 +300,12 @@ Optional arguments:
   --add-hotspot-rect                           Adds a rect to the HOT (hotspot data)
                                                resource. The 4 input values are in pixel
                                                coordinates, and should not have a decimal
-                                               point or be less than zero. The resource is
+                                               point or be less than zero. Flags should be
+                                               separated by a comma with no spaces (or use
+                                               NONE if no flags are present). The resource is
                                                added and initialized to default values if not
-                                               present beforehand. [nargs: 4]
+                                               present beforehand. [nargs: 5]
                                                [may be repeated]
-  --add-hotspot-rect-rotatable                 Adds a rect to the HOT (hotspot data)
-                                               resource. The 4 input values are in pixel
-                                               coordinates, and should not have a decimal
-                                               point or be less than zero. The resource is
-                                               added and initialized to default values if not
-                                               present beforehand. Rect is rotatable.
-                                               [nargs: 4] [may be repeated]
-  --add-hotspot-rect-reflectable               Adds a rect to the HOT (hotspot data)
-                                               resource. The 4 input values are in pixel
-                                               coordinates, and should not have a decimal
-                                               point or be less than zero. The resource is
-                                               added and initialized to default values if not
-                                               present beforehand. Rect is reflectable.
-                                               [nargs: 4] [may be repeated]
-  --add-hotspot-rect-rotatable-reflectable     Adds a rect to the HOT (hotspot data)
-                                               resource. The 4 input values are in pixel
-                                               coordinates, and should not have a decimal
-                                               point or be less than zero. The resource is
-                                               added and initialized to default values if not
-                                               present beforehand. Rect is rotatable and
-                                               reflectable. [nargs: 4] [may be repeated]
 
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be
@@ -455,6 +433,11 @@ FLAG
  • V5_CSGO_SKIP_INITIAL_DOWNLOAD
  • V5_CSGO_YCOCG
  • V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES
+
+HOTSPOT_RECT_FLAGS
+ • ALLOW_RANDOM_ROTATION
+ • ALLOW_RANDOM_REFLECTION
+ • IS_ALTERNATE
 
 PLATFORM
  • PC

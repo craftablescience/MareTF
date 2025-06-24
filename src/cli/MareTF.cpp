@@ -725,53 +725,17 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(removeHotspotDataResource);
 
-	std::vector<int> addHotspotRect;
+	std::vector<std::string> addHotspotRect;
 	editCLI
 		.add_argument("--add-hotspot-rect")
-		.metavar("LEFT TOP RIGHT BOTTOM")
+		.metavar("X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS")
 		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
-		      " should not have a decimal point or be less than zero. The resource is added and initialized to"
-		      " default values if not present beforehand.")
-		.nargs(4)
+		      " should not have a decimal point or be less than zero. Flags should be separated by a comma with no"
+		      " spaces (or use NONE if no flags are present). The resource is added and initialized to default values"
+		      " if not present beforehand.")
+		.nargs(5)
 		.append()
-		.scan<'d', int>()
 		.store_into(addHotspotRect);
-
-	std::vector<int> addHotspotRectRotatable;
-	editCLI
-		.add_argument("--add-hotspot-rect-rotatable")
-		.metavar("LEFT TOP RIGHT BOTTOM")
-		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
-			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
-			  " default values if not present beforehand. Rect is rotatable.")
-		.nargs(4)
-		.append()
-		.scan<'d', int>()
-		.store_into(addHotspotRectRotatable);
-
-	std::vector<int> addHotspotRectReflectable;
-	editCLI
-		.add_argument("--add-hotspot-rect-reflectable")
-		.metavar("LEFT TOP RIGHT BOTTOM")
-		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
-			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
-			  " default values if not present beforehand. Rect is reflectable.")
-		.nargs(4)
-		.append()
-		.scan<'d', int>()
-		.store_into(addHotspotRectReflectable);
-
-	std::vector<int> addHotspotRectRotatableReflectable;
-	editCLI
-		.add_argument("--add-hotspot-rect-rotatable-reflectable")
-		.metavar("LEFT TOP RIGHT BOTTOM")
-		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
-			  " should not have a decimal point or be less than zero. The resource is added and initialized to"
-			  " default values if not present beforehand. Rect is rotatable and reflectable.")
-		.nargs(4)
-		.append()
-		.scan<'d', int>()
-		.store_into(addHotspotRectRotatableReflectable);
 
 	//endregion
 
@@ -884,6 +848,7 @@ int main(int argc, const char* const argv[]) {
 	};
 	addEnumInfo.template operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
 	addEnumInfo.template operator()<vtfpp::VTFFlags>("FLAG");
+	addEnumInfo.template operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
 	addEnumInfo.template operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.template operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
 	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
@@ -1619,40 +1584,44 @@ int main(int argc, const char* const argv[]) {
 						if (!hot) {
 							throw std::overflow_error{""};
 						}
-						vtf.setHotspotResource(hot);
+						vtf.setHotspotDataResource(hot);
 					} catch (const std::overflow_error&) {
 						tferr << "Failed to parse specified file at " << BOLD << setHotspotDataResource << END << " for hotspot data resource! Check the file exists." << tfendl;
 					}
 				} else if (removeHotspotDataResource) {
-					vtf.removeHotspotResource();
-				} else if (!addHotspotRect.empty() || !addHotspotRectRotatable.empty() || !addHotspotRectReflectable.empty() || !addHotspotRectRotatableReflectable.empty()) {
+					vtf.removeHotspotDataResource();
+				} else if (!addHotspotRect.empty()) {
 					vtfpp::HOT hotspotsData;
 					if (const auto hotspotsDataResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
 						hotspotsData = hotspotsDataResource->getDataAsHotspotData();
 					}
-					const auto addRectsFrom = [width = vtf.getWidth(), height = vtf.getHeight(), &rects = hotspotsData.getRects()](const std::vector<int>& input, vtfpp::HOT::Rect::Flags flags) {
-						for (int i = 0; i < input.size(); i += 4) {
-							vtfpp::HOT::Rect rect{
-								.flags = flags,
-								.x1 = std::clamp<uint16_t>(input[i + 0], 0, width),
-								.y1 = std::clamp<uint16_t>(input[i + 1], 0, height),
-								.x2 = std::clamp<uint16_t>(input[i + 2], 0, width),
-								.y2 = std::clamp<uint16_t>(input[i + 3], 0, height),
-							};
-							if (rect.x1 > rect.x2) {
-								std::swap(rect.x1, rect.x2);
+					for (int i = 0; i < addHotspotRect.size(); i += 5) {
+						vtfpp::HOT::Rect rect{};
+
+						sourcepp::string::toInt(addHotspotRect[i + 0], rect.x1);
+						rect.x1 = std::clamp<uint16_t>(rect.x1, 0, vtf.getWidth());
+						sourcepp::string::toInt(addHotspotRect[i + 2], rect.x2);
+						rect.x2 = std::clamp<uint16_t>(rect.x2, 0, vtf.getWidth());
+						if (rect.x1 > rect.x2) std::swap(rect.x1, rect.x2);
+
+						sourcepp::string::toInt(addHotspotRect[i + 1], rect.y1);
+						rect.y1 = std::clamp<uint16_t>(rect.y1, 0, vtf.getHeight());
+						sourcepp::string::toInt(addHotspotRect[i + 3], rect.y2);
+						rect.y2 = std::clamp<uint16_t>(rect.y2, 0, vtf.getHeight());
+						if (rect.y1 > rect.y2) std::swap(rect.y1, rect.y2);
+
+						if (!sourcepp::string::iequals(addHotspotRect[i + 4], "NONE")) {
+							const auto hotspotFlagStrs = sourcepp::string::split(addHotspotRect[i + 4], ',');
+							for (const auto& hotspotFlagStr : hotspotFlagStrs) {
+								if (auto value = not_magic_enum::enum_cast<vtfpp::HOT::Rect::Flags>(sourcepp::string::trim(hotspotFlagStr))) {
+									rect.flags |= *value;
+								}
 							}
-							if (rect.y1 > rect.y2) {
-								std::swap(rect.y1, rect.y2);
-							}
-							rects.push_back(rect);
 						}
-					};
-					addRectsFrom(addHotspotRect, vtfpp::HOT::Rect::FLAG_NONE);
-					addRectsFrom(addHotspotRectRotatable, vtfpp::HOT::Rect::FLAG_ENABLE_ROTATION);
-					addRectsFrom(addHotspotRectReflectable, vtfpp::HOT::Rect::FLAG_ENABLE_REFLECTION);
-					addRectsFrom(addHotspotRectRotatableReflectable, static_cast<vtfpp::HOT::Rect::Flags>(vtfpp::HOT::Rect::FLAG_ENABLE_ROTATION | vtfpp::HOT::Rect::FLAG_ENABLE_REFLECTION));
-					vtf.setHotspotResource(hotspotsData);
+
+						hotspotsData.getRects().push_back(rect);
+					}
+					vtf.setHotspotDataResource(hotspotsData);
 				}
 
 				// Bake VTF
