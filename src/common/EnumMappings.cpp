@@ -3,13 +3,13 @@
 namespace not_magic_enum::detail {
 
 const std::vector<vtfpp::HOT::Rect::Flags> HOT_RECT_FLAGS_E{
-	vtfpp::HOT::Rect::FLAG_ALLOW_RANDOM_ROTATION,
-	vtfpp::HOT::Rect::FLAG_ALLOW_RANDOM_REFLECTION,
+	vtfpp::HOT::Rect::FLAG_RANDOM_ROTATION,
+	vtfpp::HOT::Rect::FLAG_RANDOM_REFLECTION,
 	vtfpp::HOT::Rect::FLAG_IS_ALTERNATE,
 };
 const std::vector<std::string_view> HOT_RECT_FLAGS_S{
-	"ALLOW_RANDOM_ROTATION",
-	"ALLOW_RANDOM_REFLECTION",
+	"RANDOM_ROTATION",
+	"RANDOM_REFLECTION",
 	"IS_ALTERNATE",
 };
 
