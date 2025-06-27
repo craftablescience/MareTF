@@ -890,6 +890,15 @@ int main(int argc, const char* const argv[]) {
 			GREEN = "\033[0;32m";
 			CYAN  = "\033[0;36m";
 			BOLD  = "\033[1m";
+
+#ifdef _WIN32
+			// Enable ANSI color codes on older Windows builds
+			HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD dwMode = 0;
+			GetConsoleMode(hStdOut, &dwMode);
+			dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+			SetConsoleMode(hStdOut, dwMode);
+#endif
 		}
 
 		static constexpr auto DIR_OPTIONS = std::filesystem::directory_options::follow_directory_symlink | std::filesystem::directory_options::skip_permission_denied;
