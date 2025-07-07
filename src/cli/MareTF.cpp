@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <exception>
 #include <memory>
@@ -2054,22 +2055,23 @@ int main(int argc, const char* const argv[]) {
 
 					// Resources
 					if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
-						const auto sheet = particleSheetResource->getDataAsParticleSheet();
-						if (sheet) {
+						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
 							kv["resources"]["particle_sheet"]["malformed"] = false;
 							kv["resources"]["particle_sheet"]["version"] = static_cast<int>(sheet.getVersion());
 							for (const auto& sequence : sheet.getSequences()) {
-								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)] = static_cast<int>(sequence.id);
-								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["duration_total"] = sequence.durationTotal;
-								kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["loop"] = sequence.loop;
+								const auto idStr = std::format("{}", sequence.id);
+								kv["resources"]["particle_sheet"]["sequences"][idStr]["duration_total"] = sequence.durationTotal;
+								kv["resources"]["particle_sheet"]["sequences"][idStr]["loop"] = sequence.loop;
 								for (int i = 0; i < sequence.frames.size(); i++) {
+									const auto iStr = std::format("{}", i);
 									const auto& frame = sequence.frames.at(i);
-									kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["duration"] = frame.duration;
-									for (int b = 0; b < (sheet.getVersion() < 1 ? 1 : frame.bounds.size()); b++) {
-										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x1"] = frame.bounds.at(b).x1;
-										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y1"] = frame.bounds.at(b).y1;
-										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["x2"] = frame.bounds.at(b).x2;
-										kv["resources"]["particle_sheet"]["sequences"][static_cast<int>(sequence.id)]["frames"][i]["bounds"][b]["y2"] = frame.bounds.at(b).y2;
+									kv["resources"]["particle_sheet"]["sequences"][idStr]["frames"][iStr]["duration"] = frame.duration;
+									for (int b = 0; b < sheet.getFrameBoundsCount(); b++) {
+										const auto bStr = std::format("{}", b);
+										kv["resources"]["particle_sheet"]["sequences"][idStr]["frames"][iStr]["bounds"][bStr]["x1"] = frame.bounds.at(b).x1;
+										kv["resources"]["particle_sheet"]["sequences"][idStr]["frames"][iStr]["bounds"][bStr]["y1"] = frame.bounds.at(b).y1;
+										kv["resources"]["particle_sheet"]["sequences"][idStr]["frames"][iStr]["bounds"][bStr]["x2"] = frame.bounds.at(b).x2;
+										kv["resources"]["particle_sheet"]["sequences"][idStr]["frames"][iStr]["bounds"][bStr]["y2"] = frame.bounds.at(b).y2;
 									}
 								}
 							}
@@ -2091,18 +2093,18 @@ int main(int argc, const char* const argv[]) {
 						kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
 					}
 					if (const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
-						const auto hotspots = hotspotResource->getDataAsHotspotData();
-						if (hotspots) {
+						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
 							kv["resources"]["hotspot_data"]["malformed"] = false;
 							kv["resources"]["hotspot_data"]["version"] = static_cast<int>(hotspots.getVersion());
 							kv["resources"]["hotspot_data"]["flags"] = static_cast<int>(hotspots.getFlags());
 							for (int i = 0; i < hotspots.getRects().size(); i++) {
+								const auto iStr = std::format("{}", i);
 								const auto& rect = hotspots.getRects().at(i);
-								kv["resources"]["hotspot_data"]["rects"][i]["flags"] = static_cast<int>(rect.flags);
-								kv["resources"]["hotspot_data"]["rects"][i]["x1"] = static_cast<int>(rect.x1);
-								kv["resources"]["hotspot_data"]["rects"][i]["y1"] = static_cast<int>(rect.y1);
-								kv["resources"]["hotspot_data"]["rects"][i]["x2"] = static_cast<int>(rect.x2);
-								kv["resources"]["hotspot_data"]["rects"][i]["y2"] = static_cast<int>(rect.y2);
+								kv["resources"]["hotspot_data"]["rects"][iStr]["flags"] = static_cast<int>(rect.flags);
+								kv["resources"]["hotspot_data"]["rects"][iStr]["x1"] = static_cast<int>(rect.x1);
+								kv["resources"]["hotspot_data"]["rects"][iStr]["y1"] = static_cast<int>(rect.y1);
+								kv["resources"]["hotspot_data"]["rects"][iStr]["x2"] = static_cast<int>(rect.x2);
+								kv["resources"]["hotspot_data"]["rects"][iStr]["y2"] = static_cast<int>(rect.y2);
 							}
 						} else {
 							kv["resources"]["hotspot_data"]["malformed"] = true;
