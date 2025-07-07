@@ -1889,9 +1889,9 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "LOD:            ";
 					if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
 						const auto lod = lodResource->getDataAsLODControlInfo();
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << std::get<0>(lod) << END << " — " << BOLD << "V: " << END << CYAN << std::get<1>(lod);
+						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-							tfout << END << BOLD << "U (360): " << END << CYAN << std::get<2>(lod) << END << " — " << BOLD << "V (360): " << END << CYAN << std::get<3>(lod);
+							tfout << END << BOLD << "U (360): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (360): " << END << CYAN << static_cast<int>(std::get<3>(lod));
 						}
 					} else {
 						tfout << RED << "Doesn't exist";
