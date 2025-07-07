@@ -750,6 +750,13 @@ int main(int argc, const char* const argv[]) {
 		.choices("human", "kv1")
 		.default_value(infoOutputMode).store_into(infoOutputMode);
 
+	bool infoSkipResources;
+	infoCLI
+		.add_argument("--info-skip-resources")
+		.help("Do not print resource internals.")
+		.flag()
+		.store_into(infoSkipResources);
+
 	//endregion
 
 	//region Extract Mode Arguments
@@ -1930,9 +1937,13 @@ int main(int argc, const char* const argv[]) {
 					}
 					tfout << END << tfendl;
 
+					// Bail here if requested
+					if (infoSkipResources) {
+						return EXIT_SUCCESS;
+					}
+
 					if (particleSheetResource) {
-						const auto sheet = particleSheetResource->getDataAsParticleSheet();
-						if (sheet) {
+						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
 							tfout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << tfendl;
 							for (const auto& sequence : sheet.getSequences()) {
@@ -1969,8 +1980,7 @@ int main(int argc, const char* const argv[]) {
 					}
 
 					if (hotspotResource) {
-						const auto hotspots = hotspotResource->getDataAsHotspotData();
-						if (hotspots) {
+						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
 							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END << tfendl;
@@ -2035,6 +2045,12 @@ int main(int argc, const char* const argv[]) {
 					kv["resources"]["thumbnail"]["format"] = not_magic_enum::enum_name(vtf.getThumbnailFormat());
 					kv["resources"]["thumbnail"]["width"] = static_cast<int>(vtf.getThumbnailWidth());
 					kv["resources"]["thumbnail"]["height"] = static_cast<int>(vtf.getThumbnailHeight());
+
+					// Bail here if requested
+					if (infoSkipResources) {
+						tfout << kv.bake();
+						return EXIT_SUCCESS;
+					}
 
 					// Resources
 					if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {

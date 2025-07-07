@@ -117,10 +117,10 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-resource PATH] [--remove-hotspot-resource]
               [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
-              [--info-output-mode VAR] [--extract-format FILE_FORMAT] [--extract-mip MIP]
-              [--extract-all-mips] [--extract-frame FRAME] [--extract-all-frames]
-              [--extract-face FACE] [--extract-all-faces] [--extract-slices SLICE]
-              [--extract-all-slices] [--extract-all] MODE PATH
+              [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
+              [--extract-mip MIP] [--extract-all-mips] [--extract-frame FRAME]
+              [--extract-all-frames] [--extract-face FACE] [--extract-all-faces]
+              [--extract-slices SLICE] [--extract-all-slices] [--extract-all] MODE PATH
 
 Positional arguments:
   MODE                                         The mode to run the program in. This
@@ -311,6 +311,7 @@ Optional arguments:
   --info-output-mode                           The mode to output information in. Can be
                                                "human" or "kv1". [nargs=0..1]
                                                [default: "human"]
+  --info-skip-resources                        Do not print resource internals.
 
 "extract" mode (detailed usage):
   --extract-format                             Output file format. [nargs=0..1]
