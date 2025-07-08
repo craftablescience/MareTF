@@ -15,7 +15,6 @@ jobs:
     strategy:
       matrix:
         build_type: [Debug, Release]
-        compiler: [msvc]
     runs-on: windows-latest
     defaults:
       run:
@@ -28,9 +27,6 @@ jobs:
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-          spectre: true
 
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=NSIS -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
@@ -42,7 +38,7 @@ jobs:
       - name: Upload Standalone
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Windows-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Windows-Standalone-msvc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/maretf.exe
           retention-days: 7
@@ -54,7 +50,7 @@ jobs:
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Windows-Installer-msvc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/MareTF-*-win64.exe
           retention-days: 7
@@ -62,7 +58,7 @@ jobs:
       - name: Upload Standalone PDBs
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Windows-PDBs-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Windows-PDBs-msvc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/maretf.pdb
           retention-days: 7
@@ -71,7 +67,6 @@ jobs:
     strategy:
       matrix:
         build_type: [Debug, Release]
-        compiler: [gcc]
         cpack_generator: [DEB]
     runs-on: ubuntu-22.04
     steps:
@@ -81,41 +76,32 @@ jobs:
           submodules: recursive
 
       - name: Install Necessary Packages
-        run: sudo apt update && sudo apt install -y cmake build-essential ninja-build chrpath
-
-      - name: Install GCC [compiler:gcc]
-        if: ${{matrix.compiler == 'gcc'}}
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: 11
-          platform: x64
+        run: sudo apt update && sudo apt install -y cmake build-essential ninja-build
 
       - name: Configure CMake
-        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=${{matrix.cpack_generator}} -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=${{matrix.cpack_generator}} -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
 
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'
         run: cmake --build . --config ${{matrix.build_type}} -t maretf -- -j$(nproc)
 
-      - name: Upload Standalone [compiler:gcc][cpack_generator:DEB]
-        if: ${{matrix.compiler == 'gcc' && matrix.cpack_generator == 'DEB'}}
+      - name: Upload Standalone [cpack_generator:DEB]
+        if: ${{matrix.cpack_generator == 'DEB'}}
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Linux-Standalone-gcc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/maretf
           retention-days: 7
 
-      - name: Create Installer [compiler:gcc]
-        if: ${{matrix.compiler == 'gcc'}}
+      - name: Create Installer
         working-directory: ${{env.BUILD_DIR}}
         run: cpack
 
-      - name: Upload Installer [compiler:gcc]
-        if: ${{matrix.compiler == 'gcc'}}
+      - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-gcc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/MareTF-*-Linux.deb
           retention-days: 7
