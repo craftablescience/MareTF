@@ -27,15 +27,15 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
 
-	fileMenu->addAction(tr("&New Texture"), [this] {
+	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&New Texture"), [this] {
 		// todo: create new texture from image
 	});
 
-	fileMenu->addAction(tr("N&ew Textures"), [this] {
+	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("N&ew Textures"), [this] {
 		// todo: create new textures from folder
 	});
 
-	fileMenu->addAction(tr("&Load Textures"), [this] {
+	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load Textures"), [this] {
 		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files %1").arg("(*)"))) {
 			this->loadTexture(file);
 		}
@@ -43,13 +43,17 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	fileMenu->addSeparator();
 
-	fileMenu->addAction(tr("&Quit"), [this] {
+	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Donate On &Ko-fi..."), [] {
+		QDesktopServices::openUrl({"https://ko-fi.com/craftablescience"});
+	});
+
+	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Quit"), [this] {
 		this->close();
 	});
 
 	// Edit menu ------------------------------------------
 
-	auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
+	//auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
 
 	// View menu ------------------------------------------
 
@@ -59,7 +63,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
-	helpMenu->addAction(tr("&About"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&About"), [this] {
 		auto* box = new QMessageBox{this};
 		box->setWindowTitle(tr("About"));
 		box->setIconPixmap(QPixmap{":/logo.png"}.scaledToWidth(64));
@@ -69,13 +73,17 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 		box->exec();
 	});
 
-	helpMenu->addAction(tr("About &Qt"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("About &Qt"), [this] {
 		QMessageBox::aboutQt(this);
 	});
 
 	helpMenu->addSeparator();
 
-	helpMenu->addAction(tr("&Make an Issue"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [this] {
+		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+	});
+
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Request a &Feature"), [this] {
 		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
 	});
 
@@ -126,11 +134,9 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 void QMareTextureWindow::loadTexture(const QString& path) {
 	for (int i = 0; i < this->textureTabs->count(); i++) {
-		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(i))) {
-			if (QDir{textureWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
-				this->textureTabs->setCurrentIndex(i);
-				return;
-			}
+		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(i)); textureWidget && QDir{textureWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
+			this->textureTabs->setCurrentIndex(i);
+			return;
 		}
 	}
 
