@@ -104,18 +104,22 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--height-resize-method RESIZE_METHOD] [--gamma-correct]
               [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt] [--clampu]
               [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
-              [--set-version X.Y] [--set-format IMAGE_FORMAT] [--set-width WIDTH]
-              [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
-              [--remove-flag FLAG]... [--recompute-transparency-flags] [--recompute-mips]
-              [--remove-mips] [--recompute-thumbnail] [--remove-thumbnail]
-              [--recompute-reflectivity] [--set-platform PLATFORM]
-              [--set-compression-method COMPRESSION_METHOD] [--set-compression-level LEVEL]
-              [--set-start-frame FRAME_INDEX] [--set-bumpmap-scale SCALE]
-              [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
-              [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
-              [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
-              [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
-              [--set-hotspot-resource PATH] [--remove-hotspot-resource]
+              [--particle-sheet-resource PATH] [--crc-resource CRC] [--lod-resource U.V]
+              [--ts0-resource COMBINED_FLAGS] [--kvd-resource PATH]
+              [--hotspot-data-resource PATH]
+              [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
+              [--set-format IMAGE_FORMAT] [--set-width WIDTH] [--set-height HEIGHT]
+              [--edit-filter RESIZE_FILTER] [--add-flag FLAG]... [--remove-flag FLAG]...
+              [--recompute-transparency-flags] [--recompute-mips] [--remove-mips]
+              [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
+              [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD]
+              [--set-compression-level LEVEL] [--set-start-frame FRAME_INDEX]
+              [--set-bumpmap-scale SCALE] [--set-particle-sheet-resource PATH]
+              [--remove-particle-sheet-resource] [--set-crc-resource CRC]
+              [--remove-crc-resource] [--set-lod-resource U.V] [--remove-lod-resource]
+              [--set-ts0-resource COMBINED_FLAGS] [--remove-ts0-resource]
+              [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--set-hotspot-data-resource PATH] [--remove-hotspot-data-resource]
               [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
               [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
               [--extract-mip MIP] [--extract-all-mips] [--extract-frame FRAME]
@@ -228,6 +232,26 @@ Optional arguments:
                                                compatibility.
   --ssbump                                     Alias of --flag SSBUMP, added for vtex2
                                                compatibility.
+  --particle-sheet-resource PATH               Set the particle sheet resource. Path should
+                                               point to a valid particle sheet file.
+  --crc-resource CRC                           Set the CRC resource.
+  --lod-resource U.V                           Set the LOD resource. U and V values should be
+                                               separated by a period.
+  --ts0-resource COMBINED_FLAGS                Set the TS0 (extended flags) resource. You'll
+                                               have to do the math to combine the flags into
+                                               one integer yourself.
+  --kvd-resource PATH                          Set the nonstandard KVD (KeyValues Data)
+                                               resource. Path should point to a text file.
+  --hotspot-data-resource PATH                 Set the hotspot data resource. Path should
+                                               point to a valid HOT file.
+  --hotspot-rect                               Adds a rect to the hotspot data resource. The
+                                               4 input values are in pixel coordinates, and
+                                               should not have a decimal point or be less
+                                               than zero. Flags should be separated by a
+                                               comma with no spaces (or use NONE if no flags
+                                               are present). The resource is added and
+                                               initialized to default values if not present
+                                               beforehand. [nargs: 5] [may be repeated]
 
 "edit" mode (detailed usage):
   --set-version X.Y                            Set the version.
@@ -292,20 +316,19 @@ Optional arguments:
   --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
                                                resource. If set KVD resource is specified,
                                                this argument is ignored.
-  --set-hotspot-resource PATH                  Set the HOT (hotspot data) resource. Path
-                                               should point to a valid HOT file.
-  --remove-hotspot-resource                    Remove the HOT (hotspot data) resource. If set
-                                               HOT resource is specified, this argument is
+  --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should
+                                               point to a valid HOT file.
+  --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT
+                                               resource is specified, this argument is
                                                ignored.
-  --add-hotspot-rect                           Adds a rect to the HOT (hotspot data)
-                                               resource. The 4 input values are in pixel
-                                               coordinates, and should not have a decimal
-                                               point or be less than zero. Flags should be
-                                               separated by a comma with no spaces (or use
-                                               NONE if no flags are present). The resource is
-                                               added and initialized to default values if not
-                                               present beforehand. [nargs: 5]
-                                               [may be repeated]
+  --add-hotspot-rect                           Adds a rect to the hotspot data resource. The
+                                               4 input values are in pixel coordinates, and
+                                               should not have a decimal point or be less
+                                               than zero. Flags should be separated by a
+                                               comma with no spaces (or use NONE if no flags
+                                               are present). The resource is added and
+                                               initialized to default values if not present
+                                               beforehand. [nargs: 5] [may be repeated]
 
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be

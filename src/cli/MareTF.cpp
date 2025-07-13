@@ -490,6 +490,63 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(ssbump);
 
+	std::string particleSheetResource;
+	createCLI
+		.add_argument("--particle-sheet-resource")
+		.metavar("PATH")
+		.help("Set the particle sheet resource. Path should point to a valid particle sheet file.")
+		.store_into(particleSheetResource);
+
+	int crcResource;
+	createCLI
+		.add_argument("--crc-resource")
+		.metavar("CRC")
+		.help("Set the CRC resource.")
+		.scan<'d', int>()
+		.store_into(crcResource);
+
+	std::string lodResource;
+	createCLI
+		.add_argument("--lod-resource")
+		.metavar("U.V")
+		.help("Set the LOD resource. U and V values should be separated by a period.")
+		.store_into(lodResource);
+
+	int ts0Resource;
+	createCLI
+		.add_argument("--ts0-resource")
+		.metavar("COMBINED_FLAGS")
+		.help("Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags"
+		      " into one integer yourself.")
+		.scan<'d', int>()
+		.store_into(ts0Resource);
+
+	std::string kvdResource;
+	createCLI
+		.add_argument("--kvd-resource")
+		.metavar("PATH")
+		.help("Set the nonstandard KVD (KeyValues Data) resource. Path should point to a text file.")
+		.store_into(kvdResource);
+
+	std::string hotspotDataResource;
+	createCLI
+		.add_argument("--hotspot-data-resource")
+		.metavar("PATH")
+		.help("Set the hotspot data resource. Path should point to a valid HOT file.")
+		.store_into(hotspotDataResource);
+
+	std::vector<std::string> hotspotRect;
+	createCLI
+		.add_argument("--hotspot-rect")
+		.metavar("X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS")
+		.help("Adds a rect to the hotspot data resource. The 4 input values are in pixel coordinates, and should"
+		      " not have a decimal point or be less than zero. Flags should be separated by a comma with no spaces"
+		      " (or use NONE if no flags are present). The resource is added and initialized to default values if"
+		      " not present beforehand.")
+		.nargs(5)
+		.append()
+		.store_into(hotspotRect);
+
 	//endregion
 
 	//region Edit Mode Arguments
@@ -719,14 +776,13 @@ int main(int argc, const char* const argv[]) {
 	editCLI
 		.add_argument("--set-hotspot-data-resource")
 		.metavar("PATH")
-		.help("Set the HOT (hotspot data) resource. Path should point to a valid HOT file.")
+		.help("Set the hotspot data resource. Path should point to a valid HOT file.")
 		.store_into(setHotspotDataResource);
 
 	bool removeHotspotDataResource;
 	editCLI
 		.add_argument("--remove-hotspot-data-resource")
-		.help("Remove the HOT (hotspot data) resource. If set HOT resource is specified,"
-			  " this argument is ignored.")
+		.help("Remove the hotspot data resource. If set HOT resource is specified, this argument is ignored.")
 		.flag()
 		.store_into(removeHotspotDataResource);
 
@@ -734,10 +790,10 @@ int main(int argc, const char* const argv[]) {
 	editCLI
 		.add_argument("--add-hotspot-rect")
 		.metavar("X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS")
-		.help("Adds a rect to the HOT (hotspot data) resource. The 4 input values are in pixel coordinates, and"
-		      " should not have a decimal point or be less than zero. Flags should be separated by a comma with no"
-		      " spaces (or use NONE if no flags are present). The resource is added and initialized to default values"
-		      " if not present beforehand.")
+		.help("Adds a rect to the hotspot data resource. The 4 input values are in pixel coordinates, and should"
+		      " not have a decimal point or be less than zero. Flags should be separated by a comma with no spaces"
+		      " (or use NONE if no flags are present). The resource is added and initialized to default values if"
+		      " not present beforehand.")
 		.nargs(5)
 		.append()
 		.store_into(addHotspotRect);
@@ -941,6 +997,108 @@ int main(int argc, const char* const argv[]) {
 			}
 			shouldRet = false;
 			return EXIT_SUCCESS;
+		};
+
+		const auto handleSettingResourcesForVTF = [&](vtfpp::VTF& vtf, bool editMode) {
+			// Modify particle sheet resource
+			if ((editMode && cli.is_used("--set-particle-sheet-resource")) || (!editMode && cli.is_used("--particle-sheet-resource"))) {
+				try {
+					const vtfpp::SHT sht{editMode ? setParticleSheetResource : particleSheetResource};
+					if (!sht) {
+						throw std::overflow_error{""};
+					}
+					vtf.setParticleSheetResource(sht);
+				} catch (const std::overflow_error&) {
+					tferr << "Failed to parse specified file at " << BOLD << (editMode ? setParticleSheetResource : particleSheetResource) << END << " for particle sheet resource! Check the file exists and has a .sht extension." << tfendl;
+				}
+			} else if (editMode && removeParticleSheetResource) {
+				vtf.removeParticleSheetResource();
+			}
+
+			// Modify CRC resource
+			if ((editMode && cli.is_used("--set-crc-resource")) || (!editMode && cli.is_used("--crc-resource"))) {
+				vtf.setCRCResource(static_cast<uint32_t>(editMode ? setCRCResource : crcResource));
+			} else if (editMode && removeCRCResource) {
+				vtf.removeCRCResource();
+			}
+
+			// Modify LOD resource
+			if ((editMode && cli.is_used("--set-lod-resource")) || (!editMode && cli.is_used("--lod-resource"))) {
+				uint8_t setU, setV;
+				const auto uv = sourcepp::string::split(editMode ? setLODResource : lodResource, '.');
+				sourcepp::string::toInt(uv[0], setU);
+				sourcepp::string::toInt(uv[1], setV);
+				vtf.setLODResource(setU, setV);
+			} else if (editMode && removeLODResource) {
+				vtf.removeLODResource();
+			}
+
+			// Modify TS0 resource
+			if ((editMode && cli.is_used("--set-ts0-resource")) || (!editMode && cli.is_used("--ts0-resource"))) {
+				vtf.setExtendedFlagsResource(static_cast<uint32_t>(editMode ? setTS0Resource : ts0Resource));
+			} else if (editMode && removeTS0Resource) {
+				vtf.removeExtendedFlagsResource();
+			}
+
+			// Modify KVD resource
+			if ((editMode && cli.is_used("--set-kvd-resource")) || (!editMode && cli.is_used("--kvd-resource"))) {
+				if (const auto txt = sourcepp::fs::readFileText(editMode ? setKVDResource : kvdResource); txt.empty()) {
+					tferr << "Failed to read contents of specified file at " << BOLD << (editMode ? setKVDResource : kvdResource) << END << " for KVD (KeyValues Data) resource! Check the file exists and is not empty." << tfendl;
+				} else {
+					vtf.setKeyValuesDataResource(txt);
+				}
+			} else if (editMode && removeKVDResource) {
+				vtf.removeKeyValuesDataResource();
+			}
+
+			// Modify HOT resource
+			if ((editMode && cli.is_used("--set-hotspot-data-resource")) || (!editMode && cli.is_used("--hotspot-data-resource"))) {
+				try {
+					const vtfpp::HOT hot{editMode ? setHotspotDataResource : hotspotDataResource};
+					if (!hot) {
+						throw std::overflow_error{""};
+					}
+					vtf.setHotspotDataResource(hot);
+				} catch (const std::overflow_error&) {
+					tferr << "Failed to parse specified file at " << BOLD << (editMode ? setHotspotDataResource : hotspotDataResource) << END << " for hotspot data resource! Check the file exists." << tfendl;
+				}
+			} else if (editMode && removeHotspotDataResource) {
+				vtf.removeHotspotDataResource();
+			} else if ((editMode && !addHotspotRect.empty()) || (!editMode && !hotspotRect.empty())) {
+				vtfpp::HOT hot;
+				if (editMode) {
+					if (const auto hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
+						hot = hotspotDataResourcePtr->getDataAsHotspotData();
+					}
+				}
+				const auto& rects = editMode ? addHotspotRect : hotspotRect;
+				for (int i = 0; i < rects.size(); i += 5) {
+					vtfpp::HOT::Rect rect{};
+
+					sourcepp::string::toInt(rects[i + 0], rect.x1);
+					rect.x1 = std::clamp<uint16_t>(rect.x1, 0, vtf.getWidth());
+					sourcepp::string::toInt(rects[i + 2], rect.x2);
+					rect.x2 = std::clamp<uint16_t>(rect.x2, 0, vtf.getWidth());
+					if (rect.x1 > rect.x2) std::swap(rect.x1, rect.x2);
+
+					sourcepp::string::toInt(rects[i + 1], rect.y1);
+					rect.y1 = std::clamp<uint16_t>(rect.y1, 0, vtf.getHeight());
+					sourcepp::string::toInt(rects[i + 3], rect.y2);
+					rect.y2 = std::clamp<uint16_t>(rect.y2, 0, vtf.getHeight());
+					if (rect.y1 > rect.y2) std::swap(rect.y1, rect.y2);
+
+					if (!sourcepp::string::iequals(rects[i + 4], "NONE")) {
+						for (const auto& hotspotFlagStr : sourcepp::string::split(rects[i + 4], ',')) {
+							if (auto value = not_magic_enum::enum_cast<vtfpp::HOT::Rect::Flags>(sourcepp::string::trim(hotspotFlagStr))) {
+								rect.flags |= *value;
+							}
+						}
+					}
+
+					hot.getRects().push_back(rect);
+				}
+				vtf.setHotspotDataResource(hot);
+			}
 		};
 
 		if (mode == "create" || mode == "convert") {
@@ -1155,6 +1313,9 @@ int main(int argc, const char* const argv[]) {
 						vtf.setFormat(outputFormatBackup);
 					}
 
+					// Set resources
+					handleSettingResourcesForVTF(vtf, false);
+
 					// Bake VTF
 					if (!vtf.bake(outputPath)) {
 						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << "." << tfendl;
@@ -1218,6 +1379,9 @@ int main(int argc, const char* const argv[]) {
 						vtf.setFormat(outputFormatBackup);
 					}
 
+					// Set resources
+					handleSettingResourcesForVTF(vtf, false);
+
 					// Bake VTF
 					if (!vtf.bake(outputPath)) {
 						tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << "." << tfendl;
@@ -1228,9 +1392,19 @@ int main(int argc, const char* const argv[]) {
 					return EXIT_SUCCESS;
 				}
 
-				// Bake VTF
-				if (!vtfpp::VTF::create(currentInputPath, outputPath, options)) {
+				// Create VTF
+				auto vtf = vtfpp::VTF::create(currentInputPath, options);
+				if (!vtf) {
 					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+					return EXIT_FAILURE;
+				}
+
+				// Set resources
+				handleSettingResourcesForVTF(vtf, false);
+
+				// Bake VTF
+				if (!vtf.bake(outputPath)) {
+					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << "." << tfendl;
 					return EXIT_FAILURE;
 				}
 				const auto elapsed = stopwatch.get().count();
@@ -1420,21 +1594,21 @@ int main(int argc, const char* const argv[]) {
 				}
 				{
 					bool checkFileShouldRet;
-					int out = checkFileDoesntExist(outputPath, checkFileShouldRet);
+					const int out = checkFileDoesntExist(outputPath, checkFileShouldRet);
 					if (checkFileShouldRet) {
 						return out;
 					}
 				}
 
 				// Start to set up VTF for editing
-				::ElapsedTime loadStopwatch;
+				const ::ElapsedTime loadStopwatch;
 				vtfpp::VTF vtf{currentInputPath};
 				if (!vtf) {
 					tferr << "Unable to load input file at " << BOLD << currentInputPath << END << " as a VTF!" << tfendl;
 					return EXIT_FAILURE;
 				}
 				tfout << "Loaded input VTF at " << BOLD << currentInputPath << END << " in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
-				::ElapsedTime editStopwatch;
+				const ::ElapsedTime editStopwatch;
 
 				// Get edit filter
 				const auto editFilterActual = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(editFilter);
@@ -1545,102 +1719,8 @@ int main(int argc, const char* const argv[]) {
 					vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
 				}
 
-				// Modify particle sheet resource
-				if (cli.is_used("--set-particle-sheet-resource")) {
-					try {
-						vtfpp::SHT sht{setParticleSheetResource};
-						if (!sht) {
-							throw std::overflow_error{""};
-						}
-						vtf.setParticleSheetResource(sht);
-					} catch (const std::overflow_error&) {
-						tferr << "Failed to parse specified file at " << BOLD << setParticleSheetResource << END << " for particle sheet resource! Check the file exists and has a .sht extension." << tfendl;
-					}
-				} else if (removeParticleSheetResource) {
-					vtf.removeParticleSheetResource();
-				}
-
-				// Modify CRC resource
-				if (cli.is_used("--set-crc-resource")) {
-					vtf.setCRCResource(static_cast<uint32_t>(setCRCResource));
-				} else if (removeCRCResource) {
-					vtf.removeCRCResource();
-				}
-
-				// Modify LOD resource
-				if (cli.is_used("--set-lod-resource")) {
-					uint8_t setU, setV;
-					const auto uv = sourcepp::string::split(setVersion, '.');
-					sourcepp::string::toInt(uv[0], setU);
-					sourcepp::string::toInt(uv[1], setV);
-					vtf.setLODResource(setU, setV);
-				} else if (removeLODResource) {
-					vtf.removeLODResource();
-				}
-
-				// Modify TS0 resource
-				if (cli.is_used("--set-ts0-resource")) {
-					vtf.setExtendedFlagsResource(static_cast<uint32_t>(setTS0Resource));
-				} else if (removeTS0Resource) {
-					vtf.removeExtendedFlagsResource();
-				}
-
-				// Modify KVD resource
-				if (cli.is_used("--set-kvd-resource")) {
-					if (const auto txt = sourcepp::fs::readFileText(setKVDResource); txt.empty()) {
-						tferr << "Failed to read contents of specified file at " << BOLD << setKVDResource << END << " for KVD (KeyValues Data) resource! Check the file exists and is not empty." << tfendl;
-					} else {
-						vtf.setKeyValuesDataResource(txt);
-					}
-				} else if (removeKVDResource) {
-					vtf.removeKeyValuesDataResource();
-				}
-
-				// Modify HOT resource
-				if (cli.is_used("--set-hotspot-data-resource")) {
-					try {
-						vtfpp::HOT hot{setHotspotDataResource};
-						if (!hot) {
-							throw std::overflow_error{""};
-						}
-						vtf.setHotspotDataResource(hot);
-					} catch (const std::overflow_error&) {
-						tferr << "Failed to parse specified file at " << BOLD << setHotspotDataResource << END << " for hotspot data resource! Check the file exists." << tfendl;
-					}
-				} else if (removeHotspotDataResource) {
-					vtf.removeHotspotDataResource();
-				} else if (!addHotspotRect.empty()) {
-					vtfpp::HOT hotspotsData;
-					if (const auto hotspotsDataResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
-						hotspotsData = hotspotsDataResource->getDataAsHotspotData();
-					}
-					for (int i = 0; i < addHotspotRect.size(); i += 5) {
-						vtfpp::HOT::Rect rect{};
-
-						sourcepp::string::toInt(addHotspotRect[i + 0], rect.x1);
-						rect.x1 = std::clamp<uint16_t>(rect.x1, 0, vtf.getWidth());
-						sourcepp::string::toInt(addHotspotRect[i + 2], rect.x2);
-						rect.x2 = std::clamp<uint16_t>(rect.x2, 0, vtf.getWidth());
-						if (rect.x1 > rect.x2) std::swap(rect.x1, rect.x2);
-
-						sourcepp::string::toInt(addHotspotRect[i + 1], rect.y1);
-						rect.y1 = std::clamp<uint16_t>(rect.y1, 0, vtf.getHeight());
-						sourcepp::string::toInt(addHotspotRect[i + 3], rect.y2);
-						rect.y2 = std::clamp<uint16_t>(rect.y2, 0, vtf.getHeight());
-						if (rect.y1 > rect.y2) std::swap(rect.y1, rect.y2);
-
-						if (!sourcepp::string::iequals(addHotspotRect[i + 4], "NONE")) {
-							for (const auto& hotspotFlagStr : sourcepp::string::split(addHotspotRect[i + 4], ',')) {
-								if (auto value = not_magic_enum::enum_cast<vtfpp::HOT::Rect::Flags>(sourcepp::string::trim(hotspotFlagStr))) {
-									rect.flags |= *value;
-								}
-							}
-						}
-
-						hotspotsData.getRects().push_back(rect);
-					}
-					vtf.setHotspotDataResource(hotspotsData);
-				}
+				// Set resources
+				handleSettingResourcesForVTF(vtf, true);
 
 				// Bake VTF
 				if (!vtf.bake(outputPath)) {
@@ -1865,9 +1945,9 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "Particle Sheet: ";
-					const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
-					if (particleSheetResource) {
-						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
+					const auto* particleSheetResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
+					if (particleSheetResourcePtr) {
+						if (const auto sheet = particleSheetResourcePtr->getDataAsParticleSheet()) {
 							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
@@ -1886,16 +1966,16 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "CRC:            ";
-					if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << crcResource->getDataAsCRC() << std::dec;
+					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << crcResourcePtr->getDataAsCRC() << std::dec;
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
 					tfout << END << tfendl;
 
 					tfout << BOLD << "LOD:            ";
-					if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-						const auto lod = lodResource->getDataAsLODControlInfo();
+					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
 						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
 							tfout << END << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
@@ -1906,9 +1986,9 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "KeyValues Data: ";
-					const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
-					if (kvdResource) {
-						const auto keyvalues = kvdResource->getDataAsKeyValuesData();
+					const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
+					if (kvdResourcePtr) {
+						const auto keyvalues = kvdResourcePtr->getDataAsKeyValuesData();
 						tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
 					} else {
 						tfout << RED << "Doesn't exist";
@@ -1916,9 +1996,9 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "Hotspot Data:   ";
-					const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
-					if (hotspotResource) {
-						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
+					const auto* hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
+					if (hotspotDataResourcePtr) {
+						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
@@ -1929,8 +2009,8 @@ int main(int argc, const char* const argv[]) {
 					tfout << END << tfendl;
 
 					tfout << BOLD << "Extended Flags: ";
-					if (const auto* ts0Resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0Resource->getDataAsExtendedFlags() << std::dec;
+					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0ResourcePtr->getDataAsExtendedFlags() << std::dec;
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -1941,8 +2021,8 @@ int main(int argc, const char* const argv[]) {
 						return EXIT_SUCCESS;
 					}
 
-					if (particleSheetResource) {
-						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
+					if (particleSheetResourcePtr) {
+						if (const auto sheet = particleSheetResourcePtr->getDataAsParticleSheet()) {
 							tfout << '\n' << GREEN << BOLD << " ――― PARTICLE SHEET RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << sheet.getVersion() << END << tfendl;
 							for (const auto& sequence : sheet.getSequences()) {
@@ -1973,13 +2053,13 @@ int main(int argc, const char* const argv[]) {
 						}
 					}
 
-					if (kvdResource) {
+					if (kvdResourcePtr) {
 						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
-						tfout << kvdResource->getDataAsKeyValuesData() << END << tfendl;
+						tfout << kvdResourcePtr->getDataAsKeyValuesData() << END << tfendl;
 					}
 
-					if (hotspotResource) {
-						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
+					if (hotspotDataResourcePtr) {
+						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
 							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END << tfendl;
@@ -2052,8 +2132,8 @@ int main(int argc, const char* const argv[]) {
 					}
 
 					// Resources
-					if (const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
-						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
+					if (const auto* particleSheetResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)) {
+						if (const auto sheet = particleSheetResourcePtr->getDataAsParticleSheet()) {
 							kv["resources"]["particle_sheet"]["malformed"] = false;
 							kv["resources"]["particle_sheet"]["version"] = static_cast<int>(sheet.getVersion());
 							for (const auto& sequence : sheet.getSequences()) {
@@ -2077,18 +2157,18 @@ int main(int argc, const char* const argv[]) {
 							kv["resources"]["particle_sheet"]["malformed"] = true;
 						}
 					}
-					if (const auto* crcResource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						kv["resources"]["crc"] = static_cast<int>(crcResource->getDataAsCRC());
+					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+						kv["resources"]["crc"] = static_cast<int>(crcResourcePtr->getDataAsCRC());
 					}
-					if (const auto* lodResource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-						const auto lod = lodResource->getDataAsLODControlInfo();
+					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
 						kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
 						kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
 						kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
 						kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
 					}
-					if (const auto* kvdResource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
-						kv["resources"]["kvd"] = kvdResource->getDataAsKeyValuesData();
+					if (const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
+						kv["resources"]["kvd"] = kvdResourcePtr->getDataAsKeyValuesData();
 					}
 					if (const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
 						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
@@ -2108,8 +2188,8 @@ int main(int argc, const char* const argv[]) {
 							kv["resources"]["hotspot_data"]["malformed"] = true;
 						}
 					}
-					if (const auto* ts0Resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						kv["resources"]["ts0"] = static_cast<int>(ts0Resource->getDataAsExtendedFlags());
+					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsExtendedFlags());
 					}
 
 					// ...and print it all out
