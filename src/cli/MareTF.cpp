@@ -2122,6 +2122,13 @@ int main(int argc, const char* const argv[]) {
 
 			// Check input path
 			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+				// Hack: if the input path is "version", show program version and exit
+				// This is for Stefan and other tool devs
+				if (inputPath == "version") {
+					std::cout << PROJECT_VERSION << std::endl;
+					return EXIT_SUCCESS;
+				}
+
 				throw std::invalid_argument{"Input path does not exist!"};
 			}
 
