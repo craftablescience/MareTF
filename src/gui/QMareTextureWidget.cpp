@@ -27,6 +27,10 @@ QIcon QMareTextureWidget::getIcon() const {
 	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio)};
 }
 
+QString QMareTextureWidget::getPath() const {
+	return this->path;
+}
+
 const vtfpp::VTF& QMareTextureWidget::getVTF() const {
 	return this->vtf;
 }

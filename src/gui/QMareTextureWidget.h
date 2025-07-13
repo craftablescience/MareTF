@@ -18,6 +18,8 @@ public:
 
 	[[nodiscard]] QIcon getIcon() const;
 
+	[[nodiscard]] QString getPath() const;
+
 	[[nodiscard]] const vtfpp::VTF& getVTF() const;
 
 	[[nodiscard]] vtfpp::VTF& getVTF();

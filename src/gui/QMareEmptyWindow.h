@@ -19,5 +19,5 @@ protected:
 
 	QPushButton* newTexture;
 	QPushButton* newTextures;
-	QPushButton* loadTexture;
+	QPushButton* loadTextures;
 };

@@ -2,6 +2,7 @@
 
 #include <QDesktopServices>
 #include <QDockWidget>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QListWidget>
 #include <QMenuBar>
@@ -22,10 +23,36 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->setWindowIcon(QIcon(":/logo.png"));
 	this->resize(this->screen()->availableGeometry().size() * 0.7);
 
-	// Menus ------------------------------------------
+	// File menu ------------------------------------------
 
 	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
+
+	fileMenu->addAction(tr("&New Texture"), [this] {
+		// todo: create new texture from image
+	});
+
+	fileMenu->addAction(tr("N&ew Textures"), [this] {
+		// todo: create new textures from folder
+	});
+
+	fileMenu->addAction(tr("&Load Textures"), [this] {
+		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files %1").arg("(*)"))) {
+			this->loadTexture(file);
+		}
+	});
+
+	fileMenu->addSeparator();
+
+	fileMenu->addAction(tr("&Quit"), [this] {
+		this->close();
+	});
+
+	// Edit menu ------------------------------------------
+
 	auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
+
+	// View menu ------------------------------------------
+
 	auto* viewMenu = this->menuBar()->addMenu(tr("&View"));
 
 	// Help menu ------------------------------------------
@@ -98,6 +125,15 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 }
 
 void QMareTextureWindow::loadTexture(const QString& path) {
+	for (int i = 0; i < this->textureTabs->count(); i++) {
+		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(i))) {
+			if (QDir{textureWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
+				this->textureTabs->setCurrentIndex(i);
+				return;
+			}
+		}
+	}
+
 	auto* widget = new QMareTextureWidget{this->textureTabs};
 	widget->loadTexture(path);
 	if (*widget) {
@@ -105,7 +141,7 @@ void QMareTextureWindow::loadTexture(const QString& path) {
 		this->textureTabs->setTabIcon(index, widget->getIcon());
 	} else {
 		widget->deleteLater();
-		QMessageBox::critical(this, tr("Error"), tr("Failed to load texture at location: %1%2").arg("\n\n").arg(path));
+		QMessageBox::critical(this, tr("Error"), tr("Failed to load texture at location: %1").arg("\n\n" + path));
 	}
 }
 

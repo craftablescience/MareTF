@@ -1,5 +1,6 @@
 #include "QMareEmptyWindow.h"
 
+#include <QFileDialog>
 #include <QPainter>
 #include <QPushButton>
 #include <QScreen>
@@ -17,10 +18,10 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	this->newTexture->setToolTip(tr("New Texture"));
 	this->newTextures = new QPushButton{QIcon{":/button_new_multi.png"}, "", this};
 	this->newTextures->setToolTip(tr("New Textures"));
-	this->loadTexture = new QPushButton{QIcon{":/button_load.png"}, "", this};
-	this->loadTexture->setToolTip(tr("Load Texture"));
+	this->loadTextures = new QPushButton{QIcon{":/button_load.png"}, "", this};
+	this->loadTextures->setToolTip(tr("Load Textures"));
 
-	for (auto* button : {this->newTexture, this->newTextures, this->loadTexture}) {
+	for (auto* button : {this->newTexture, this->newTextures, this->loadTextures}) {
 		static constexpr auto BUTTON_SIZE = 80;
 		button->setFlat(true);
 		button->setIconSize(QSize{BUTTON_SIZE, BUTTON_SIZE});
@@ -33,8 +34,15 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	connect(this->newTextures, &QPushButton::clicked, this, [this] {
 		// todo: create new textures from folder
 	});
-	connect(this->loadTexture, &QPushButton::clicked, this, [this] {
-		// todo: open file dialog with multi select, then open QMareTextureWindow and load all textures
+	connect(this->loadTextures, &QPushButton::clicked, this, [this] {
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files %1").arg("(*)")); !files.empty()) {
+			auto* window = new QMareTextureWindow;
+			for (const auto& file : files) {
+				window->loadTexture(file);
+			}
+			window->show();
+			this->close();
+		}
 	});
 }
 
@@ -61,5 +69,5 @@ void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 void QMareEmptyWindow::resizeEvent(QResizeEvent*) {
 	this->newTexture->setGeometry(QRect{static_cast<int>(0.14 * this->width() - static_cast<float>(this->newTexture->width()) / 2), static_cast<int>(0.4 * this->height() - static_cast<float>(this->newTexture->height())), this->newTexture->width(), this->newTexture->height()});
 	this->newTextures->setGeometry(QRect{static_cast<int>(0.24 * this->width() - static_cast<float>(this->newTextures->width()) / 2), static_cast<int>(0.55 * this->height() - static_cast<float>(this->newTextures->height())), this->newTextures->width(), this->newTextures->height()});
-	this->loadTexture->setGeometry(QRect{static_cast<int>(0.12 * this->width() - static_cast<float>(this->loadTexture->width()) / 2), static_cast<int>(0.65 * this->height() - static_cast<float>(this->loadTexture->height())), this->loadTexture->width(), this->loadTexture->height()});
+	this->loadTextures->setGeometry(QRect{static_cast<int>(0.12 * this->width() - static_cast<float>(this->loadTextures->width()) / 2), static_cast<int>(0.65 * this->height() - static_cast<float>(this->loadTextures->height())), this->loadTextures->width(), this->loadTextures->height()});
 }
