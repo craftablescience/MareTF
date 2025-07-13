@@ -1,3 +1,7 @@
+// ReSharper disable CppDFATimeOver
+// ReSharper disable CppUnusedIncludeDirective
+// ReSharper disable CppUseStructuredBinding
+
 #include <algorithm>
 #include <chrono>
 #include <csignal>
@@ -39,7 +43,7 @@ using namespace std::literals;
 
 namespace {
 
-std::string_view randomDeviantArtTFTrope() {
+[[nodiscard]] std::string_view randomDeviantArtTFTrope() {
 	static constexpr std::array<std::string_view, 10> DEVIANTART_TF_TROPES{
 		"Splicing DNA",
 		"Drinking a potion stolen from a wizard neighbor",
@@ -58,7 +62,7 @@ std::string_view randomDeviantArtTFTrope() {
 	return DEVIANTART_TF_TROPES.at(dist(generator));
 }
 
-bool fileIsASupportedImageFileFormat(std::string_view extension) {
+[[nodiscard]] bool fileIsASupportedImageFileFormat(std::string_view extension) {
 	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
 		".apng",
 		".bmp",
@@ -79,7 +83,7 @@ bool fileIsASupportedImageFileFormat(std::string_view extension) {
 	return std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(extension)) != SUPPORTED_EXTENSIONS.end();
 }
 
-std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat) {
+[[nodiscard]] std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat) {
 	switch (fileFormat) {
 		using enum vtfpp::ImageConversion::FileFormat;
 		case DEFAULT:
@@ -151,14 +155,14 @@ struct tferr_t {
 
 struct tfendl_t {} tfendl;
 
-template<>
-tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
+// ReSharper disable once CppDeclaratorNeverUsed
+template<> tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
 	if (!QUIET) std::cout << std::endl;
 	return *this;
 }
 
-template<>
-tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
+// ReSharper disable once CppDeclaratorNeverUsed
+template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 	if (!QUIET) std::cerr << std::endl;
 	return *this;
 }
@@ -854,14 +858,14 @@ int main(int argc, const char* const argv[]) {
 		}
 		enumInfo += '\n';
 	};
-	addEnumInfo.template operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
-	addEnumInfo.template operator()<vtfpp::VTFFlags>("FLAG");
-	addEnumInfo.template operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
-	addEnumInfo.template operator()<vtfpp::VTF::Platform>("PLATFORM");
-	addEnumInfo.template operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
-	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
-	addEnumInfo.template operator()<vtfpp::ImageConversion::ResizeMethod>("RESIZE_METHOD");
-	addEnumInfo.template operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
+	addEnumInfo.operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
+	addEnumInfo.operator()<vtfpp::VTFFlags>("FLAG");
+	addEnumInfo.operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
+	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
+	addEnumInfo.operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
+	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
+	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeMethod>("RESIZE_METHOD");
+	addEnumInfo.operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
 
 	static constexpr std::string_view PROGRAM_DETAILS{
 		"Program details:\n\n"
@@ -1282,8 +1286,8 @@ int main(int argc, const char* const argv[]) {
 				std::unordered_map<std::string, std::pair<::ElapsedTime<>, efsw::Action>> fileActions;
 				std::mutex fileActionsMutex;
 				::MareTFFileWatchListener fileUpdateListener{
-					[&](efsw::WatchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) {
-						auto path = dir + filename;
+					[&](efsw::WatchID, const std::string& dir, const std::string& filename, efsw::Action action, const std::string& oldFilename) {
+						const auto path = dir + filename;
 						if (watchingSingleFile && std::filesystem::absolute(path) != std::filesystem::absolute(inputPath)) {
 							return;
 						}
@@ -1293,8 +1297,7 @@ int main(int argc, const char* const argv[]) {
 						// Collapse Moved events so we don't need to check them in the switches below
 						if (action == efsw::Actions::Moved) {
 							if (!oldFilename.empty()) {
-								const auto oldPath = dir + oldFilename;
-								if (fileActions.contains(oldPath) && fileActions[oldPath].second == efsw::Action::Add) {
+								if (const auto oldPath = dir + oldFilename; fileActions.contains(oldPath) && fileActions[oldPath].second == efsw::Action::Add) {
 									fileActions.erase(oldPath);
 								} else {
 									fileActions[oldPath] = {{}, efsw::Actions::Delete};
@@ -1377,8 +1380,7 @@ int main(int argc, const char* const argv[]) {
 						std::lock_guard fileActionsLock{fileActionsMutex};
 
 						const auto pathsView = fileActions | std::views::keys;
-						std::vector<std::string> paths{pathsView.begin(), pathsView.end()};
-						for (const auto& path : paths) {
+						for (std::vector<std::string> paths{pathsView.begin(), pathsView.end()}; const auto& path : paths) {
 							if (fileActions[path].first.get() < 750ms || !::fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
 								continue;
 							}
@@ -1628,8 +1630,7 @@ int main(int argc, const char* const argv[]) {
 						if (rect.y1 > rect.y2) std::swap(rect.y1, rect.y2);
 
 						if (!sourcepp::string::iequals(addHotspotRect[i + 4], "NONE")) {
-							const auto hotspotFlagStrs = sourcepp::string::split(addHotspotRect[i + 4], ',');
-							for (const auto& hotspotFlagStr : hotspotFlagStrs) {
+							for (const auto& hotspotFlagStr : sourcepp::string::split(addHotspotRect[i + 4], ',')) {
 								if (auto value = not_magic_enum::enum_cast<vtfpp::HOT::Rect::Flags>(sourcepp::string::trim(hotspotFlagStr))) {
 									rect.flags |= *value;
 								}
@@ -1747,8 +1748,7 @@ int main(int argc, const char* const argv[]) {
 				}
 
 				// Extract VTF
-				int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0);
-				if (successCount < extractionSuccessful.size()) {
+				if (int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0); successCount < extractionSuccessful.size()) {
 					tferr << "Failed to save " << CYAN << (extractionSuccessful.size() - successCount) << END << " of " << CYAN << extractionSuccessful.size() << END << " files." << tfendl;
 					return EXIT_FAILURE;
 				}
@@ -1867,11 +1867,10 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "Particle Sheet: ";
 					const auto* particleSheetResource = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
 					if (particleSheetResource) {
-						const auto sheet = particleSheetResource->getDataAsParticleSheet();
-						if (!sheet) {
-							tfout << RED << "Exists, but failed to parse";
-						} else {
+						if (const auto sheet = particleSheetResource->getDataAsParticleSheet()) {
 							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+						} else {
+							tfout << RED << "Exists, but failed to parse";
 						}
 					} else {
 						tfout << RED << "Doesn't exist";
@@ -1899,7 +1898,7 @@ int main(int argc, const char* const argv[]) {
 						const auto lod = lodResource->getDataAsLODControlInfo();
 						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-							tfout << END << BOLD << "U (360): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (360): " << END << CYAN << static_cast<int>(std::get<3>(lod));
+							tfout << END << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
 						}
 					} else {
 						tfout << RED << "Doesn't exist";
@@ -1919,11 +1918,10 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "Hotspot Data:   ";
 					const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
 					if (hotspotResource) {
-						const auto hotspots = hotspotResource->getDataAsHotspotData();
-						if (!hotspots) {
-							tfout << RED << "Exists, but failed to parse";
-						} else {
+						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
 							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+						} else {
+							tfout << RED << "Exists, but failed to parse";
 						}
 					} else {
 						tfout << RED << "Doesn't exist";
