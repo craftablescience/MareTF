@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
 
 	// Discord integration
 	// todo: make optional
-#if 0
 	MARETF_MSVC_SEH_IGNORE_BEGIN()
 		DiscordEventHandlers handlers{};
 		Discord_Initialize("1384260711202422845", &handlers, true, nullptr);
@@ -39,19 +38,18 @@ int main(int argc, char* argv[]) {
 
 		std::atexit(&Discord_Shutdown);
 	MARETF_MSVC_SEH_IGNORE_END()
-#endif
 
-// random bullshit go
-
-	auto* emptyWindow = new QMareEmptyWindow;
-	emptyWindow->show();
-
-	auto* window = new QMareTextureWindow;
-	window->loadTexture("/home/lxlewis/Downloads/test.vtf");
-	window->loadTexture("/home/lxlewis/Downloads/test2.vtf");
-	window->show();
-
-// random bullshit stop
+	// Show a window
+	if (argc > 1) {
+		auto* window = new QMareTextureWindow;
+		for (int i = 1; i < argc; i++) {
+			window->loadTexture(argv[i]);
+		}
+		window->show();
+	} else {
+		auto* emptyWindow = new QMareEmptyWindow;
+		emptyWindow->show();
+	}
 
 	return QApplication::exec();
 }

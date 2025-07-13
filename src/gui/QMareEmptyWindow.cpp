@@ -1,7 +1,5 @@
 #include "QMareEmptyWindow.h"
 
-#include <array>
-
 #include <QPainter>
 #include <QPushButton>
 #include <QScreen>
@@ -11,15 +9,18 @@
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	this->setWindowTitle(PROJECT_TITLE);
-	this->setWindowIcon(QIcon(":/logo.png"));
+	this->setWindowIcon(QIcon{":/logo.png"});
 	this->resize(this->screen()->availableGeometry().size() * 0.6);
 	this->setMinimumSize(400, 250);
 
-	this->newTexture = new QPushButton{QIcon{":/logo.png"}, "", this};
-	this->newTextures = new QPushButton{QIcon{":/logo.png"}, "", this};
-	this->loadTexture = new QPushButton{QIcon{":/logo.png"}, "", this};
+	this->newTexture = new QPushButton{QIcon{":/button_new.png"}, "", this};
+	this->newTexture->setToolTip(tr("New Texture"));
+	this->newTextures = new QPushButton{QIcon{":/button_new_multi.png"}, "", this};
+	this->newTextures->setToolTip(tr("New Textures"));
+	this->loadTexture = new QPushButton{QIcon{":/button_load.png"}, "", this};
+	this->loadTexture->setToolTip(tr("Load Texture"));
 
-	for (auto* button : std::array{this->newTexture, this->newTextures, this->loadTexture}) {
+	for (auto* button : {this->newTexture, this->newTextures, this->loadTexture}) {
 		static constexpr auto BUTTON_SIZE = 80;
 		button->setFlat(true);
 		button->setIconSize(QSize{BUTTON_SIZE, BUTTON_SIZE});
@@ -58,7 +59,7 @@ void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 }
 
 void QMareEmptyWindow::resizeEvent(QResizeEvent*) {
-	this->newTexture->setGeometry(QRect{static_cast<int>(0.14 * this->width()), static_cast<int>(0.4 * this->height()), this->newTexture->width(), this->newTexture->height()});
-	this->newTextures->setGeometry(QRect{static_cast<int>(0.24 * this->width()), static_cast<int>(0.55 * this->height()), this->newTextures->width(), this->newTextures->height()});
-	this->loadTexture->setGeometry(QRect{static_cast<int>(0.12 * this->width()), static_cast<int>(0.65 * this->height()), this->loadTexture->width(), this->loadTexture->height()});
+	this->newTexture->setGeometry(QRect{static_cast<int>(0.14 * this->width() - static_cast<float>(this->newTexture->width()) / 2), static_cast<int>(0.4 * this->height() - static_cast<float>(this->newTexture->height())), this->newTexture->width(), this->newTexture->height()});
+	this->newTextures->setGeometry(QRect{static_cast<int>(0.24 * this->width() - static_cast<float>(this->newTextures->width()) / 2), static_cast<int>(0.55 * this->height() - static_cast<float>(this->newTextures->height())), this->newTextures->width(), this->newTextures->height()});
+	this->loadTexture->setGeometry(QRect{static_cast<int>(0.12 * this->width() - static_cast<float>(this->loadTexture->width()) / 2), static_cast<int>(0.65 * this->height() - static_cast<float>(this->loadTexture->height())), this->loadTexture->width(), this->loadTexture->height()});
 }
