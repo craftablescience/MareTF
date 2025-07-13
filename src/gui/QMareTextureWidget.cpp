@@ -1,5 +1,7 @@
 #include "QMareTextureWidget.h"
 
+#include <stdexcept>
+
 #include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
@@ -8,12 +10,14 @@
 QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget(parent) {}
 
 void QMareTextureWidget::loadTexture(const QString& path_) {
-	if (auto loadVTF = vtfpp::VTF{path_.toUtf8().constData()}) {
-		this->path = path_;
-		this->vtf = std::move(loadVTF);
-		this->textureCurrentData = this->vtf.getImageDataAsRGBA8888();
-		this->textureCurrent = QImage{reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidth(), this->vtf.getHeight(), QImage::Format_RGBA8888};
-	}
+	try {
+		if (auto loadVTF = vtfpp::VTF{path_.toUtf8().constData()}) {
+			this->path = path_;
+			this->vtf = std::move(loadVTF);
+			this->textureCurrentData = this->vtf.getImageDataAsRGBA8888();
+			this->textureCurrent = QImage{reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidth(), this->vtf.getHeight(), QImage::Format_RGBA8888};
+		}
+	} catch (const std::overflow_error&) {}
 }
 
 QIcon QMareTextureWidget::getIcon() const {

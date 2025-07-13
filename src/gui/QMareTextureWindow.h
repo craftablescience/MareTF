@@ -11,7 +11,7 @@ class QMareTextureWindow : public QMainWindow {
 public:
 	QMareTextureWindow();
 
-	void loadTexture(const QString& path) const;
+	void loadTexture(const QString& path);
 
 	void regenerateDetails();
 

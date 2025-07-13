@@ -1,12 +1,15 @@
 #include "QMareTextureWindow.h"
 
+#include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileInfo>
 #include <QListWidget>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPainter>
 #include <QScreen>
 #include <QTabWidget>
+#include <qurl.h>
 
 #include "../common/Common.h"
 #include "../common/Config.h"
@@ -21,10 +24,33 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	// Menus ------------------------------------------
 
-	auto* fileMenu = this->menuBar()->addMenu(tr("File"));
-	auto* editMenu = this->menuBar()->addMenu(tr("Edit"));
-	auto* viewMenu = this->menuBar()->addMenu(tr("View"));
-	auto* helpMenu = this->menuBar()->addMenu(tr("Help"));
+	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
+	auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
+	auto* viewMenu = this->menuBar()->addMenu(tr("&View"));
+
+	// Help menu ------------------------------------------
+
+	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
+
+	helpMenu->addAction(tr("&About"), [this] {
+		auto* box = new QMessageBox{this};
+		box->setWindowTitle(tr("About"));
+		box->setIconPixmap(QPixmap{":/logo.png"}.scaledToWidth(64));
+		box->setTextFormat(Qt::MarkdownText);
+		box->setText(tr("## %1\nCreated by %2\n\nThis project lives [on GitHub here](%3).").arg(PROJECT_TITLE).arg(PROJECT_ORGANIZATION_NAME).arg(PROJECT_HOMEPAGE_URL));
+		box->setStandardButtons(QMessageBox::Ok);
+		box->exec();
+	});
+
+	helpMenu->addAction(tr("About &Qt"), [this] {
+		QMessageBox::aboutQt(this);
+	});
+
+	helpMenu->addSeparator();
+
+	helpMenu->addAction(tr("&Make an Issue"), [this] {
+		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+	});
 
 	// Texture tabs ------------------------------------------
 
@@ -45,19 +71,21 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	this->setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-	auto* infoDock = new QDockWidget{tr("Info"), this};
-	// widget here
+	auto* infoDock = new QDockWidget{tr("&Info"), this};
+	infoDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	// todo: widget here
 	infoDock->setWidget(new QWidget);
 	this->addDockWidget(Qt::LeftDockWidgetArea, infoDock);
 	viewMenu->addAction(infoDock->toggleViewAction());
 
-	auto* resDock = new QDockWidget{tr("Resources"), this};
-	// widget here
+	auto* resDock = new QDockWidget{tr("&Resources"), this};
+	resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	// todo: widget here
 	resDock->setWidget(new QWidget);
 	this->addDockWidget(Qt::LeftDockWidgetArea, resDock);
 	viewMenu->addAction(resDock->toggleViewAction());
 
-	auto* flagsDock = new QDockWidget{tr("Flags"), this};
+	auto* flagsDock = new QDockWidget{tr("&Flags"), this};
 	flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	this->flagsChecks = new QListWidget{flagsDock};
 	flagsDock->setWidget(this->flagsChecks);
@@ -69,7 +97,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->regenerateDetails();
 }
 
-void QMareTextureWindow::loadTexture(const QString& path) const {
+void QMareTextureWindow::loadTexture(const QString& path) {
 	auto* widget = new QMareTextureWidget{this->textureTabs};
 	widget->loadTexture(path);
 	if (*widget) {
@@ -77,7 +105,7 @@ void QMareTextureWindow::loadTexture(const QString& path) const {
 		this->textureTabs->setTabIcon(index, widget->getIcon());
 	} else {
 		widget->deleteLater();
-		// todo: show failure popup
+		QMessageBox::critical(this, tr("Error"), tr("Failed to load texture at location: %1%2").arg("\n\n").arg(path));
 	}
 }
 
