@@ -24,7 +24,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/sourcepp")
 if(MARETF_BUILD_GUI)
     # Qt
     if(WIN32 AND NOT DEFINED QT_BASEDIR)
-        message(FATAL_ERROR "Please define your QT install dir with -DQT_BASEDIR=\"C:/your/qt6/here\"")
+        message(FATAL_ERROR "Please define your Qt install dir with -DQT_BASEDIR=\"C:/your/qt6/here\"")
     endif()
 
     if(DEFINED QT_BASEDIR)

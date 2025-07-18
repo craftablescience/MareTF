@@ -46,6 +46,8 @@ elseif(UNIX AND MARETF_BUILD_GUI)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
             DESTINATION "share/icons/hicolor/512x512/mimetypes"
             RENAME "image-x-vtf.png")
+else()
+    message(FATAL_ERROR "No install rules for selected platform.")
 endif()
 
 # CPack setup
@@ -67,6 +69,9 @@ if(WIN32)
     if(MARETF_BUILD_GUI)
         install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
     endif()
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+            DESTINATION .)
 
     if(NOT (CPACK_GENERATOR STREQUAL "NSIS"))
         message(AUTHOR_WARNING "CPACK_GENERATOR on Windows must be NSIS! Setting generator to NSIS...")
@@ -91,6 +96,9 @@ else()
     if(MARETF_BUILD_GUI)
         install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION bin)
     endif()
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+            DESTINATION "share/licenses/${PROJECT_NAME}")
 
     if(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
