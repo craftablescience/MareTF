@@ -10,10 +10,13 @@
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
+#include <QPlainTextEdit>
 #include <QScreen>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -422,8 +425,91 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* resDock = new QDockWidget{tr("&Resources"), this};
 	resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	// todo: widget here
-	resDock->setWidget(new QWidget);
+
+	auto* resScroll = new QScrollArea{resDock};
+
+	auto* resWidget = new QWidget{resScroll};
+	auto* resWidgetLayout = new QVBoxLayout{resWidget};
+
+	this->resThumbnailGroup = new QGroupBox{tr("Thumbnail"), resWidget};
+	auto* resThumbnailLayout = new QFormLayout{this->resThumbnailGroup};
+	resThumbnailLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resThumbnailPreview = new QLabel{resWidget};
+	resThumbnailLayout->addRow(tr("Preview"), this->resThumbnailPreview);
+
+	this->resThumbnailWidth = new QSpinBox{resWidget};
+	this->resThumbnailWidth->setDisabled(true);
+	resThumbnailLayout->addRow(tr("Width"), this->resThumbnailWidth);
+
+	this->resThumbnailHeight = new QSpinBox{resWidget};
+	this->resThumbnailHeight->setDisabled(true);
+	resThumbnailLayout->addRow(tr("Height"), this->resThumbnailHeight);
+
+	resWidgetLayout->addWidget(this->resThumbnailGroup);
+
+	this->resCRCGroup = new QGroupBox{tr("CRC"), resWidget};
+	auto* resCRCLayout = new QFormLayout{this->resCRCGroup};
+	resCRCLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resCRCValue = new QLineEdit{resWidget};
+	this->resCRCValue->setInputMask("HHHHHHHH");
+	resCRCLayout->addRow(tr("Value"), this->resCRCValue);
+
+	resWidgetLayout->addWidget(this->resCRCGroup);
+
+	this->resTS0Group = new QGroupBox{tr("TS0"), resWidget};
+	auto* resTS0Layout = new QFormLayout{this->resTS0Group};
+	resTS0Layout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resTS0Value = new QLineEdit{resWidget};
+	this->resTS0Value->setInputMask("HHHHHHHH");
+	resTS0Layout->addRow(tr("Value"), this->resTS0Value);
+
+	resWidgetLayout->addWidget(this->resTS0Group);
+
+	this->resLODGroup = new QGroupBox{tr("LOD Control"), resWidget};
+	auto* resLODLayout = new QFormLayout{this->resLODGroup};
+	resLODLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resLODValueU = new QSpinBox{resWidget};
+	this->resLODValueU->setRange(0, std::numeric_limits<uint8_t>::max());
+	resLODLayout->addRow(tr("U"), this->resLODValueU);
+
+	this->resLODValueV = new QSpinBox{resWidget};
+	this->resLODValueV->setRange(0, std::numeric_limits<uint8_t>::max());
+	resLODLayout->addRow(tr("V"), this->resLODValueV);
+
+	this->resLODValueU360 = new QSpinBox{resWidget};
+	this->resLODValueU360->setRange(0, std::numeric_limits<uint8_t>::max());
+	resLODLayout->addRow(tr("U360"), this->resLODValueU360);
+
+	this->resLODValueV360 = new QSpinBox{resWidget};
+	this->resLODValueV360->setRange(0, std::numeric_limits<uint8_t>::max());
+	resLODLayout->addRow(tr("V360"), this->resLODValueV360);
+
+	resWidgetLayout->addWidget(this->resLODGroup);
+
+	this->resKeyValuesGroup = new QGroupBox{tr("KeyValues"), resWidget};
+	auto* resKeyValuesLayout = new QFormLayout{this->resKeyValuesGroup};
+	resKeyValuesLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resKeyValuesData = new QPlainTextEdit{resWidget};
+	resKeyValuesLayout->addRow(tr("Data"), this->resKeyValuesData);
+
+	resWidgetLayout->addWidget(this->resKeyValuesGroup);
+
+	// todo: particle sheet
+
+	// todo: hotspot
+
+	resWidgetLayout->addStretch(1);
+
+	resScroll->setMinimumWidth(resWidget->sizeHint().width() + this->style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+	resScroll->setWidgetResizable(true);
+	resScroll->setWidget(resWidget);
+
+	resDock->setWidget(resScroll);
 	this->addDockWidget(Qt::RightDockWidgetArea, resDock);
 	viewMenu->addAction(resDock->toggleViewAction());
 
@@ -510,6 +596,26 @@ void QMareTextureWindow::regenerateDetails() {
 
 		this->flagsChecks->clear();
 
+		this->resThumbnailGroup->setVisible(false);
+		this->resThumbnailPreview->clear();
+		this->resThumbnailWidth->setValue(0);
+		this->resThumbnailHeight->setValue(0);
+
+		this->resCRCGroup->setVisible(false);
+		this->resCRCValue->setText("00000000");
+
+		this->resTS0Group->setVisible(false);
+		this->resTS0Value->setText("00000000");
+
+		this->resLODGroup->setVisible(false);
+		this->resLODValueU->setValue(0);
+		this->resLODValueV->setValue(0);
+		this->resLODValueU360->setValue(0);
+		this->resLODValueV360->setValue(0);
+
+		this->resKeyValuesGroup->setVisible(false);
+		this->resKeyValuesData->clear();
+
 		return;
 	}
 
@@ -583,5 +689,57 @@ void QMareTextureWindow::regenerateDetails() {
 			flagItem->setForeground(Qt::gray);
 		}
 		this->flagsChecks->addItem(flagItem);
+	}
+
+	if (vtf.hasThumbnailData()) {
+		this->resThumbnailGroup->setVisible(true);
+		const auto thumbnailPreviewImageData = vtf.getThumbnailDataAs(vtfpp::ImageFormat::BGR888);
+		this->resThumbnailPreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(thumbnailPreviewImageData.data()), vtf.getThumbnailWidth(), vtf.getThumbnailHeight(), QImage::Format_BGR888}).scaledToWidth(64));
+		this->resThumbnailWidth->setValue(vtf.getThumbnailWidth());
+		this->resThumbnailHeight->setValue(vtf.getThumbnailHeight());
+	} else {
+		this->resThumbnailGroup->setVisible(false);
+		this->resThumbnailPreview->clear();
+		this->resThumbnailWidth->setValue(0);
+		this->resThumbnailHeight->setValue(0);
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+		this->resCRCGroup->setVisible(true);
+		this->resCRCValue->setText(QString{"%1"}.arg(resource->getDataAsCRC(), 8, 16, '0'));
+	} else {
+		this->resCRCGroup->setVisible(false);
+		this->resCRCValue->setText("00000000");
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+		this->resTS0Group->setVisible(true);
+		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsCRC(), 8, 16, '0'));
+	} else {
+		this->resTS0Group->setVisible(false);
+		this->resTS0Value->setText("00000000");
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+		const auto lodData = resource->getDataAsLODControlInfo();
+		this->resLODGroup->setVisible(true);
+		this->resLODValueU->setValue(std::get<0>(lodData));
+		this->resLODValueV->setValue(std::get<1>(lodData));
+		this->resLODValueU360->setValue(std::get<2>(lodData));
+		this->resLODValueV360->setValue(std::get<3>(lodData));
+	} else {
+		this->resLODGroup->setVisible(false);
+		this->resLODValueU->setValue(0);
+		this->resLODValueV->setValue(0);
+		this->resLODValueU360->setValue(0);
+		this->resLODValueV360->setValue(0);
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
+		this->resKeyValuesGroup->setVisible(true);
+		this->resKeyValuesData->setPlainText(resource->getDataAsKeyValuesData().c_str());
+	} else {
+		this->resKeyValuesGroup->setVisible(false);
+		this->resKeyValuesData->clear();
 	}
 }

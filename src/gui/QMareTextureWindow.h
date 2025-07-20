@@ -6,7 +6,10 @@ class QCheckBox;
 class QComboBox;
 class QDoubleSpinBox;
 class QGroupBox;
+class QLabel;
+class QLineEdit;
 class QListWidget;
+class QPlainTextEdit;
 class QSpinBox;
 class QTabWidget;
 class QTimer;
@@ -64,6 +67,26 @@ protected:
 	QGroupBox* detailsCompressionGroup;
 	QComboBox* detailsCompressionMethod;
 	QSpinBox* detailsCompressionLevel;
+
+	QGroupBox* resThumbnailGroup;
+	QLabel* resThumbnailPreview;
+	QSpinBox* resThumbnailWidth;
+	QSpinBox* resThumbnailHeight;
+
+	QGroupBox* resCRCGroup;
+	QLineEdit* resCRCValue;
+
+	QGroupBox* resTS0Group;
+	QLineEdit* resTS0Value;
+
+	QGroupBox* resLODGroup;
+	QSpinBox* resLODValueU;
+	QSpinBox* resLODValueV;
+	QSpinBox* resLODValueU360;
+	QSpinBox* resLODValueV360;
+
+	QGroupBox* resKeyValuesGroup;
+	QPlainTextEdit* resKeyValuesData;
 
 	QListWidget* flagsChecks;
 };
