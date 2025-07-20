@@ -147,6 +147,7 @@ void QMareTextureWindow::loadTexture(const QString& path) {
 	if (*widget) {
 		const int index = this->textureTabs->addTab(widget, QFileInfo{path}.fileName());
 		this->textureTabs->setTabIcon(index, widget->getIcon());
+		this->textureTabs->setCurrentIndex(index);
 	} else {
 		widget->deleteLater();
 		QMessageBox::critical(this, tr("Error"), tr("Failed to load texture at location: %1").arg("\n\n" + path));
