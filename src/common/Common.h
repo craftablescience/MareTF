@@ -6,11 +6,9 @@
 #include <vtfpp/VTF.h>
 
 #ifdef _WIN32
-#define MARETF_MSVC_SEH_IGNORE_BEGIN() __try {
-#define MARETF_MSVC_SEH_IGNORE_END() } __except (1 /*EXCEPTION_EXECUTE_HANDLER*/) {}
+#define MARETF_MSVC_SEH_IGNORE(fn) __try { fn() } __except (1 /*EXCEPTION_EXECUTE_HANDLER*/) {}
 #else
-#define MARETF_MSVC_SEH_IGNORE_BEGIN() {
-#define MARETF_MSVC_SEH_IGNORE_END() }
+#define MARETF_MSVC_SEH_IGNORE(fn) fn()
 #endif
 
 std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform);
