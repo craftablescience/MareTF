@@ -44,17 +44,31 @@ using namespace std::literals;
 namespace {
 
 [[nodiscard]] std::string_view randomDeviantArtTFTrope() {
-	static constexpr std::array<std::string_view, 10> DEVIANTART_TF_TROPES{
+	static constexpr std::array<std::string_view, 23> DEVIANTART_TF_TROPES{
 		"Splicing DNA",
 		"Drinking a potion stolen from a wizard neighbor",
 		"Tampering with a sacred equine relic",
 		"Downloading a mysterious app",
-		"Irritating a farmhand who's secretly a witch",
+		"Irritating a magic-wielding farmhand",
 		"Getting isekai'd into Ponyville",
 		"Falling into the contraption",
 		"Entering the light of the full moon on Nightmare Night",
 		"Wearing a saddle on a dare",
 		"Drawing a pony with a magic marker",
+		"Injecting pony HRT",
+		// The following are from @BethesdaCakeDelivery, thanks!
+		"Abandoning humanity",
+		"Initiating headbonk",
+		"Turning hands into hooves",
+		"Beginning pastelization",
+		"Rearranging bone structure",
+		"De-evolving into a four-legged creature",
+		"Turning unguligrade",
+		"Handing out hooves",
+		"Hooving out hands",
+		"Trotting through green fields and apple trees",
+		"Buying an orbitouch",
+		"Ponifying splines",
 	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
