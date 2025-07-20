@@ -706,7 +706,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
 		this->resCRCGroup->setVisible(true);
-		this->resCRCValue->setText(QString{"%1"}.arg<qulonglong>(resource->getDataAsCRC(), 8, 16, QChar{u'0'}));
+		this->resCRCValue->setText(QString{"%1"}.arg(resource->getDataAsCRC(), 8, 16, QChar{u'0'}));
 	} else {
 		this->resCRCGroup->setVisible(false);
 		this->resCRCValue->setText("00000000");
@@ -714,7 +714,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 		this->resTS0Group->setVisible(true);
-		this->resTS0Value->setText(QString{"%1"}.arg<qulonglong>(resource->getDataAsExtendedFlags(), 8, 16, QChar{u'0'}));
+		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsExtendedFlags(), 8, 16, QChar{u'0'}));
 	} else {
 		this->resTS0Group->setVisible(false);
 		this->resTS0Value->setText("00000000");
