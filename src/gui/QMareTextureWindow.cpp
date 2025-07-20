@@ -1,14 +1,22 @@
 #include "QMareTextureWindow.h"
 
+#include <limits>
+
+#include <QCheckBox>
+#include <QComboBox>
 #include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFormLayout>
+#include <QGroupBox>
 #include <QListWidget>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
 #include <QScreen>
+#include <QScrollArea>
+#include <QSpinBox>
 #include <QTabWidget>
 #include <qurl.h>
 
@@ -104,29 +112,194 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 		this->textureTabs->removeTab(index);
 	});
 
-	// Docks ------------------------------------------
+	// Preview dock ------------------------------------------
 
 	this->setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-	auto* infoDock = new QDockWidget{tr("&Info"), this};
-	infoDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	// todo: widget here
-	infoDock->setWidget(new QWidget);
-	this->addDockWidget(Qt::LeftDockWidgetArea, infoDock);
-	viewMenu->addAction(infoDock->toggleViewAction());
+	auto* previewDock = new QDockWidget(tr("&Preview"), this);
+	previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	// todo: widget
+	previewDock->setWidget(new QWidget);
+	this->addDockWidget(Qt::LeftDockWidgetArea, previewDock);
+	viewMenu->addAction(previewDock->toggleViewAction());
+
+	// Details dock ------------------------------------------
+
+	auto* detailsDock = new QDockWidget{tr("&Details"), this};
+	detailsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+
+	auto* detailsWidget = new QWidget{detailsDock};
+	auto* detailsWidgetLayout = new QVBoxLayout{detailsWidget};
+
+	this->detailsFileTypeGroup = new QGroupBox(tr("File Type"), detailsWidget);
+	auto* detailsFileTypeLayout = new QFormLayout{this->detailsFileTypeGroup};
+	detailsFileTypeLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->detailsPlatform = new QComboBox{this->detailsFileTypeGroup};
+	this->detailsPlatform->addItem(tr("PC"));
+	this->detailsPlatform->setItemData(0, vtfpp::VTF::PLATFORM_PC);
+	this->detailsPlatform->addItem(tr("Xbox 360"));
+	this->detailsPlatform->setItemData(1, vtfpp::VTF::PLATFORM_X360);
+	this->detailsPlatform->addItem(tr("PS3 (Orange Box)"));
+	this->detailsPlatform->setItemData(2, vtfpp::VTF::PLATFORM_PS3_ORANGEBOX);
+	this->detailsPlatform->addItem(tr("PS3 (P2, CS:GO)"));
+	this->detailsPlatform->setItemData(3, vtfpp::VTF::PLATFORM_PS3_PORTAL2);
+	detailsFileTypeLayout->addRow(tr("Platform"), this->detailsPlatform);
+
+	this->detailsVersion = new QComboBox{this->detailsFileTypeGroup};
+	for (int i = 0; i <= 6; i++) {
+		this->detailsVersion->addItem(QString{"7.%1"}.arg(i));
+		this->detailsVersion->setItemData(i, i);
+	}
+	detailsFileTypeLayout->addRow(tr("Version"), this->detailsVersion);
+
+	// Hide the Version combo when Platform != PLATFORM_PC
+	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this->detailsVersion, [this, detailsFileTypeLayout](int index) {
+		detailsFileTypeLayout->setRowVisible(1, this->detailsPlatform->itemData(index).toInt() == vtfpp::VTF::PLATFORM_PC);
+	});
+
+	this->detailsFormat = new QComboBox{this->detailsFileTypeGroup};
+	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::ImageFormat>()) {
+		if (static_cast<int>(value) < 0) {
+			continue;
+		}
+		this->detailsFormat->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data());
+		this->detailsFormat->setItemData(this->detailsFormat->count() - 1, static_cast<int>(value));
+	}
+	detailsFileTypeLayout->addRow(tr("Format"), this->detailsFormat);
+
+	detailsWidgetLayout->addWidget(this->detailsFileTypeGroup);
+
+	this->detailsDimsGroup = new QGroupBox(tr("Dimensions"), detailsWidget);
+	auto* detailsDimsLayout = new QFormLayout{this->detailsDimsGroup};
+	detailsDimsLayout->setFormAlignment(Qt::AlignHCenter);
+	detailsDimsLayout->setLabelAlignment(Qt::AlignLeft);
+
+	this->detailsWidth = new QSpinBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Width"), this->detailsWidth);
+	this->detailsHeight = new QSpinBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Height"), this->detailsHeight);
+	this->detailsDepth = new QSpinBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Depth"), this->detailsDepth);
+	this->detailsFrames = new QSpinBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Frames"), this->detailsFrames);
+	this->detailsStartFrame = new QSpinBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Start Frame"), this->detailsStartFrame);
+	for (auto* spinBox : {this->detailsWidth, this->detailsHeight, this->detailsDepth, this->detailsFrames, this->detailsStartFrame}) {
+		spinBox->setMinimum(0);
+		spinBox->setMaximum(std::numeric_limits<uint16_t>::max());
+	}
+	this->detailsCubemap = new QCheckBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Cubemap"), this->detailsCubemap);
+	this->detailsMipmaps = new QCheckBox{this->detailsDimsGroup};
+	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
+
+	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
+
+	this->detailsMiscellaneousGroup = new QGroupBox(tr("Miscellaneous"), detailsWidget);
+	auto* detailsMiscellaneousLayout = new QFormLayout{this->detailsMiscellaneousGroup};
+	detailsMiscellaneousLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->detailsBumpmapScale = new QDoubleSpinBox{this->detailsMiscellaneousGroup};
+	this->detailsBumpmapScale->setSingleStep(0.1);
+	this->detailsBumpmapScale->setDecimals(3);
+	detailsMiscellaneousLayout->addRow(tr("Bumpmap Scale"), this->detailsBumpmapScale);
+
+	auto* detailsReflectivityGroup = new QGroupBox(this->detailsMiscellaneousGroup);
+	auto* detailsReflectivityLayout = new QFormLayout{detailsReflectivityGroup};
+	detailsReflectivityLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->detailsReflectivityR = new QDoubleSpinBox{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("R"), this->detailsReflectivityR);
+	this->detailsReflectivityG = new QDoubleSpinBox{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("G"), this->detailsReflectivityG);
+	this->detailsReflectivityB = new QDoubleSpinBox{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("B"), this->detailsReflectivityB);
+	for (auto* spinBox : {this->detailsReflectivityR, this->detailsReflectivityG, this->detailsReflectivityB}) {
+		spinBox->setDecimals(6);
+		spinBox->setDisabled(true);
+	}
+
+	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), detailsReflectivityGroup);
+
+	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
+
+	this->detailsCompressionGroup = new QGroupBox(tr("Compression"), detailsWidget);
+	auto* detailsCompressionLayout = new QFormLayout{this->detailsCompressionGroup};
+	detailsCompressionLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->detailsCompressionMethod = new QComboBox{this->detailsCompressionGroup};
+	this->detailsCompressionMethod->addItem("None");
+	this->detailsCompressionMethod->setItemData(0, 0);
+	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>()) {
+		this->detailsCompressionMethod->addItem(name.data());
+		this->detailsCompressionMethod->setItemData(this->detailsCompressionMethod->count() - 1, static_cast<int>(value));
+	}
+	detailsCompressionLayout->addRow(tr("Method"), this->detailsCompressionMethod);
+
+	this->detailsCompressionLevel = new QSpinBox{this->detailsCompressionGroup};
+	detailsCompressionLayout->addRow(tr("Level"), this->detailsCompressionLevel);
+
+	// Limit strength to 0-0 for None, 1-9 for Deflate/LZMA, 1-22 for Zstd
+	connect(this->detailsCompressionMethod, &QComboBox::currentIndexChanged, this->detailsCompressionLevel, [this](int index) {
+		switch (this->detailsCompressionMethod->itemData(index).toInt()) {
+			case static_cast<int>(vtfpp::CompressionMethod::DEFLATE):
+			case static_cast<int>(vtfpp::CompressionMethod::CONSOLE_LZMA):
+				this->detailsCompressionLevel->setRange(1, 9);
+				break;
+			case static_cast<int>(vtfpp::CompressionMethod::ZSTD):
+				this->detailsCompressionLevel->setRange(1, 22);
+				break;
+			default:
+			case 0:
+				this->detailsCompressionLevel->setRange(0, 0);
+				break;
+		}
+	});
+
+	detailsWidgetLayout->addWidget(this->detailsCompressionGroup);
+
+	// Compression group is unused for PC 7.0-7.5
+	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this->detailsCompressionGroup, [this](int index) {
+		if (this->detailsPlatform->itemData(index).toInt() == vtfpp::VTF::PLATFORM_PC) {
+			this->detailsCompressionGroup->setEnabled(this->detailsVersion->currentIndex() == 6);
+		} else {
+			this->detailsCompressionGroup->setVisible(true);
+		}
+	});
+	connect(this->detailsVersion, &QComboBox::currentIndexChanged, this->detailsCompressionGroup, [this](int index) {
+		this->detailsCompressionGroup->setEnabled(index == 6);
+	});
+
+	detailsWidgetLayout->addStretch(1);
+
+	auto* detailsScroll = new QScrollArea{detailsDock};
+	detailsScroll->setMinimumWidth(detailsWidget->sizeHint().width());
+	detailsScroll->setWidgetResizable(true);
+	detailsScroll->setWidget(detailsWidget);
+
+	detailsDock->setWidget(detailsScroll);
+	this->addDockWidget(Qt::LeftDockWidgetArea, detailsDock);
+	viewMenu->addAction(detailsDock->toggleViewAction());
+
+	// Resources dock ------------------------------------------
 
 	auto* resDock = new QDockWidget{tr("&Resources"), this};
 	resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	// todo: widget here
 	resDock->setWidget(new QWidget);
-	this->addDockWidget(Qt::LeftDockWidgetArea, resDock);
+	this->addDockWidget(Qt::RightDockWidgetArea, resDock);
 	viewMenu->addAction(resDock->toggleViewAction());
+
+	// Flags dock ------------------------------------------
 
 	auto* flagsDock = new QDockWidget{tr("&Flags"), this};
 	flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	this->flagsChecks = new QListWidget{flagsDock};
 	flagsDock->setWidget(this->flagsChecks);
 	this->addDockWidget(Qt::RightDockWidgetArea, flagsDock);
+	this->tabifyDockWidget(flagsDock, resDock);
+	flagsDock->raise();
 	viewMenu->addAction(flagsDock->toggleViewAction());
 
 	// Final setup ------------------------------------------
@@ -162,11 +335,76 @@ void QMareTextureWindow::regenerateDetails() {
 	}
 	if (!activeTexture) {
 		this->setWindowTitle(PROJECT_TITLE);
+
+		this->detailsFileTypeGroup->setDisabled(true);
+		this->detailsPlatform->setCurrentIndex(0);
+		this->detailsVersion->setCurrentIndex(0);
+		this->detailsFormat->setCurrentIndex(0);
+
+		this->detailsDimsGroup->setDisabled(true);
+		this->detailsWidth->setValue(0);
+		this->detailsHeight->setValue(0);
+		this->detailsDepth->setValue(0);
+		this->detailsFrames->setValue(0);
+		this->detailsStartFrame->setValue(0);
+		this->detailsCubemap->setChecked(false);
+		this->detailsMipmaps->setChecked(false);
+
+		this->detailsMiscellaneousGroup->setDisabled(true);
+		this->detailsBumpmapScale->setValue(0.0);
+		this->detailsReflectivityR->setValue(0.0);
+		this->detailsReflectivityG->setValue(0.0);
+		this->detailsReflectivityB->setValue(0.0);
+
+		// Disable/enable is automatic
+		//this->detailsCompressionGroup->setDisabled(true);
+		this->detailsCompressionMethod->setCurrentIndex(0);
+		this->detailsCompressionLevel->setValue(0);
+
+		this->flagsChecks->clear();
+
 		return;
 	}
-	const vtfpp::VTF& vtf = activeTexture->getVTF();
 
+	const vtfpp::VTF& vtf = activeTexture->getVTF();
 	this->setWindowTitle(QString{PROJECT_TITLE} + " | " + this->textureTabs->tabText(activeIndex) + "[*]");
+
+	static constexpr auto searchAndSetCombo = [](QComboBox* combo, int value, bool condition = true) {
+		combo->setCurrentIndex(0);
+		if (condition) {
+			for (int i = 0; i < combo->count(); i++) {
+				if (combo->itemData(i).toInt() == value) {
+					combo->setCurrentIndex(i);
+					break;
+				}
+			}
+		}
+	};
+
+	this->detailsFileTypeGroup->setEnabled(true);
+	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
+	this->detailsVersion->setCurrentIndex(vtf.getVersion());
+	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
+
+	this->detailsDimsGroup->setEnabled(true);
+	this->detailsWidth->setValue(vtf.getWidth());
+	this->detailsHeight->setValue(vtf.getHeight());
+	this->detailsDepth->setValue(vtf.getSliceCount());
+	this->detailsFrames->setValue(vtf.getFrameCount());
+	this->detailsStartFrame->setValue(vtf.getStartFrame());
+	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
+	this->detailsMipmaps->setChecked(vtf.getMipCount() > 1);
+
+	this->detailsMiscellaneousGroup->setEnabled(true);
+	this->detailsBumpmapScale->setValue(vtf.getBumpMapScale());
+	this->detailsReflectivityR->setValue(vtf.getReflectivity()[0]);
+	this->detailsReflectivityG->setValue(vtf.getReflectivity()[1]);
+	this->detailsReflectivityB->setValue(vtf.getReflectivity()[2]);
+
+	// Disable/enable is automatic
+	//this->detailsCompressionGroup->setEnabled(true);
+	searchAndSetCombo(this->detailsCompressionMethod, static_cast<int>(vtf.getCompressionMethod()), vtf.getCompressionLevel() > 0 || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA);
+	this->detailsCompressionLevel->setValue(vtf.getCompressionLevel());
 
 	this->flagsChecks->clear();
 	const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
