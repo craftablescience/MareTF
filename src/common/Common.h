@@ -6,7 +6,7 @@
 #include <vtfpp/VTF.h>
 
 #ifdef _WIN32
-#define MARETF_MSVC_SEH_IGNORE(fn) __try { fn() } __except (1 /*EXCEPTION_EXECUTE_HANDLER*/) {}
+#define MARETF_MSVC_SEH_IGNORE(fn) __try { fn(); } __except (1 /*EXCEPTION_EXECUTE_HANDLER*/) {}
 #else
 #define MARETF_MSVC_SEH_IGNORE(fn) fn()
 #endif
