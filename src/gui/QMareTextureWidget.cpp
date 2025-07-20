@@ -116,7 +116,7 @@ void QMareTextureWidget::resizeEvent(QResizeEvent* e) {
 
 void QMareTextureWidget::wheelEvent(QWheelEvent* e) {
 	this->textureZoom += static_cast<float>(e->angleDelta().y()) / 360.f;
-	this->textureZoom = qMax(1.f, this->textureZoom);
+	this->textureZoom = qMax(0.25f, this->textureZoom);
 
 	this->update();
 	e->accept();
