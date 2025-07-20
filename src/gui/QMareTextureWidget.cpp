@@ -168,9 +168,9 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		for (int x = targetRect.left(), i = 0; x < targetRect.left() + targetRect.width(); x += SQUARE_SIZE, i++) {
 			for (int y = targetRect.top(), j = 0; y < targetRect.top() + targetRect.height(); y += SQUARE_SIZE, j++) {
 				if ((i + j) % 2 == 0) {
-					painter.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE, {214, 214, 214});
+					painter.fillRect(x, y, std::min(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), std::min(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {214, 214, 214});
 				} else {
-					painter.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE, {242, 242, 242});
+					painter.fillRect(x, y, std::min(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), std::min(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {242, 242, 242});
 				}
 			}
 		}
