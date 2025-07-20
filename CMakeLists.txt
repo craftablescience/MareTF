@@ -14,8 +14,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # options
-option(MARETF_BUILD_GUI       "Build MareTF GUI"       OFF)
-option(MARETF_BUILD_INSTALLER "Build MareTF installer" OFF)
+option(MARETF_BUILD_GUI       "Build ${PROJECT_NAME_PRETTY} GUI"        ON)
+option(MARETF_BUILD_INSTALLER "Build ${PROJECT_NAME_PRETTY} installer" OFF)
 
 # add helpers
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
@@ -68,6 +68,9 @@ endif()
 if(MARETF_BUILD_INSTALLER)
     cs_include_directory(install)
 endif()
+
+# copy the license
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE" COPYONLY)
 
 # VS setup
 if(WIN32 AND MARETF_BUILD_GUI)
