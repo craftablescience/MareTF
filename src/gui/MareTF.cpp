@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
 	// Discord integration
 	// todo: make optional
-	MARETF_MSVC_SEH_IGNORE(initDiscord);
+	::initDiscord();
 
 	// Show a window
 	if (argc > 1) {
