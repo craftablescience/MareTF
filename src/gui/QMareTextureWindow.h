@@ -9,6 +9,7 @@ class QGroupBox;
 class QListWidget;
 class QSpinBox;
 class QTabWidget;
+class QTimer;
 
 class QMareTextureWindow : public QMainWindow {
 	Q_OBJECT;
@@ -22,6 +23,23 @@ public:
 
 protected:
 	QTabWidget* textureTabs;
+
+	QGroupBox* previewGeneralGroup;
+	QSpinBox* previewCurrentMip;
+	QCheckBox* previewAlpha;
+	QCheckBox* previewBackground;
+
+	QGroupBox* previewAnimationGroup;
+	QSpinBox* previewCurrentFrame;
+	QDoubleSpinBox* previewAnimationSpeed;
+	QCheckBox* previewAnimate;
+	QTimer* previewAnimateTimer;
+
+	QGroupBox* previewCubemapGroup;
+	QSpinBox* previewCurrentFace;
+
+	QGroupBox* previewDepthGroup;
+	QSpinBox* previewCurrentDepth;
 
 	QGroupBox* detailsFileTypeGroup;
 	QComboBox* detailsPlatform;

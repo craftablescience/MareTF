@@ -18,7 +18,7 @@
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QTabWidget>
-#include <qurl.h>
+#include <QTimer>
 
 #include "../common/Common.h"
 #include "../common/Config.h"
@@ -103,6 +103,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->textureTabs->setDocumentMode(true);
 	this->textureTabs->setIconSize({64, 64});
 	this->textureTabs->setMovable(true);
+	this->textureTabs->setTabBarAutoHide(true);
 	this->textureTabs->setTabsClosable(true);
 	this->setCentralWidget(this->textureTabs);
 
@@ -118,8 +119,146 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* previewDock = new QDockWidget(tr("&Preview"), this);
 	previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	// todo: widget
-	previewDock->setWidget(new QWidget);
+
+	auto* previewScroll = new QScrollArea{previewDock};
+
+	auto* previewWidget = new QWidget{previewScroll};
+	auto* previewWidgetLayout = new QVBoxLayout{previewWidget};
+
+	this->previewGeneralGroup = new QGroupBox{tr("General"), previewWidget};
+	auto* previewGeneralLayout = new QFormLayout{this->previewGeneralGroup};
+	previewGeneralLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->previewCurrentMip = new QSpinBox{previewWidget};
+	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);
+
+	// Change the current mip
+	connect(this->previewCurrentMip, &QSpinBox::valueChanged, this, [this](int value) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setCurrentMip(value);
+		}
+	});
+
+	this->previewAlpha = new QCheckBox{previewWidget};
+	this->previewAlpha->setChecked(true);
+	previewGeneralLayout->addRow(tr("Alpha"), this->previewAlpha);
+
+	// Change alpha
+	QMareTextureWidget::useAlpha() = true;
+	connect(this->previewAlpha, &QCheckBox::toggled, this, [this](bool checked) {
+		QMareTextureWidget::useAlpha() = checked;
+		for (int i = 0; i < this->textureTabs->count(); i++) {
+			if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(i))) {
+				activeTexture->reloadCurrentTexture();
+			}
+		}
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->update();
+		}
+	});
+
+	this->previewBackground = new QCheckBox{previewWidget};
+	this->previewBackground->setChecked(true);
+	previewGeneralLayout->addRow(tr("Background"), this->previewBackground);
+
+	// Change background
+	QMareTextureWidget::useBackground() = true;
+	connect(this->previewBackground, &QCheckBox::toggled, this, [this](bool checked) {
+		QMareTextureWidget::useBackground() = checked;
+		if (auto* activeTextureWidget = this->textureTabs->widget(this->textureTabs->currentIndex())) {
+			activeTextureWidget->update();
+		}
+	});
+
+	previewWidgetLayout->addWidget(this->previewGeneralGroup);
+
+	this->previewAnimationGroup = new QGroupBox{tr("Animation"), previewWidget};
+	auto* previewAnimationLayout = new QFormLayout{this->previewAnimationGroup};
+	previewAnimationLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->previewCurrentFrame = new QSpinBox{previewWidget};
+	previewAnimationLayout->addRow(tr("Current Frame"), this->previewCurrentFrame);
+
+	// Change the current frame
+	connect(this->previewCurrentFrame, &QSpinBox::valueChanged, this, [this](int value) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setCurrentFrame(value);
+		}
+	});
+
+	this->previewAnimationSpeed = new QDoubleSpinBox{previewWidget};
+	this->previewAnimationSpeed->setRange(0.0, 120.0);
+	this->previewAnimationSpeed->setValue(24.0);
+	previewAnimationLayout->addRow(tr("Animation FPS"), this->previewAnimationSpeed);
+
+	this->previewAnimate = new QCheckBox{previewWidget};
+	previewAnimationLayout->addRow(tr("Animate"), this->previewAnimate);
+
+	this->previewAnimateTimer = new QTimer{previewWidget};
+	this->previewAnimateTimer->setTimerType(Qt::PreciseTimer);
+	this->previewAnimateTimer->start(static_cast<int>(1000.0 / this->previewAnimationSpeed->value()));
+
+	// Set the timer duration
+	connect(this->previewAnimationSpeed, &QDoubleSpinBox::valueChanged, this, [this](double value) {
+		this->previewAnimateTimer->stop();
+		this->previewAnimateTimer->start(static_cast<int>(1000.0 / value));
+	});
+
+	// Increment the current frame if animate is enabled
+	connect(this->previewAnimateTimer, &QTimer::timeout, this, [this] {
+		if (!this->previewAnimate->isChecked()) {
+			return;
+		}
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			if (this->previewCurrentFrame->value() + 1 == activeTexture->getVTF().getFrameCount()) {
+				this->previewCurrentFrame->setValue(0);
+			} else {
+				this->previewCurrentFrame->setValue(this->previewCurrentFrame->value() + 1);
+			}
+		}
+	});
+
+	previewWidgetLayout->addWidget(this->previewAnimationGroup);
+
+	this->previewCubemapGroup = new QGroupBox{tr("Cubemap"), previewWidget};
+	auto* previewCubemapLayout = new QFormLayout{this->previewCubemapGroup};
+	previewCubemapLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->previewCurrentFace = new QSpinBox{previewWidget};
+	previewCubemapLayout->addRow(tr("Current Face"), this->previewCurrentFace);
+
+	// Change the current face
+	connect(this->previewCurrentFace, &QSpinBox::valueChanged, this, [this](int value) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setCurrentFace(value);
+		}
+	});
+
+	previewWidgetLayout->addWidget(this->previewCubemapGroup);
+
+	this->previewDepthGroup = new QGroupBox{tr("Depth"), previewWidget};
+	auto* previewDepthLayout = new QFormLayout{this->previewDepthGroup};
+	previewDepthLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->previewCurrentDepth = new QSpinBox{previewWidget};
+	previewDepthLayout->addRow(tr("Current Depth"), this->previewCurrentDepth);
+
+	// Change the current depth
+	connect(this->previewCurrentDepth, &QSpinBox::valueChanged, this, [this](int value) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setCurrentDepth(value);
+		}
+	});
+
+	previewWidgetLayout->addWidget(this->previewDepthGroup);
+
+	previewWidgetLayout->addStretch(1);
+
+	previewScroll->setMinimumWidth(previewWidget->sizeHint().width() + this->style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+	previewScroll->setWidgetResizable(true);
+	previewScroll->setWidget(previewWidget);
+
+	previewDock->setWidget(previewScroll);
 	this->addDockWidget(Qt::LeftDockWidgetArea, previewDock);
 	viewMenu->addAction(previewDock->toggleViewAction());
 
@@ -128,10 +267,12 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* detailsDock = new QDockWidget{tr("&Details"), this};
 	detailsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	auto* detailsWidget = new QWidget{detailsDock};
+	auto* detailsScroll = new QScrollArea{detailsDock};
+
+	auto* detailsWidget = new QWidget{detailsScroll};
 	auto* detailsWidgetLayout = new QVBoxLayout{detailsWidget};
 
-	this->detailsFileTypeGroup = new QGroupBox(tr("File Type"), detailsWidget);
+	this->detailsFileTypeGroup = new QGroupBox{tr("File Type"), detailsWidget};
 	auto* detailsFileTypeLayout = new QFormLayout{this->detailsFileTypeGroup};
 	detailsFileTypeLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -154,7 +295,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsFileTypeLayout->addRow(tr("Version"), this->detailsVersion);
 
 	// Hide the Version combo when Platform != PLATFORM_PC
-	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this->detailsVersion, [this, detailsFileTypeLayout](int index) {
+	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this, [this, detailsFileTypeLayout](int index) {
 		detailsFileTypeLayout->setRowVisible(1, this->detailsPlatform->itemData(index).toInt() == vtfpp::VTF::PLATFORM_PC);
 	});
 
@@ -170,7 +311,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	detailsWidgetLayout->addWidget(this->detailsFileTypeGroup);
 
-	this->detailsDimsGroup = new QGroupBox(tr("Dimensions"), detailsWidget);
+	this->detailsDimsGroup = new QGroupBox{tr("Dimensions"), detailsWidget};
 	auto* detailsDimsLayout = new QFormLayout{this->detailsDimsGroup};
 	detailsDimsLayout->setFormAlignment(Qt::AlignHCenter);
 	detailsDimsLayout->setLabelAlignment(Qt::AlignLeft);
@@ -196,7 +337,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
 
-	this->detailsMiscellaneousGroup = new QGroupBox(tr("Miscellaneous"), detailsWidget);
+	this->detailsMiscellaneousGroup = new QGroupBox{tr("Miscellaneous"), detailsWidget};
 	auto* detailsMiscellaneousLayout = new QFormLayout{this->detailsMiscellaneousGroup};
 	detailsMiscellaneousLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -205,7 +346,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->detailsBumpmapScale->setDecimals(3);
 	detailsMiscellaneousLayout->addRow(tr("Bumpmap Scale"), this->detailsBumpmapScale);
 
-	auto* detailsReflectivityGroup = new QGroupBox(this->detailsMiscellaneousGroup);
+	auto* detailsReflectivityGroup = new QGroupBox{this->detailsMiscellaneousGroup};
 	auto* detailsReflectivityLayout = new QFormLayout{detailsReflectivityGroup};
 	detailsReflectivityLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -224,7 +365,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
 
-	this->detailsCompressionGroup = new QGroupBox(tr("Compression"), detailsWidget);
+	this->detailsCompressionGroup = new QGroupBox{tr("Compression"), detailsWidget};
 	auto* detailsCompressionLayout = new QFormLayout{this->detailsCompressionGroup};
 	detailsCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -232,7 +373,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->detailsCompressionMethod->addItem("None");
 	this->detailsCompressionMethod->setItemData(0, 0);
 	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>()) {
-		this->detailsCompressionMethod->addItem(name.data());
+		this->detailsCompressionMethod->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data());
 		this->detailsCompressionMethod->setItemData(this->detailsCompressionMethod->count() - 1, static_cast<int>(value));
 	}
 	detailsCompressionLayout->addRow(tr("Method"), this->detailsCompressionMethod);
@@ -241,7 +382,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsCompressionLayout->addRow(tr("Level"), this->detailsCompressionLevel);
 
 	// Limit strength to 0-0 for None, 1-9 for Deflate/LZMA, 1-22 for Zstd
-	connect(this->detailsCompressionMethod, &QComboBox::currentIndexChanged, this->detailsCompressionLevel, [this](int index) {
+	connect(this->detailsCompressionMethod, &QComboBox::currentIndexChanged, this, [this](int index) {
 		switch (this->detailsCompressionMethod->itemData(index).toInt()) {
 			case static_cast<int>(vtfpp::CompressionMethod::DEFLATE):
 			case static_cast<int>(vtfpp::CompressionMethod::CONSOLE_LZMA):
@@ -260,21 +401,16 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsWidgetLayout->addWidget(this->detailsCompressionGroup);
 
 	// Compression group is unused for PC 7.0-7.5
-	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this->detailsCompressionGroup, [this](int index) {
-		if (this->detailsPlatform->itemData(index).toInt() == vtfpp::VTF::PLATFORM_PC) {
-			this->detailsCompressionGroup->setEnabled(this->detailsVersion->currentIndex() == 6);
-		} else {
-			this->detailsCompressionGroup->setVisible(true);
-		}
+	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this, [this](int index) {
+		this->detailsCompressionGroup->setVisible(this->detailsPlatform->itemData(index).toInt() != vtfpp::VTF::PLATFORM_PC || this->detailsVersion->currentIndex() == 6);
 	});
-	connect(this->detailsVersion, &QComboBox::currentIndexChanged, this->detailsCompressionGroup, [this](int index) {
-		this->detailsCompressionGroup->setEnabled(index == 6);
+	connect(this->detailsVersion, &QComboBox::currentIndexChanged, this, [this](int index) {
+		this->detailsCompressionGroup->setVisible(index == 6);
 	});
 
 	detailsWidgetLayout->addStretch(1);
 
-	auto* detailsScroll = new QScrollArea{detailsDock};
-	detailsScroll->setMinimumWidth(detailsWidget->sizeHint().width());
+	detailsScroll->setMinimumWidth(detailsWidget->sizeHint().width() + this->style()->pixelMetric(QStyle::PM_ScrollBarExtent));
 	detailsScroll->setWidgetResizable(true);
 	detailsScroll->setWidget(detailsWidget);
 
@@ -336,12 +472,24 @@ void QMareTextureWindow::regenerateDetails() {
 	if (!activeTexture) {
 		this->setWindowTitle(PROJECT_TITLE);
 
-		this->detailsFileTypeGroup->setDisabled(true);
+		this->previewGeneralGroup->setVisible(false);
+		this->previewCurrentMip->setValue(0);
+
+		this->previewAnimationGroup->setVisible(false);
+		this->previewCurrentFrame->setValue(0);
+
+		this->previewCubemapGroup->setVisible(false);
+		this->previewCurrentFace->setValue(0);
+
+		this->previewDepthGroup->setVisible(false);
+		this->previewCurrentDepth->setValue(0);
+
+		this->detailsFileTypeGroup->setVisible(false);
 		this->detailsPlatform->setCurrentIndex(0);
 		this->detailsVersion->setCurrentIndex(0);
 		this->detailsFormat->setCurrentIndex(0);
 
-		this->detailsDimsGroup->setDisabled(true);
+		this->detailsDimsGroup->setVisible(false);
 		this->detailsWidth->setValue(0);
 		this->detailsHeight->setValue(0);
 		this->detailsDepth->setValue(0);
@@ -350,14 +498,13 @@ void QMareTextureWindow::regenerateDetails() {
 		this->detailsCubemap->setChecked(false);
 		this->detailsMipmaps->setChecked(false);
 
-		this->detailsMiscellaneousGroup->setDisabled(true);
+		this->detailsMiscellaneousGroup->setVisible(false);
 		this->detailsBumpmapScale->setValue(0.0);
 		this->detailsReflectivityR->setValue(0.0);
 		this->detailsReflectivityG->setValue(0.0);
 		this->detailsReflectivityB->setValue(0.0);
 
-		// Disable/enable is automatic
-		//this->detailsCompressionGroup->setDisabled(true);
+		this->detailsCompressionGroup->setVisible(false);
 		this->detailsCompressionMethod->setCurrentIndex(0);
 		this->detailsCompressionLevel->setValue(0);
 
@@ -367,7 +514,7 @@ void QMareTextureWindow::regenerateDetails() {
 	}
 
 	const vtfpp::VTF& vtf = activeTexture->getVTF();
-	this->setWindowTitle(QString{PROJECT_TITLE} + " | " + this->textureTabs->tabText(activeIndex) + "[*]");
+	this->setWindowTitle(QString{"%1 | %2 | %3x%4%5[*]"}.arg(PROJECT_TITLE).arg(this->textureTabs->tabText(activeIndex)).arg(vtf.getWidth()).arg(vtf.getHeight()).arg(vtf.getSliceCount() > 1 ? QString{"x%1"}.arg(vtf.getSliceCount()) : QString{}));
 
 	static constexpr auto searchAndSetCombo = [](QComboBox* combo, int value, bool condition = true) {
 		combo->setCurrentIndex(0);
@@ -381,12 +528,29 @@ void QMareTextureWindow::regenerateDetails() {
 		}
 	};
 
-	this->detailsFileTypeGroup->setEnabled(true);
+	this->previewGeneralGroup->setVisible(true);
+	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());
+	this->previewCurrentMip->setRange(0, vtf.getMipCount() - 1);
+	this->previewCurrentMip->setEnabled(vtf.getMipCount() > 1);
+
+	this->previewAnimationGroup->setVisible(vtf.getFrameCount() > 1);
+	this->previewCurrentFrame->setValue(activeTexture->getCurrentFrame());
+	this->previewCurrentFrame->setRange(0, vtf.getFrameCount() - 1);
+
+	this->previewCubemapGroup->setVisible(vtf.getFaceCount() > 1);
+	this->previewCurrentFace->setValue(activeTexture->getCurrentFace());
+	this->previewCurrentFace->setRange(0, vtf.getFaceCount() - 1);
+
+	this->previewDepthGroup->setVisible(vtf.getSliceCount() > 1);
+	this->previewCurrentDepth->setValue(activeTexture->getCurrentDepth());
+	this->previewCurrentDepth->setRange(0, vtf.getSliceCount() - 1);
+
+	this->detailsFileTypeGroup->setVisible(true);
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
 	this->detailsVersion->setCurrentIndex(vtf.getVersion());
 	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
 
-	this->detailsDimsGroup->setEnabled(true);
+	this->detailsDimsGroup->setVisible(true);
 	this->detailsWidth->setValue(vtf.getWidth());
 	this->detailsHeight->setValue(vtf.getHeight());
 	this->detailsDepth->setValue(vtf.getSliceCount());
@@ -395,14 +559,14 @@ void QMareTextureWindow::regenerateDetails() {
 	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
 	this->detailsMipmaps->setChecked(vtf.getMipCount() > 1);
 
-	this->detailsMiscellaneousGroup->setEnabled(true);
+	this->detailsMiscellaneousGroup->setVisible(true);
 	this->detailsBumpmapScale->setValue(vtf.getBumpMapScale());
 	this->detailsReflectivityR->setValue(vtf.getReflectivity()[0]);
 	this->detailsReflectivityG->setValue(vtf.getReflectivity()[1]);
 	this->detailsReflectivityB->setValue(vtf.getReflectivity()[2]);
 
-	// Disable/enable is automatic
-	//this->detailsCompressionGroup->setEnabled(true);
+	// Visibility is controlled elsewhere
+	//this->detailsCompressionGroup->setVisible(true);
 	searchAndSetCombo(this->detailsCompressionMethod, static_cast<int>(vtf.getCompressionMethod()), vtf.getCompressionLevel() > 0 || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA);
 	this->detailsCompressionLevel->setValue(vtf.getCompressionLevel());
 

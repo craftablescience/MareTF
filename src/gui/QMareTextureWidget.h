@@ -16,6 +16,8 @@ public:
 
 	void loadTexture(const QString& path_);
 
+	void reloadCurrentTexture();
+
 	[[nodiscard]] QIcon getIcon() const;
 
 	[[nodiscard]] QString getPath() const;
@@ -24,7 +26,27 @@ public:
 
 	[[nodiscard]] vtfpp::VTF& getVTF();
 
+	[[nodiscard]] uint8_t getCurrentMip() const;
+
+	void setCurrentMip(uint8_t mip);
+
+	[[nodiscard]] uint16_t getCurrentFrame() const;
+
+	void setCurrentFrame(uint16_t frame);
+
+	[[nodiscard]] uint8_t getCurrentFace() const;
+
+	void setCurrentFace(uint8_t face);
+
+	[[nodiscard]] uint16_t getCurrentDepth() const;
+
+	void setCurrentDepth(uint16_t depth);
+
 	explicit operator bool() const;
+
+	[[nodiscard]] static bool& useBackground();
+
+	[[nodiscard]] static bool& useAlpha();
 
 protected:
 	void mouseMoveEvent(QMouseEvent* e) override;
@@ -43,6 +65,10 @@ protected:
 	QImage textureCurrent;
 	QPointF textureOffset;
 	float textureZoom = 1.f;
+	uint8_t currentMip = 0;
+	uint8_t currentFace = 0;
+	uint16_t currentFrame = 0;
+	uint16_t currentDepth = 0;
 
 	QPointF mousePressPosition;
 };
