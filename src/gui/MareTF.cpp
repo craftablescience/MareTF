@@ -4,6 +4,7 @@
 
 #include <discord_rpc.h>
 #include <QApplication>
+#include <QTranslator>
 
 #include "../common/Common.h"
 #include "../common/Config.h"
@@ -20,6 +21,20 @@ int main(int argc, char* argv[]) {
 #if !defined(__APPLE__) && !defined(_WIN32)
 	QGuiApplication::setDesktopFileName(PROJECT_NAME);
 #endif
+
+	const QLocale locale;
+	QTranslator translatorQtBase;
+	if (translatorQtBase.load(locale, "qtbase", "_", ":/i18n")) {
+		QCoreApplication::installTranslator(&translatorQtBase);
+	}
+	QTranslator translatorQtHelp;
+	if (translatorQtHelp.load(locale, "qt_help", "_", ":/i18n")) {
+		QCoreApplication::installTranslator(&translatorQtHelp);
+	}
+	QTranslator translatorQt;
+	if (translatorQt.load(locale, "qt", "_", ":/i18n")) {
+		QCoreApplication::installTranslator(&translatorQt);
+	}
 
 	// Discord integration
 	// todo: make optional
