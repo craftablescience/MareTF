@@ -29,11 +29,11 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&New Texture"), [this] {
 		// todo: create new texture from image
-	});
+	})->setDisabled(true);
 
 	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("N&ew Textures"), [this] {
 		// todo: create new textures from folder
-	});
+	})->setDisabled(true);
 
 	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load Textures"), [this] {
 		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files %1").arg("(*)"))) {
@@ -53,7 +53,9 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	// Edit menu ------------------------------------------
 
-	//auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
+#ifdef DEBUG // todo: edit textures
+	auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
+#endif
 
 	// View menu ------------------------------------------
 

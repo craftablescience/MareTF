@@ -21,6 +21,11 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	this->loadTextures = new QPushButton{QIcon{":/button_load.png"}, "", this};
 	this->loadTextures->setToolTip(tr("Load Textures"));
 
+#ifndef DEBUG // todo: new textures
+	this->newTexture->setDisabled(true);
+	this->newTextures->setDisabled(true);
+#endif
+
 	for (auto* button : {this->newTexture, this->newTextures, this->loadTextures}) {
 		static constexpr auto BUTTON_SIZE = 80;
 		button->setFlat(true);

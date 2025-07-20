@@ -1,51 +1,68 @@
 # Configuration stuff
-if(WIN32 AND MARETF_BUILD_GUI)
-    # Qt
-    install(IMPORTED_RUNTIME_ARTIFACTS
-            Qt6::Core Qt6::Gui Qt6::Widgets
-            RUNTIME DESTINATION .
-            LIBRARY DESTINATION .)
+if(WIN32)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
 
-    install(FILES "${QT_BASEDIR}/plugins/platforms/qwindows${QT_LIB_SUFFIX}.dll"
-            DESTINATION platforms)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION .)
 
-    install(FILES "${QT_BASEDIR}/plugins/styles/qwindowsvistastyle${QT_LIB_SUFFIX}.dll"
-            DESTINATION styles)
+    if(MARETF_BUILD_GUI)
+        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
 
-    # NSIS install commands
-    configure_file(
-            "${CMAKE_CURRENT_LIST_DIR}/win/InstallCommands.nsh.in"
-            "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh"
-            @ONLY)
+        # Qt
+        install(IMPORTED_RUNTIME_ARTIFACTS
+                Qt6::Core Qt6::Gui Qt6::Widgets
+                RUNTIME DESTINATION .
+                LIBRARY DESTINATION .)
 
-    # NSIS uninstall commands
-    configure_file(
-            "${CMAKE_CURRENT_LIST_DIR}/win/UninstallCommands.nsh.in"
-            "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh"
-            @ONLY)
-elseif(UNIX AND MARETF_BUILD_GUI)
-    # Use system Qt - no install rules
+        install(FILES "${QT_BASEDIR}/plugins/platforms/qwindows${QT_LIB_SUFFIX}.dll"
+                DESTINATION platforms)
 
-    # Desktop file
-    configure_file(
-            "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"
-            "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop")
-    install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop"
-            DESTINATION "share/applications")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-            DESTINATION "share/pixmaps"
-            RENAME "${PROJECT_NAME}.png")
+        install(FILES "${QT_BASEDIR}/plugins/styles/qwindowsvistastyle${QT_LIB_SUFFIX}.dll"
+                DESTINATION styles)
 
-    # MIME type info
-    configure_file(
-            "${CMAKE_CURRENT_LIST_DIR}/linux/mime-type.xml.in"
-            "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml")
-    install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml"
-            DESTINATION "share/mime/packages"
-            RENAME "${PROJECT_NAME}.xml")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-            DESTINATION "share/icons/hicolor/512x512/mimetypes"
-            RENAME "image-x-vtf.png")
+        # NSIS install commands
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/win/InstallCommands.nsh.in"
+                "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh"
+                @ONLY)
+
+        # NSIS uninstall commands
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/win/UninstallCommands.nsh.in"
+                "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh"
+                @ONLY)
+    endif()
+elseif(UNIX)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+            DESTINATION "share/licenses/${PROJECT_NAME}")
+
+    if(MARETF_BUILD_GUI)
+        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION "bin")
+
+        # Use system Qt - no install rules
+
+        # Desktop file
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"
+                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop")
+        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop"
+                DESTINATION "share/applications")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
+                DESTINATION "share/pixmaps"
+                RENAME "${PROJECT_NAME}.png")
+
+        # MIME type info
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/linux/mime-type.xml.in"
+                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml")
+        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml"
+                DESTINATION "share/mime/packages"
+                RENAME "${PROJECT_NAME}.xml")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
+                DESTINATION "share/icons/hicolor/512x512/mimetypes"
+                RENAME "image-x-vtf.png")
+    endif()
 else()
     message(FATAL_ERROR "No install rules for selected platform.")
 endif()
@@ -65,14 +82,6 @@ set(CPACK_STRIP_FILES ON)
 set(CPACK_THREADS 0)
 set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
-    if(MARETF_BUILD_GUI)
-        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
-    endif()
-
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
-            DESTINATION .)
-
     if(NOT (CPACK_GENERATOR STREQUAL "NSIS"))
         message(AUTHOR_WARNING "CPACK_GENERATOR on Windows must be NSIS! Setting generator to NSIS...")
         set(CPACK_GENERATOR "NSIS" CACHE INTERNAL "" FORCE)
@@ -92,14 +101,6 @@ if(WIN32)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/install/win") # NSIS.template.in, NSIS.InstallOptions.ini.in
     endif()
 else()
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-    if(MARETF_BUILD_GUI)
-        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION bin)
-    endif()
-
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
-            DESTINATION "share/licenses/${PROJECT_NAME}")
-
     if(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
         if(MARETF_BUILD_GUI)
