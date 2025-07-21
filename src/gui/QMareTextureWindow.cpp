@@ -123,9 +123,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* previewDock = new QDockWidget(tr("&Preview"), this);
 	previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	auto* previewScroll = new QScrollArea{previewDock};
-
-	auto* previewWidget = new QWidget{previewScroll};
+	auto* previewWidget = new QWidget{previewDock};
 	auto* previewWidgetLayout = new QVBoxLayout{previewWidget};
 
 	this->previewGeneralGroup = new QGroupBox{tr("General"), previewWidget};
@@ -257,11 +255,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	previewWidgetLayout->addStretch(1);
 
-	previewScroll->setMinimumWidth(previewWidget->sizeHint().width() + this->style()->pixelMetric(QStyle::PM_ScrollBarExtent));
-	previewScroll->setWidgetResizable(true);
-	previewScroll->setWidget(previewWidget);
-
-	previewDock->setWidget(previewScroll);
+	previewDock->setWidget(previewWidget);
 	this->addDockWidget(Qt::LeftDockWidgetArea, previewDock);
 	viewMenu->addAction(previewDock->toggleViewAction());
 
