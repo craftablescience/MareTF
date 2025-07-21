@@ -12,7 +12,7 @@
 
 A utility to create, edit, and display every type of VTF file ever made.
 
-###### *See also: [VTF Thumbnailer](https://github.com/craftablescience/vtf-thumbnailer)*
+###### *See also: [VTF Thumbnailer](https://github.com/craftablescience/vtf-thumbnailer) and [QVTF++](https://github.com/craftablescience/qvtfpp)*
 
 ## Features
 
