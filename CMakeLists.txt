@@ -5,7 +5,7 @@ endif()
 
 # set up project
 project(maretf
-        DESCRIPTION "A work in progress command-line utility to work with VTF files."
+        DESCRIPTION "A utility to create, edit, and display every type of VTF file ever made."
         VERSION 0.7.0
         HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
 set(PROJECT_NAME_PRETTY "MareTF")
