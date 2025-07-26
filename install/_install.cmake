@@ -54,7 +54,7 @@ elseif(UNIX)
         install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop"
                 DESTINATION "share/applications")
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                DESTINATION "share/pixmaps"
+                DESTINATION "share/icons/hicolor/512x512/apps"
                 RENAME "${PROJECT_NAME}.png")
 
         # MIME type info
@@ -64,9 +64,6 @@ elseif(UNIX)
         install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml"
                 DESTINATION "share/mime/packages"
                 RENAME "${PROJECT_NAME}.xml")
-        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                DESTINATION "share/icons/hicolor/512x512/mimetypes"
-                RENAME "image-x-vtf.png")
     endif()
 else()
     message(FATAL_ERROR "No install rules for selected platform.")
