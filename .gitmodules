@@ -6,7 +6,7 @@
 	url = https://github.com/p-ranav/argparse
 [submodule "ext/discord"]
 	path = ext/discord
-	url = git@github.com:craftablescience/discord-rpc-clean.git
+	url = https://github.com/craftablescience/discord-rpc-clean
 [submodule "ext/efsw"]
 	path = ext/efsw
 	url = https://github.com/SpartanJ/efsw

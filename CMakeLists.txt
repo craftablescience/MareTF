@@ -1,7 +1,4 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
-if(PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "" FORCE)
-endif()
 
 # set up project
 project(maretf
