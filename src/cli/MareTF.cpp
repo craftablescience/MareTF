@@ -1,12 +1,10 @@
 // ReSharper disable CppDFATimeOver
-// ReSharper disable CppUnusedIncludeDirective
 // ReSharper disable CppUseStructuredBinding
 
 #include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
-#include <chrono>
 #include <filesystem>
 #include <format>
 #include <functional>
