@@ -407,6 +407,15 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(hdriNoFilter);
 
+	std::string resizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
+	createCLI
+		.add_argument("--resize-method")
+		.metavar("RESIZE_METHOD")
+		.help("How to resize the texture's width and height to match a power of 2. Overridden by"
+			" --width-resize-method and --height-resize-method.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
+		.default_value(resizeMethod).store_into(resizeMethod);
+
 	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	createCLI
 		.add_argument("--width-resize-method")
@@ -1260,8 +1269,8 @@ int main(int argc, const char* const argv[]) {
 				options.bumpMapScale = bumpMapScale;
 
 				// Set resize methods
-				options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(widthResizeMethod);
-				options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(heightResizeMethod);
+				options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--width-resize-method") ? widthResizeMethod : resizeMethod);
+				options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--height-resize-method") ? heightResizeMethod : resizeMethod);
 
 				// Set gamma correction
 				if (gammaCorrection) {

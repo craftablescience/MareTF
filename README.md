@@ -100,10 +100,10 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--no-mips] [--no-animation] [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
-              [--opengl] [--hdri] [--hdri-no-filter] [--width-resize-method RESIZE_METHOD]
-              [--height-resize-method RESIZE_METHOD] [--gamma-correct]
-              [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt] [--clampu]
-              [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
+              [--opengl] [--hdri] [--hdri-no-filter] [--resize-method RESIZE_METHOD]
+              [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
+              [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
+              [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
               [--particle-sheet-resource PATH] [--crc-resource CRC] [--lod-resource U.V]
               [--ts0-resource COMBINED_FLAGS] [--kvd-resource PATH]
               [--hotspot-data-resource PATH]
@@ -205,6 +205,11 @@ Optional arguments:
                                                equirectangular HDRI and create a cubemap.
   --hdri-no-filter                             When creating a cubemap from an input HDRI, do
                                                not perform bilinear filtering.
+  --resize-method                              How to resize the texture's width and height
+                                               to match a power of 2. Overridden by
+                                               --width-resize-method and
+                                               --height-resize-method. [nargs=0..1]
+                                               [default: "BIGGER"]
   --width-resize-method                        How to resize the texture's width to match a
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
   --height-resize-method                       How to resize the texture's height to match a
