@@ -2,9 +2,10 @@
 
 #include <QMainWindow>
 
+class QDragEnterEvent;
+class QDropEvent;
 class QPaintEvent;
-class QPushButton;
-class QResizeEvent;
+class QToolBar;
 
 class QMareEmptyWindow : public QMainWindow {
 	Q_OBJECT;
@@ -15,9 +16,9 @@ public:
 protected:
 	void paintEvent(QPaintEvent*) override;
 
-	void resizeEvent(QResizeEvent*) override;
+	void dragEnterEvent(QDragEnterEvent* event) override;
 
-	QPushButton* newTexture;
-	QPushButton* newTextures;
-	QPushButton* loadTextures;
+	void dropEvent(QDropEvent* event) override;
+
+	QToolBar* toolbar;
 };

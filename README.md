@@ -49,7 +49,21 @@ A utility to create, edit, and display every type of VTF file ever made.
 
 <img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_wink.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, winking." />
 
-## Example Usage
+## Credits
+
+- Assets:
+  - The kirin in the program logo (Olive Shade) was created with [pony.town](https://pony.town)'s character creator
+  - The lovely GUI splash screen art is by [@pastacrylic](https://linktr.ee/pastacrylic)
+- CLI Dependencies:
+  - [argparse](https://github.com/p-ranav/argparse)
+  - [efsw](https://github.com/SpartanJ/efsw)
+  - [indicators](https://github.com/p-ranav/indicators)
+  - [sourcepp](https://github.com/craftablescience/sourcepp)
+- GUI Dependencies:
+  - [sourcepp](https://github.com/craftablescience/sourcepp)
+  - [Qt](https://www.qt.io)
+
+## Example CLI Usage
 
 ```shell
 maretf create input.png --version 7.4 --format UNCHANGED --filter KAISER
@@ -77,21 +91,7 @@ maretf info input.vtf
 ```
 - Prints the VTF's metadata to the console.
 
-## Credits
-
-- Assets:
-  - The kirin in the program logo (Olive Shade) was created with [pony.town](https://pony.town)'s character creator
-  - The font used in the GUI is [Celestia Medium Redux](http://www.mattyhex.net/CMR), licensed under public domain
-- CLI Dependencies:
-  - [argparse](https://github.com/p-ranav/argparse)
-  - [efsw](https://github.com/SpartanJ/efsw)
-  - [indicators](https://github.com/p-ranav/indicators)
-  - [sourcepp](https://github.com/craftablescience/sourcepp)
-- GUI Dependencies:
-  - [sourcepp](https://github.com/craftablescience/sourcepp)
-  - [Qt](https://www.qt.io)
-
-## Full Help Text
+## Full CLI Help Text
 
 ```
 Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]

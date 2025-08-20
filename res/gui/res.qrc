@@ -1,12 +1,10 @@
 <RCC>
     <qresource prefix="/">
         <file>../logo.png</file>
-        <file>background_gradient.png</file>
-        <file>background_landscape.png</file>
+        <file>button_kofi.png</file>
+        <file>button_load.png</file>
         <file>button_new.png</file>
         <file>button_new_multi.png</file>
-        <file>button_load.png</file>
-        <file>env_sun.png</file>
-        <file>olive_shade_sleep.png</file>
+        <file>splash.png</file>
     </qresource>
 </RCC>

@@ -26,6 +26,7 @@
 #include "../common/Common.h"
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
+#include "Credits.h"
 #include "QMareTextureWidget.h"
 
 QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
@@ -38,27 +39,29 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
 
-	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&New Texture"), [this] {
+	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [] {
 		// todo: create new texture from image
 	})->setDisabled(true);
 
-	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("N&ew Textures"), [this] {
+	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [] {
 		// todo: create new textures from folder
 	})->setDisabled(true);
 
-	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load Textures"), [this] {
-		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files %1").arg("(*)"))) {
+	fileMenu->addSeparator();
+
+	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
+		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
 			this->loadTexture(file);
 		}
 	});
 
 	fileMenu->addSeparator();
 
-	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Donate On &Ko-fi..."), [] {
+	fileMenu->addAction(QIcon{":/button_kofi.png"}, tr("&Donate"), [] {
 		QDesktopServices::openUrl({"https://ko-fi.com/craftablescience"});
 	});
 
-	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Quit"), [this] {
+	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Exit"), Qt::ALT | Qt::Key_F4, [this] {
 		this->close();
 	});
 
@@ -76,27 +79,21 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&About"), [this] {
-		auto* box = new QMessageBox{this};
-		box->setWindowTitle(tr("About"));
-		box->setIconPixmap(QPixmap{":/logo.png"}.scaledToWidth(64));
-		box->setTextFormat(Qt::MarkdownText);
-		box->setText(tr("## %1\nCreated by %2\n\nThis project lives [on GitHub here](%3).").arg(PROJECT_TITLE).arg(PROJECT_ORGANIZATION_NAME).arg(PROJECT_HOMEPAGE_URL));
-		box->setStandardButtons(QMessageBox::Ok);
-		box->exec();
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
+		::showMareTFCredits(this);
 	});
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("About &Qt"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {
 		QMessageBox::aboutQt(this);
 	});
 
 	helpMenu->addSeparator();
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [] {
 		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
 	});
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Request a &Feature"), [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Request a &Feature"), [] {
 		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
 	});
 
