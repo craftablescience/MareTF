@@ -14,6 +14,8 @@ A utility to create, edit, and display every type of VTF file ever made.
 
 ###### *See also: [VTF Thumbnailer](https://github.com/craftablescience/vtf-thumbnailer) and [QVTF++](https://github.com/craftablescience/qvtfpp)*
 
+![A preview of the application's main windows.](https://github.com/craftablescience/MareTF/blob/mane/res/brand/screenshot1.png?raw=true)
+
 ## Features
 
 - Create Mode
@@ -28,6 +30,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Create console VTFs
     - Xbox 360
     - PlayStation 3
+  - Supports new formats in Alien Swarm and beyond
   - Supports new Strata Source VTF version
     - New formats (BC7 / BC6H)
     - New CPU compression (Deflate / Zstandard)
