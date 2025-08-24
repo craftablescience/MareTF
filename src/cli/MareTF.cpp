@@ -1204,9 +1204,9 @@ int main(int argc, const char* const argv[]) {
 				// Set default flags or animation state based on input filename
 				int frameNumberStart = 0;
 				int frameNumberCount = 0;
-				if (auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour")) {
+				if (auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour") || inputStem.ends_with("_albedo") || inputStem.ends_with("-albedo") || inputStem.ends_with("_diffuse") || inputStem.ends_with("-diffuse")) {
 					addSRGBFlag(options);
-				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal")) {
+				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal") || inputStem.ends_with("_norm") || inputStem.ends_with("-norm")) {
 					options.flags |= vtfpp::VTF::FLAG_NORMAL;
 				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
 					if (options.version >= 3) {
