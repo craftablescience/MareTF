@@ -239,7 +239,7 @@ int main(int argc, const char* const argv[]) {
 
 	bool quiet;
 	cli
-		.add_argument("-q", "--quiet")
+		.add_argument("--quiet")
 		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully).")
 		.flag()
 		.store_into(quiet);
@@ -289,6 +289,14 @@ int main(int argc, const char* const argv[]) {
 		.help("Output format.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
 		.default_value(format).store_into(format);
+
+	float compressedFormatQuality = vtfpp::ImageConversion::DEFAULT_COMPRESSED_QUALITY;
+	createCLI
+		.add_argument("-q", "--quality")
+		.metavar("COMPRESSION_QUALITY")
+		.help("The quality of DXTn/BCn format compression, between 0.0 and 1.0. Higher quality will take significantly longer to create the texture. Ignored if output format is uncompressed.")
+		.scan<'g', float>()
+		.default_value(compressedFormatQuality).store_into(compressedFormatQuality);
 
 	std::string filter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
 	createCLI
@@ -1163,6 +1171,9 @@ int main(int argc, const char* const argv[]) {
 					}
 				}
 
+				// Set compression quality
+				options.compressedFormatQuality = compressedFormatQuality;
+
 				// Set filter
 				options.filter = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter);
 
@@ -1329,9 +1340,9 @@ int main(int argc, const char* const argv[]) {
 
 					// And now convert to output format
 					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1));
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup);
+						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 					}
 
 					// Set resources
@@ -1395,9 +1406,9 @@ int main(int argc, const char* const argv[]) {
 
 					// And now convert to output format
 					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1));
+						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup);
+						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 					}
 
 					// Set resources
