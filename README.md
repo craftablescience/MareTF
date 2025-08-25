@@ -99,11 +99,12 @@ maretf info input.vtf
 ```
 Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
-              [--filter RESIZE_FILTER] [--flag FLAG]... [--no-automatic-transparency-flags]
-              [--no-mips] [--no-animation] [--no-thumbnail] [--platform PLATFORM]
-              [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
-              [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
-              [--opengl] [--hdri] [--hdri-no-filter] [--resize-method RESIZE_METHOD]
+              [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--flag FLAG]...
+              [--no-automatic-transparency-flags] [--no-mips] [--no-animation]
+              [--no-thumbnail] [--platform PLATFORM] [--compression-method COMPRESSION_METHOD]
+              [--compression-level LEVEL] [--start-frame FRAME_INDEX]
+              [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl] [--hdri]
+              [--hdri-no-filter] [--resize-method RESIZE_METHOD]
               [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
               [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
               [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
@@ -147,7 +148,7 @@ Optional arguments:
   -y, --yes                                    Automatically say yes to any prompts.
   -n, --no                                     Automatically say no to any prompts.
                                                Overrides --yes.
-  -q, --quiet                                  Don't print anything to stdout or stderr
+  --quiet                                      Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
                                                successfully).
   --no-recurse                                 If the input path is a directory, do not enter
@@ -169,6 +170,11 @@ Optional arguments:
                                                [nargs=0..1] [default: "7.4"]
   -f, --format                                 Output format. [nargs=0..1]
                                                [default: "DEFAULT"]
+  -q, --quality                                The quality of DXTn/BCn format compression,
+                                               between 0.0 and 1.0. Higher quality will take
+                                               significantly longer to create the texture.
+                                               Ignored if output format is uncompressed.
+                                               [nargs=0..1] [default: 0.105]
   -r, --filter                                 The resize filter used to generate mipmaps and
                                                when resizing the base texture to match a
                                                power of 2 (if necessary). [nargs=0..1]
