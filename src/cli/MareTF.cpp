@@ -24,6 +24,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+#ifdef _MSC_VER
+#  include <intrin.h>
+#  define __builtin_popcount __popcnt
+#endif
 
 #include <argparse/argparse.hpp>
 #include <efsw/efsw.hpp>
@@ -177,6 +181,273 @@ template<> tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
 template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 	if (!QUIET) std::cerr << std::endl;
 	return *this;
+}
+
+} // namespace
+
+namespace DistanceMapping {
+
+enum Leaf : uint8_t {
+	IN,         // leaf is opaque
+	OUT,        // leaf is transparent
+	FIGUREITOUT // leaf is mixed but small so you should brute force scan.
+};
+
+enum Quadrant : uint8_t {
+	NW,
+	NE,
+	SW,
+	SE
+};
+
+static uint16_t i32tou16sat(int32_t i) {
+	if (i > UINT16_MAX)
+		return UINT16_MAX;
+	if (i < 0)
+		return 0;
+	return (uint16_t) i;
+}
+static uint16_t ftoabsu16(float f) { return i32tou16sat((int32_t) fabs(f)); }
+
+class QuadTree {
+public:
+	QuadTree(
+		std::vector<std::byte> *actuallyrgba32323232f,
+		uint16_t inWidth,
+		uint16_t inHeight,
+		uint16_t reduceX,
+		uint16_t reduceY,
+		float distanceSpread,
+		bool sampleCentered,
+		float alphaThreshold = 0.04f
+	)
+		: rgba32323232f(reinterpret_cast<const float *>(actuallyrgba32323232f->data()))
+		, imgWidth(inWidth)
+		, imgHeight(inHeight)
+		, reduceX(reduceX)
+		, reduceY(reduceY)
+		, searchRadius(ftoabsu16(2.0f * std::max((float) this->reduceX, (float) this->reduceY) * distanceSpread))
+		// the second power of two after search radius
+		, granularity(((uint16_t) 4) << ftoabsu16(ceil(log2((float) searchRadius))))
+		, offsX(sampleCentered ? this->reduceX / 2 : 0)
+		, offsY(sampleCentered ? this->reduceY / 2 : 0)
+		, alphaThreshold(alphaThreshold)
+		, root([this](){ return scanImg(0, 0, imgWidth, imgHeight); }())
+	{}
+	~QuadTree() { Node::wither(root); }
+
+private:
+	const float *rgba32323232f;
+public:
+	const uint16_t imgWidth, imgHeight;
+	const uint16_t reduceX, reduceY;
+	const uint16_t searchRadius;
+private:
+	const uint16_t granularity;
+public:
+	const uint16_t offsX, offsY;
+private:
+	const float alphaThreshold;
+public:
+
+	class Node;
+	typedef std::variant<Leaf, Node *> Branch;
+	const Branch root;
+
+	class Node {
+	public:
+		Branch branches[4];
+		Node(Branch nw, Branch ne, Branch sw, Branch se) : branches {nw, ne, sw, se} {};
+		~Node() {
+			for (uint16_t q = NW; q <= SE; q++)
+				wither(branches[q]);
+		}
+		static void wither(Branch c) {
+			if (holds_alternative<Node *>(c))
+				delete get<Node*>(c);
+		}
+	};
+
+	static bool brancheq(Branch a, Branch b) {
+		return holds_alternative<Leaf>(a) && holds_alternative<Leaf>(b) && get<Leaf>(a) == get<Leaf>(b);
+	}
+
+	float sampleClamped(int32_t x, int32_t y) {
+		int32_t rX = std::min(i32tou16sat(x), (uint16_t) (imgWidth - 1));
+		int32_t rY = std::min(i32tou16sat(y), (uint16_t) (imgHeight - 1));
+		return rgba32323232f[(rY * imgWidth + rX) * 4 + 3];
+	}
+
+	Leaf thresh(float alpha) {
+		return alpha >= alphaThreshold ? IN : OUT;
+	}
+
+private:
+	// TODO: cleverer scan to partition top-down?
+	Branch scanImg(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+		if (w <= granularity || h <= granularity) {
+			// extend sensitivity to minimum safe distance. a safe leaf is a safe leaf, no need to peek.
+			int32_t ix = x - searchRadius + offsX, tx = x + w + searchRadius + offsX;
+			int32_t iy = y - searchRadius + offsY, ty = y + h + searchRadius + offsY;
+			Leaf curShade = thresh(sampleClamped(ix, iy));
+
+			for (auto jx = ix; jx < tx; jx++)
+				for (auto jy = iy; jy < ty; jy++)
+					if (thresh(sampleClamped(jx, jy)) != curShade)
+						return FIGUREITOUT;
+
+			return curShade;
+		}
+
+		uint16_t hw = w / 2, hh = h / 2;
+		Branch iNW = scanImg(x,      y,      hw, hh);
+		Branch iNE = scanImg(x + hw, y,      hw, hh);
+		Branch iSW = scanImg(x,      y + hh, hw, hh);
+		Branch iSE = scanImg(x + hw, y + hh, hw, hh);
+
+		if (brancheq(iNW, iNE) && brancheq(iNE, iSW) && brancheq(iSW, iSE))
+			return get<Leaf>(iNW);
+		return new Node(iNW, iNE, iSW, iSE);
+	}
+};
+
+class RasterCursor {
+public:
+	RasterCursor(QuadTree *tree)
+		: tree(tree)
+		, curX(tree->offsX)
+		, curY(tree->offsY)
+	{
+		curShade = reorient();
+	};
+
+	bool getContiguousRun(Leaf &srcShade, uint16_t &srcY, uint16_t &srcX, uint16_t &dstW) {
+		srcX = curX;
+		srcY = curY;
+		dstW = 0;
+		srcShade = curShade = reorient();
+
+		while (curX < tree->imgWidth && QuadTree::brancheq(srcShade, curShade)) {
+			auto blkSize = tree->imgWidth >> depth;
+			curX += blkSize;
+			dstW += blkSize / tree->reduceX;
+			curShade = reorient();
+		}
+
+		if (curX >= tree->imgWidth) {
+			curX = tree->offsX;
+			curY += tree->reduceY;
+		}
+
+		return curY < tree->imgHeight;
+	}
+private:
+	Leaf reorient() {
+		depth = 0;
+		curBranch = tree->root;
+		auto remX = curX, remY = curY;
+
+		while (holds_alternative<QuadTree::Node *>(curBranch)) {
+			auto benchX = tree->imgWidth >> (depth + 1), benchY = tree->imgHeight >> (depth + 1);
+			if (benchX < 2 || benchY < 2)
+				return curShade; // would be nice to make this unrepresentable
+			auto bGtX = remX >= benchX, bGtY = remY >= benchY;
+			remX -= benchX * bGtX;
+			remY -= benchY * bGtY;
+			curBranch = get<QuadTree::Node *>(curBranch)->branches[bGtX | bGtY << 1];
+			depth++;
+		}
+
+		return get<Leaf>(curBranch);
+	}
+
+	QuadTree *tree;
+	uint16_t curX, curY, depth;
+	Leaf curShade;
+	QuadTree::Branch curBranch;
+};
+
+void paintMap(
+	std::vector<std::byte> *srcrgba32323232f,
+	float *dstrgba32323232f,
+	uint16_t inputWidth,
+	uint16_t inputHeight,
+	uint16_t reduceX,
+	uint16_t reduceY,
+	float distanceSpread,
+	bool valveQuirks,
+	bool sampleCentered,
+	bool distanceAA,
+	bool &warning
+) {
+	auto tree = std::make_shared<QuadTree>(srcrgba32323232f, inputWidth, inputHeight, reduceX, reduceY, distanceSpread, sampleCentered);
+	auto cursor = std::make_unique<RasterCursor>(tree.get());
+	uint16_t srcY = 0, srcX = 0, dstW = 0;
+	auto srcShade = FIGUREITOUT;
+	uint32_t iOut = 3;
+	auto keepPainting = true;
+	do {
+		keepPainting = cursor->getContiguousRun(srcShade, srcY, srcX, dstW);
+		float fillDistance = 1.0f;
+		switch (srcShade) {
+		case OUT:
+			fillDistance = 0.0f;
+		case IN:
+			for (uint16_t i = 0; i < dstW; i++, iOut += 4)
+				dstrgba32323232f[iOut] = fillDistance;
+			break;
+		case FIGUREITOUT:
+		default:
+			// oh no we actually have to do work
+			for (uint16_t i = 0; i < dstW; i++, iOut += 4) {
+				auto curX = srcX + i * reduceX;
+				float alphaRef = tree->sampleClamped(curX, srcY);
+				Leaf stateRef = tree->thresh(alphaRef);
+				auto nearest = std::numeric_limits<float>::max();
+				for (int32_t sX = curX - tree->searchRadius, tX = curX + tree->searchRadius; sX < tX; sX++) {
+					for (int32_t sY = srcY - tree->searchRadius, tY = srcY + tree->searchRadius; sY < tY; sY++) {
+						float alphaSmp = tree->sampleClamped(sX, sY);
+						Leaf stateSmp = tree->thresh(alphaSmp);
+						if (stateSmp != stateRef) {
+							float dist = std::hypot((float) (sX - curX), (float) (sY - srcY));
+							if (distanceAA)
+								dist += sqrt(2) * (1 - fabs(alphaSmp - alphaRef));
+							nearest = fmin(nearest, dist);
+						}
+					}
+				}
+
+				nearest = fmin(0.5f, nearest * 0.5f / (float) tree->searchRadius);
+				if (stateRef == OUT)
+					nearest = -nearest;
+
+				dstrgba32323232f[iOut] = 0.5 + nearest;
+			}
+		}
+	} while (keepPainting);
+
+	warning = false;
+
+	if (valveQuirks) {
+		auto oWidth = inputWidth / reduceX;
+		auto oHeight = inputHeight / reduceY;
+
+		auto blackOutAndWarn = [&](auto oi) {
+			auto px = dstrgba32323232f + oi * 4 + 3;
+			if (fabs(*px) > 0.000001f)
+				warning = true;
+			*px = 0.0f;
+		};
+
+		for (auto x = 0; x < oWidth; x++) {
+			blackOutAndWarn(x);
+			blackOutAndWarn(x + (oHeight - 1) * oWidth);
+		}
+		for (auto y = 0; y < oHeight; y++) {
+			blackOutAndWarn(y * oWidth);
+			blackOutAndWarn(y * oWidth + oHeight - 1);
+		}
+	}
 }
 
 } // namespace
@@ -414,6 +685,68 @@ int main(int argc, const char* const argv[]) {
 		.help("When creating a cubemap from an input HDRI, do not perform bilinear filtering.")
 		.flag()
 		.store_into(hdriNoFilter);
+
+	bool alphaToDistance;
+	createCLI
+		.add_argument("--alpha-to-distance")
+		.help("Convert alpha channel to a distance map.")
+		.flag()
+		.store_into(alphaToDistance);
+
+	uint16_t reduce = 1;
+	createCLI
+		.add_argument("--reduce")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale when building a distance map."
+			" Must be a power of 2. Overridden by --reduce-x and --reduce-y.")
+		.scan<'u', uint16_t>()
+		.default_value(reduce).store_into(reduce);
+
+	bool reduceXSet = false;
+	uint16_t reduceX = 1;
+	createCLI
+		.add_argument("--reduce-x")
+		.metavar("FACTOR")
+		.action([&](const auto&){ reduceXSet = true; })
+		.help("Factor by which to downscale width when building a distance map."
+			" Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.default_value(reduceX).store_into(reduceX);
+
+	bool reduceYSet = false;
+	uint16_t reduceY = 1;
+	createCLI
+		.add_argument("--reduce-y")
+		.metavar("FACTOR")
+		.action([&](const auto&){ reduceYSet = true; })
+		.help("Factor by which to downscale height when building a distance map."
+			" Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.default_value(reduceX).store_into(reduceY);
+
+	float distanceSpread = 1.0f;
+	createCLI
+		.add_argument("--distance-spread")
+		.metavar("COEFF")
+		.help("Multiply the search radius when building a distance map.")
+		.scan<'g', float>()
+		.default_value(distanceSpread).store_into(distanceSpread);
+
+	bool noValveDistanceQuirks;
+	createCLI
+		.add_argument("--no-valve-distance-quirks")
+		.flag()
+		.help("Do not force the edges of a generated distance map to black, nor warn about"
+			" finite distances at the edges of an image.")
+		.store_into(noValveDistanceQuirks);
+
+	bool distanceAA;
+	createCLI
+		.add_argument("--distance-aa")
+		.flag()
+		.help("Treat any alpha channel turned into a distance map as antialiased."
+			" May cause artifacts if long gradients are present.")
+		.store_into(distanceAA);
 
 	std::string resizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
 	createCLI
@@ -1425,7 +1758,53 @@ int main(int argc, const char* const argv[]) {
 				}
 
 				// Create VTF
-				auto vtf = vtfpp::VTF::create(currentInputPath, options);
+				vtfpp::VTF vtf;
+
+				if (alphaToDistance) {
+					std::string reduceXSetString = "--reduce-x";
+					std::string reduceYSetString = "--reduce-y";
+					if (!reduceXSet) {
+						reduceX = reduce;
+						reduceXSetString = "--reduce";
+					}
+					if (!reduceYSet) {
+						reduceY = reduce;
+						reduceYSetString = "--reduce";
+					}
+					auto checkReducePow = [&](uint16_t v, const auto &originString) {
+						if (__builtin_popcount(v) != 1) {
+							tferr << BOLD << originString << END << " is not a power of two.";
+							return false;
+						}
+						return true;
+					};
+					if (!checkReducePow(reduceX, reduceXSetString) || !checkReducePow(reduceY, reduceYSetString)) {
+						return EXIT_FAILURE;
+					}
+
+					int inputWidth, inputHeight, inputFrameCount;
+					vtfpp::ImageFormat inputFormat;
+					auto image = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), inputFormat, inputWidth, inputHeight, inputFrameCount);
+					if (vtfpp::ImageFormatDetails::decompressedAlpha(inputFormat) < 1) {
+						tferr << "Could not acquire alpha from " << BOLD << currentInputPath << END << "; inferred format was" << BOLD << not_magic_enum::detail::IMAGE_FORMAT_S[(int) inputFormat] << END << "." << tfendl;
+						return EXIT_FAILURE;
+					}
+					uint16_t newWidth = inputWidth, newHeight = inputHeight;
+					vtfpp::ImageConversion::setResizedDims(newWidth, options.widthResizeMethod, newHeight, options.heightResizeMethod);
+					image = vtfpp::ImageConversion::resizeImageData(image, inputFormat, inputWidth, newWidth, inputHeight, newHeight, srgb, options.filter);
+					auto sampleImage = vtfpp::ImageConversion::convertImageDataToFormat(image, inputFormat, vtfpp::ImageFormat::RGBA32323232F, newWidth, newHeight);
+					auto distanceTarget = vtfpp::ImageConversion::resizeImageData(image, inputFormat, newWidth, newWidth / reduceX, newHeight, newHeight / reduceY, srgb, options.filter);
+					auto distanceCanvas = vtfpp::ImageConversion::convertImageDataToFormat(distanceTarget, inputFormat, vtfpp::ImageFormat::RGBA32323232F, newWidth / reduceX, newHeight / reduceY);
+					bool edgeWarning = false;
+					DistanceMapping::paintMap(&sampleImage, reinterpret_cast<float *>(distanceCanvas.data()), newWidth, newHeight, reduceX, reduceY, distanceSpread, !noValveDistanceQuirks, false, distanceAA, edgeWarning);
+					if (edgeWarning)
+						tferr << "Edges of generated distance map were opaque; forcibly masking. Pass " << BOLD << "--no-valve-distance-quirks" << END << " to disable this." << tfendl;
+
+					vtf = vtfpp::VTF::create(distanceCanvas, vtfpp::ImageFormat::RGBA32323232F, newWidth / reduceX, newHeight / reduceY, options);
+				} else {
+					vtf = vtfpp::VTF::create(currentInputPath, options);
+				}
+
 				if (!vtf) {
 					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 					return EXIT_FAILURE;
