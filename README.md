@@ -274,10 +274,20 @@ Optional arguments:
                                                losing information. Recommended to pair this
                                                with the recompute transparency flags
                                                argument.
-  --set-width WIDTH                            Set the lowest mip's width. Ignores power of
-                                               two resize rule.
-  --set-height HEIGHT                          Set the lowest mip's height. Ignores power of
-                                               two resize rule.
+  --set-width WIDTH                            Set the largest mip's width. Ignores power of
+                                               two resize rule. Keep in mind this operation
+                                               will result in information loss, especially if
+                                               the texture is using a lossy format.
+                                               Recommended to pair this with the recompute
+                                               mips argument if the input texture is using a
+                                               lossless format.
+  --set-height HEIGHT                          Set the largest mip's height. Ignores power of
+                                               two resize rule. Keep in mind this operation
+                                               will result in information loss, especially if
+                                               the texture is using a lossy format.
+                                               Recommended to pair this with the recompute
+                                               mips argument if the input texture is using a
+                                               lossless format.
   --edit-filter                                Use this resize filter for all resizing
                                                operations that accept a filter parameter,
                                                including mipmap generation. [nargs=0..1]

@@ -603,7 +603,9 @@ int main(int argc, const char* const argv[]) {
 	editCLI
 		.add_argument("--set-width")
 		.metavar("WIDTH")
-		.help("Set the lowest mip's width. Ignores power of two resize rule.")
+		.help("Set the largest mip's width. Ignores power of two resize rule. Keep in mind this operation will"
+		      " result in information loss, especially if the texture is using a lossy format. Recommended to pair this"
+		      " with the recompute mips argument if the input texture is using a lossless format.")
 		.scan<'d', int>()
 		.store_into(setWidth);
 
@@ -611,7 +613,9 @@ int main(int argc, const char* const argv[]) {
 	editCLI
 		.add_argument("--set-height")
 		.metavar("HEIGHT")
-		.help("Set the lowest mip's height. Ignores power of two resize rule.")
+		.help("Set the largest mip's height. Ignores power of two resize rule. Keep in mind this operation will"
+		      " result in information loss, especially if the texture is using a lossy format. Recommended to pair this"
+		      " with the recompute mips argument if the input texture is using a lossless format.")
 		.scan<'d', int>()
 		.store_into(setHeight);
 
