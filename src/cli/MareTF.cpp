@@ -1139,7 +1139,7 @@ int main(int argc, const char* const argv[]) {
 				// Check output path
 				if (outputPath.empty()) {
 					const std::filesystem::path inputPathPath{currentInputPath};
-					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + ".vtf";
+					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + (*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf");
 				}
 				{
 					bool checkFileShouldRet;
@@ -1603,7 +1603,7 @@ int main(int argc, const char* const argv[]) {
 									create(path);
 									break;
 								case efsw::Actions::Delete: {
-									const auto vtfPath = std::filesystem::path{path}.replace_extension(".vtf").string();
+									const auto vtfPath = std::filesystem::path{path}.replace_extension(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf").string();
 									if (std::error_code ec; std::filesystem::exists(vtfPath, ec)) {
 										ec.clear();
 										std::filesystem::remove(vtfPath, ec);
@@ -1773,7 +1773,7 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf")) {
+				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
 					throw std::invalid_argument{"Input file must be a VTF!"};
 				}
 				return edit(inputPath);
@@ -1782,14 +1782,14 @@ int main(int argc, const char* const argv[]) {
 				int out = EXIT_SUCCESS;
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							out = out || edit(dirEntry.path().string());
 						}
 					}
 				} else {
 					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							out = out || edit(dirEntry.path().string());
 						}
@@ -1878,7 +1878,7 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf")) {
+				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
 					throw std::invalid_argument{"Input file must be a VTF!"};
 				}
 				return extract(inputPath);
@@ -1887,14 +1887,14 @@ int main(int argc, const char* const argv[]) {
 				int out = EXIT_SUCCESS;
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							out = out || extract(dirEntry.path().string());
 						}
 					}
 				} else {
 					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							out = out || extract(dirEntry.path().string());
 						}
@@ -2249,7 +2249,7 @@ int main(int argc, const char* const argv[]) {
 			}
 
 			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf")) {
+				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
 					throw std::invalid_argument{"Input file must be a VTF!"};
 				}
 				const auto out = info(inputPath);
@@ -2260,14 +2260,14 @@ int main(int argc, const char* const argv[]) {
 				int out = EXIT_SUCCESS;
 				if (noRecurse) {
 					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							out = out || info(dirEntry.path().string());
 						}
 					}
 				} else {
 					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf") {
+						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 							outputPath = "";
 							if (infoOutputMode == "kv1") {
 								tfout << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;

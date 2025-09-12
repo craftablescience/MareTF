@@ -204,6 +204,8 @@ const std::vector<std::string_view> COMPRESSION_METHOD_S{
 
 const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E{
 	vtfpp::Resource::TYPE_THUMBNAIL_DATA,
+	vtfpp::Resource::TYPE_PALETTE_DATA,
+	vtfpp::Resource::TYPE_FALLBACK_DATA,
 	vtfpp::Resource::TYPE_IMAGE_DATA,
 	vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA,
 	vtfpp::Resource::TYPE_CRC,
@@ -215,6 +217,8 @@ const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E{
 };
 const std::vector<std::string_view> RESOURCE_TYPE_S{
 	"THUMBNAIL",
+	"PALETTE",
+	"FALLBACK",
 	"IMAGE",
 	"PARTICLE_SHEET",
 	"CRC",
@@ -247,6 +251,9 @@ const std::vector<vtfpp::VTFFlags> VTF_FLAGS_E{
 	// FlagsV2
 	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V2_NO_DEPTH_BUFFER),
 	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V2_CLAMP_U),
+	// FlagsXBOX
+	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_XBOX_CACHEABLE),
+	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_XBOX_UNFILTERABLE_OK),
 	// FlagsV3
 	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_LOAD_ALL_MIPS),
 	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_VERTEX_TEXTURE),
@@ -294,6 +301,9 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 	// FlagsV2
 	"V2_NO_DEPTH_BUFFER",
 	"V2_CLAMP_U",
+	// FlagsXBOX
+	"XBOX_CACHEABLE",
+	"XBOX_UNFILTERABLE_OK",
 	// FlagsV3
 	"V3_LOAD_ALL_MIPS",
 	"V3_VERTEX_TEXTURE",
@@ -322,15 +332,17 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{
 	vtfpp::VTF::PLATFORM_PC,
-	vtfpp::VTF::PLATFORM_PS3_PORTAL2,
-	vtfpp::VTF::PLATFORM_PS3_ORANGEBOX,
+	vtfpp::VTF::PLATFORM_XBOX,
 	vtfpp::VTF::PLATFORM_X360,
+	vtfpp::VTF::PLATFORM_PS3_ORANGEBOX,
+	vtfpp::VTF::PLATFORM_PS3_PORTAL2,
 };
 const std::vector<std::string_view> VTF_PLATFORM_S{
 	"PC",
-	"PS3_PORTAL2",
-	"PS3_ORANGEBOX",
+	"XBOX",
 	"X360",
+	"PS3_ORANGEBOX",
+	"PS3_PORTAL2",
 };
 
 } // namespace not_magic_enum::detail

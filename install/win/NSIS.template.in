@@ -20,6 +20,7 @@
   Var INSTALL_DESKTOP
   Var IS_DEFAULT_INSTALLDIR
   Var EXT_REGISTER_ASSET_VTF
+  Var EXT_REGISTER_ASSET_XTF
 
 ;--------------------------------
 ;Include Modern UI
@@ -723,6 +724,7 @@ Section "-Core installation"
 
   ; Read all file extensions to register
   !insertmacro INSTALLOPTIONS_READ $EXT_REGISTER_ASSET_VTF "NSIS.InstallOptions.ini" "Field 7" "State"
+  !insertmacro INSTALLOPTIONS_READ $EXT_REGISTER_ASSET_XTF "NSIS.InstallOptions.ini" "Field 8" "State"
 
   ; Write special uninstall registry entries
   Push "StartMenu"

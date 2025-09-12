@@ -61,3 +61,12 @@ Right=55
 Top=85
 Bottom=95
 State=1
+
+[Field 8]
+Type=CheckBox
+Text=.xtf
+Left=0
+Right=55
+Top=95
+Bottom=105
+State=1

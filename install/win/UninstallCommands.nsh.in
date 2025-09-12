@@ -1,4 +1,5 @@
 DeleteRegKey HKCR '.vtf'
+DeleteRegKey HKCR '.xtf'
 
 DeleteRegKey HKCR '@PROJECT_NAME@_asset'
 

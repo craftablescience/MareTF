@@ -1,6 +1,9 @@
 ${If} ${EXT_REGISTER_ASSET_VTF}
   WriteRegStr HKCR '.vtf' '' '@PROJECT_NAME@_asset'
 ${EndIf}
+${If} ${EXT_REGISTER_ASSET_XTF}
+  WriteRegStr HKCR '.xtf' '' '@PROJECT_NAME@_asset'
+${EndIf}
 
 WriteRegStr HKCR '@PROJECT_NAME@_asset' '' 'Valve Texture Format File'
 WriteRegStr HKCR '@PROJECT_NAME@_asset\\shell' '' 'open'

@@ -9,4 +9,13 @@
         <glob pattern="*.vtf"/>
         <glob pattern="*.VTF"/>
     </mime-type>
+    <mime-type type="image/x-xtf">
+        <comment>Valve Xbox Texture Format File</comment>
+        <icon name="${PROJECT_NAME}"/>
+        <acronym>XTF</acronym>
+        <expanded-acronym>Valve Xbox Texture Format</expanded-acronym>
+        <glob-deleteall/>
+        <glob pattern="*.xtf"/>
+        <glob pattern="*.XTF"/>
+    </mime-type>
 </mime-info>
