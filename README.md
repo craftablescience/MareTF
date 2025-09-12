@@ -28,6 +28,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Create non-power of two textures
   - Create cubemaps from HDRIs
   - Create console VTFs
+    - Original Xbox
     - Xbox 360
     - PlayStation 3
   - Supports new formats in Alien Swarm and beyond
@@ -462,6 +463,8 @@ FLAG
  • SINGLE_COPY
  • V2_NO_DEPTH_BUFFER
  • V2_CLAMP_U
+ • XBOX_CACHEABLE
+ • XBOX_UNFILTERABLE_OK
  • V3_LOAD_ALL_MIPS
  • V3_VERTEX_TEXTURE
  • V3_SSBUMP
@@ -489,9 +492,10 @@ HOTSPOT_RECT_FLAGS
 
 PLATFORM
  • PC
- • PS3_PORTAL2
- • PS3_ORANGEBOX
+ • XBOX
  • X360
+ • PS3_ORANGEBOX
+ • PS3_PORTAL2
 
 FILE_FORMAT
  • DEFAULT
