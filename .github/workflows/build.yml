@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         build_type: [Debug, Release]
-    runs-on: windows-latest
+    runs-on: windows-2022
     defaults:
       run:
         shell: cmd
