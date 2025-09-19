@@ -1985,6 +1985,10 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << tfendl;
 					tfout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << tfendl;
 
+					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_XBOX) {
+						tfout << BOLD << "Mip Scale:     " << END << CYAN << vtf.getXBOXMipScale() << END << tfendl;
+					}
+
 					tfout << BOLD << "Compression:   " << END;
 					if (vtf.getCompressionLevel() == 0) {
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
@@ -2170,6 +2174,9 @@ int main(int argc, const char* const argv[]) {
 					kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
 					kv["image"]["start_frame"] = static_cast<int>(vtf.getStartFrame());
 					kv["image"]["bumpmap_scale"] = vtf.getBumpMapScale();
+					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_XBOX) {
+						kv["image"]["mip_scale"] = static_cast<int>(vtf.getXBOXMipScale());
+					}
 					if (vtf.getCompressionLevel() == 0) {
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
 							kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());
