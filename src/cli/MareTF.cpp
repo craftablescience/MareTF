@@ -440,6 +440,16 @@ int main(int argc, const char* const argv[]) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
 		.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
+	int xboxMipScale = 0;
+	createCLI
+		.add_argument("--xbox-mip-scale")
+		.metavar("SCALE")
+		.help("On the XBOX platform, expands the perceived size of the texture when applied to map geometry and"
+		      " models. For example, given a 256x256 texture, setting a mip scale of 1 will cause it to be perceived"
+		      " as 512x512 without actually increasing memory requirements. Ignored on all other platforms.")
+		.scan<'d', int>()
+		.default_value(xboxMipScale).store_into(xboxMipScale);
+
 	bool gammaCorrection;
 	createCLI
 		.add_argument("--gamma-correct")
@@ -729,6 +739,14 @@ int main(int argc, const char* const argv[]) {
 		.help("Set the bumpmap scale. It can have a decimal point.")
 		.scan<'g', float>()
 		.store_into(setBumpMapScale);
+
+	int setXboxMipScale = 0;
+	createCLI
+		.add_argument("--set-xbox-mip-scale")
+		.metavar("SCALE")
+		.help("Set the mip scale. Only has effect on the XBOX platform. See --xbox-mip-scale for more information.")
+		.scan<'d', int>()
+		.default_value(setXboxMipScale).store_into(setXboxMipScale);
 
 	std::string setParticleSheetResource;
 	editCLI
@@ -1295,6 +1313,9 @@ int main(int argc, const char* const argv[]) {
 				// Set inversion of green channel
 				options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
 
+				// Set XBOX mip scale
+				options.xboxMipScale = xboxMipScale;
+
 				// Start stopwatch
 				::ElapsedTime stopwatch;
 
@@ -1703,6 +1724,11 @@ int main(int argc, const char* const argv[]) {
 				// Set bumpmap scale
 				if (cli.is_used("--set-bumpmap-scale")) {
 					vtf.setBumpMapScale(setBumpMapScale);
+				}
+
+				// Set XBOX mip scale
+				if (cli.is_used("--set-xbox-mip-scale")) {
+					vtf.setXBOXMipScale(setXboxMipScale);
 				}
 
 				// Recompute/remove mips
