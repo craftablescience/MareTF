@@ -611,7 +611,7 @@ void QMareTextureWindow::regenerateDetails() {
 	}
 
 	const vtfpp::VTF& vtf = activeTexture->getVTF();
-	this->setWindowTitle(QString{"%1 | %2 | %3x%4%5[*]"}.arg(PROJECT_TITLE).arg(this->textureTabs->tabText(activeIndex)).arg(vtf.getWidth()).arg(vtf.getHeight()).arg(vtf.getSliceCount() > 1 ? QString{"x%1"}.arg(vtf.getSliceCount()) : QString{}));
+	this->setWindowTitle(QString{"%1 | %2 | %3x%4%5[*]"}.arg(PROJECT_TITLE).arg(this->textureTabs->tabText(activeIndex)).arg(vtf.getWidth()).arg(vtf.getHeight()).arg(vtf.getDepth() > 1 ? QString{"x%1"}.arg(vtf.getDepth()) : QString{}));
 
 	static constexpr auto searchAndSetCombo = [](QComboBox* combo, int value, bool condition = true) {
 		combo->setCurrentIndex(0);
@@ -638,9 +638,9 @@ void QMareTextureWindow::regenerateDetails() {
 	this->previewCurrentFace->setValue(activeTexture->getCurrentFace());
 	this->previewCurrentFace->setRange(0, vtf.getFaceCount() - 1);
 
-	this->previewDepthGroup->setVisible(vtf.getSliceCount() > 1);
+	this->previewDepthGroup->setVisible(vtf.getDepth() > 1);
 	this->previewCurrentDepth->setValue(activeTexture->getCurrentDepth());
-	this->previewCurrentDepth->setRange(0, vtf.getSliceCount() - 1);
+	this->previewCurrentDepth->setRange(0, vtf.getDepth() - 1);
 
 	this->detailsFileTypeGroup->setVisible(true);
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
@@ -650,7 +650,7 @@ void QMareTextureWindow::regenerateDetails() {
 	this->detailsDimsGroup->setVisible(true);
 	this->detailsWidth->setValue(vtf.getWidth());
 	this->detailsHeight->setValue(vtf.getHeight());
-	this->detailsDepth->setValue(vtf.getSliceCount());
+	this->detailsDepth->setValue(vtf.getDepth());
 	this->detailsFrames->setValue(vtf.getFrameCount());
 	this->detailsStartFrame->setValue(vtf.getStartFrame());
 	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
@@ -673,10 +673,10 @@ void QMareTextureWindow::regenerateDetails() {
 		auto* flagItem = new QListWidgetItem{prettyFlagNames[i].data(), this->flagsChecks};
 		flagItem->setCheckState(activeTexture->getVTF().getFlags() & (vtf.getFlags() & 1 << i) ? Qt::Checked : Qt::Unchecked);
 		// basically just populate this differently per VTF version/platform - repopulate on every tab change
-		if (1 << i & vtfpp::VTF::FLAGS_MASK_INTERNAL) {
+		if (1 << i & vtfpp::VTF::FLAG_MASK_INTERNAL) {
 			flagItem->setFlags(flagItem->flags() & ~Qt::ItemIsEnabled);
 		}
-		if (flagItem->text().startsWith("Unused")) {
+		if (flagItem->text().startsWith("Unused") || flagItem->text().contains("(vtex)")) {
 			flagItem->setForeground(Qt::gray);
 		}
 		this->flagsChecks->addItem(flagItem);

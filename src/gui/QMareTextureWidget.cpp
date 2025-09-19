@@ -84,7 +84,7 @@ uint16_t QMareTextureWidget::getCurrentDepth() const {
 }
 
 void QMareTextureWidget::setCurrentDepth(uint16_t depth) {
-	this->currentDepth = std::clamp<uint16_t>(depth, 0, this->vtf.getSliceCount() - 1);
+	this->currentDepth = std::clamp<uint16_t>(depth, 0, this->vtf.getDepth() - 1);
 	this->reloadCurrentTexture();
 }
 

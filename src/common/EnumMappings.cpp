@@ -229,105 +229,103 @@ const std::vector<std::string_view> RESOURCE_TYPE_S{
 	"AUX_COMPRESSION",
 };
 
-const std::vector<vtfpp::VTFFlags> VTF_FLAGS_E{
-	// FlagsV0
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_POINT_SAMPLE),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_TRILINEAR),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_CLAMP_S),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_CLAMP_T),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_ANISOTROPIC),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_HINT_DXT5),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_NORMAL),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_NO_MIP),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_NO_LOD),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_PROCEDURAL),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_ONE_BIT_ALPHA),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_MULTI_BIT_ALPHA),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_ENVMAP),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_RENDERTARGET),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_DEPTH_RENDERTARGET),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_NO_DEBUG_OVERRIDE),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_SINGLE_COPY),
-	// FlagsV2
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V2_NO_DEPTH_BUFFER),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V2_CLAMP_U),
-	// FlagsXBOX
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_XBOX_CACHEABLE),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_XBOX_UNFILTERABLE_OK),
-	// FlagsV3
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_LOAD_ALL_MIPS),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_VERTEX_TEXTURE),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_SSBUMP),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V3_BORDER),
-	// FlagsV4
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_SRGB),
-	// FlagsV4_TF2
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_TF2_STAGING_MEMORY),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_TF2_IMMEDIATE_CLEANUP),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_TF2_IGNORE_PICMIP),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_TF2_STREAMABLE_COARSE),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V4_TF2_STREAMABLE_FINE),
-	// FlagsV5
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_PWL_CORRECTED),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_SRGB),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_DEFAULT_POOL),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_LOAD_MOST_MIPS),
-	// FlagsV5_CSGO
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_CSGO_COMBINED),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_CSGO_ASYNC_DOWNLOAD),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_CSGO_SKIP_INITIAL_DOWNLOAD),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_CSGO_YCOCG),
-	static_cast<vtfpp::VTFFlags>(vtfpp::VTF::FLAG_V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES),
+const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E{
+	// v0
+	vtfpp::VTF::FLAG_V0_POINT_SAMPLE,
+	vtfpp::VTF::FLAG_V0_TRILINEAR,
+	vtfpp::VTF::FLAG_V0_CLAMP_S,
+	vtfpp::VTF::FLAG_V0_CLAMP_T,
+	vtfpp::VTF::FLAG_V0_ANISOTROPIC,
+	vtfpp::VTF::FLAG_V0_NORMAL,
+	vtfpp::VTF::FLAG_V0_NO_LOD,
+	vtfpp::VTF::FLAG_V0_LOAD_SMALL_MIPS,
+	vtfpp::VTF::FLAG_V0_PROCEDURAL,
+	vtfpp::VTF::FLAG_V0_ONE_BIT_ALPHA,
+	vtfpp::VTF::FLAG_V0_MULTI_BIT_ALPHA,
+	// v1
+	vtfpp::VTF::FLAG_V1_RENDERTARGET,
+	vtfpp::VTF::FLAG_V1_DEPTH_RENDERTARGET,
+	vtfpp::VTF::FLAG_V1_NO_DEBUG_OVERRIDE,
+	vtfpp::VTF::FLAG_V1_SINGLE_COPY,
+	// v2
+	vtfpp::VTF::FLAG_V2_NO_DEPTH_BUFFER,
+	vtfpp::VTF::FLAG_V2_CLAMP_U,
+	// XBOX
+	vtfpp::VTF::FLAG_XBOX_CACHEABLE,
+	vtfpp::VTF::FLAG_XBOX_UNFILTERABLE_OK,
+	// v3
+	vtfpp::VTF::FLAG_V3_LOAD_ALL_MIPS,
+	vtfpp::VTF::FLAG_V3_VERTEX_TEXTURE,
+	vtfpp::VTF::FLAG_V3_SSBUMP,
+	vtfpp::VTF::FLAG_V3_BORDER,
+	// v4
+	vtfpp::VTF::FLAG_V4_SRGB,
+	// v4 (TF2)
+	vtfpp::VTF::FLAG_V4_TF2_STAGING_MEMORY,
+	vtfpp::VTF::FLAG_V4_TF2_IMMEDIATE_CLEANUP,
+	vtfpp::VTF::FLAG_V4_TF2_IGNORE_PICMIP,
+	vtfpp::VTF::FLAG_V4_TF2_STREAMABLE_COARSE,
+	vtfpp::VTF::FLAG_V4_TF2_STREAMABLE_FINE,
+	// v5
+	vtfpp::VTF::FLAG_V5_PWL_CORRECTED,
+	vtfpp::VTF::FLAG_V5_SRGB,
+	vtfpp::VTF::FLAG_V5_DEFAULT_POOL,
+	vtfpp::VTF::FLAG_V5_LOAD_MOST_MIPS,
+	// v5 (CS:GO)
+	vtfpp::VTF::FLAG_V5_CSGO_COMBINED,
+	vtfpp::VTF::FLAG_V5_CSGO_ASYNC_DOWNLOAD,
+	vtfpp::VTF::FLAG_V5_CSGO_SKIP_INITIAL_DOWNLOAD,
+	vtfpp::VTF::FLAG_V5_CSGO_YCOCG,
+	vtfpp::VTF::FLAG_V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES,
 };
 const std::vector<std::string_view> VTF_FLAGS_S{
-	// FlagsV0
+	// v0
 	"POINT_SAMPLE",
 	"TRILINEAR",
 	"CLAMP_S",
 	"CLAMP_T",
 	"ANISOTROPIC",
-	"HINT_DXT5",
 	"NORMAL",
-	"NO_MIP",
 	"NO_LOD",
+	"LOAD_SMALL_MIPS",
 	"PROCEDURAL",
 	"ONE_BIT_ALPHA",
 	"MULTI_BIT_ALPHA",
-	"ENVMAP",
+	// v1
 	"RENDERTARGET",
 	"DEPTH_RENDERTARGET",
 	"NO_DEBUG_OVERRIDE",
 	"SINGLE_COPY",
-	// FlagsV2
-	"V2_NO_DEPTH_BUFFER",
-	"V2_CLAMP_U",
-	// FlagsXBOX
+	// v2
+	"NO_DEPTH_BUFFER",
+	"CLAMP_U",
+	// XBOX
 	"XBOX_CACHEABLE",
 	"XBOX_UNFILTERABLE_OK",
-	// FlagsV3
-	"V3_LOAD_ALL_MIPS",
-	"V3_VERTEX_TEXTURE",
-	"V3_SSBUMP",
-	"V3_BORDER",
-	// FlagsV4
-	"V4_SRGB",
-	// FlagsV4_TF2
-	"V4_TF2_STAGING_MEMORY",
-	"V4_TF2_IMMEDIATE_CLEANUP",
-	"V4_TF2_IGNORE_PICMIP",
-	"V4_TF2_STREAMABLE_COARSE",
-	"V4_TF2_STREAMABLE_FINE",
-	// FlagsV5
-	"V5_PWL_CORRECTED",
-	"V5_SRGB",
-	"V5_DEFAULT_POOL",
-	"V5_LOAD_MOST_MIPS",
-	// FlagsV5_CSGO
-	"V5_CSGO_COMBINED",
-	"V5_CSGO_ASYNC_DOWNLOAD",
-	"V5_CSGO_SKIP_INITIAL_DOWNLOAD",
-	"V5_CSGO_YCOCG",
-	"V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES",
+	// v3
+	"LOAD_ALL_MIPS",
+	"VERTEX_TEXTURE",
+	"SSBUMP",
+	"BORDER",
+	// v4
+	"SRGB_V4",
+	// v4 (TF2)
+	"TF2_STAGING_MEMORY",
+	"TF2_IMMEDIATE_CLEANUP",
+	"TF2_IGNORE_PICMIP",
+	"TF2_STREAMABLE_COARSE",
+	"TF2_STREAMABLE_FINE",
+	// v5
+	"PWL_CORRECTED",
+	"SRGB_V5",
+	"DEFAULT_POOL",
+	"LOAD_MOST_MIPS",
+	// v5 (CS:GO)
+	"CSGO_COMBINED",
+	"CSGO_ASYNC_DOWNLOAD",
+	"CSGO_SKIP_INITIAL_DOWNLOAD",
+	"CSGO_YCOCG",
+	"CSGO_ASYNC_SKIP_INITIAL_LOW_RES",
 };
 
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{

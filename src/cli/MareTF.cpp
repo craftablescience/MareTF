@@ -313,7 +313,7 @@ int main(int argc, const char* const argv[]) {
 		.metavar("FLAG")
 		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied"
 		      " automatically based on the VTF properties.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(flags);
 
@@ -633,7 +633,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--add-flag")
 		.metavar("FLAG")
 		.help("Flags to add. ENVMAP and NO_MIP flags are ignored.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(addFlags);
 
@@ -642,7 +642,7 @@ int main(int argc, const char* const argv[]) {
 		.add_argument("--remove-flag")
 		.metavar("FLAG")
 		.help("Flags to remove. ENVMAP and NO_MIP flags are ignored.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTFFlags>, "FLAG"))
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(removeFlags);
 
@@ -948,7 +948,7 @@ int main(int argc, const char* const argv[]) {
 		enumInfo += '\n';
 	};
 	addEnumInfo.operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
-	addEnumInfo.operator()<vtfpp::VTFFlags>("FLAG");
+	addEnumInfo.operator()<vtfpp::VTF::Flags>("FLAG");
 	addEnumInfo.operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
 	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
@@ -1183,7 +1183,7 @@ int main(int argc, const char* const argv[]) {
 
 				// Set flags
 				for (const auto& flag : flags) {
-					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag);
+					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
 				}
 				static constexpr auto addSRGBFlag = [](vtfpp::VTF::CreationOptions& opts) {
 					opts.flags |= opts.version < 4 ? 0 : opts.version > 4 ? static_cast<uint32_t>(vtfpp::VTF::FLAG_V5_SRGB) : static_cast<uint32_t>(vtfpp::VTF::FLAG_V4_SRGB);
@@ -1192,25 +1192,25 @@ int main(int argc, const char* const argv[]) {
 					addSRGBFlag(options);
 				}
 				if (clamp_s) {
-					options.flags |= vtfpp::VTF::FLAG_CLAMP_S;
+					options.flags |= vtfpp::VTF::FLAG_V0_CLAMP_S;
 				}
 				if (clamp_t) {
-					options.flags |= vtfpp::VTF::FLAG_CLAMP_T;
+					options.flags |= vtfpp::VTF::FLAG_V0_CLAMP_T;
 				}
 				if (clamp_u && options.version >= 2) {
 					options.flags |= vtfpp::VTF::FLAG_V2_CLAMP_U;
 				}
 				if (point_sample) {
-					options.flags |= vtfpp::VTF::FLAG_POINT_SAMPLE;
+					options.flags |= vtfpp::VTF::FLAG_V0_POINT_SAMPLE;
 				}
 				if (trilinear) {
-					options.flags |= vtfpp::VTF::FLAG_TRILINEAR;
+					options.flags |= vtfpp::VTF::FLAG_V0_TRILINEAR;
 				}
 				if (anisotropic) {
-					options.flags |= vtfpp::VTF::FLAG_ANISOTROPIC;
+					options.flags |= vtfpp::VTF::FLAG_V0_ANISOTROPIC;
 				}
 				if (normal) {
-					options.flags |= vtfpp::VTF::FLAG_NORMAL;
+					options.flags |= vtfpp::VTF::FLAG_V0_NORMAL;
 				}
 				if (ssbump && options.version >= 3) {
 					options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
@@ -1222,7 +1222,7 @@ int main(int argc, const char* const argv[]) {
 				if (auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour") || inputStem.ends_with("_albedo") || inputStem.ends_with("-albedo") || inputStem.ends_with("_diffuse") || inputStem.ends_with("-diffuse")) {
 					addSRGBFlag(options);
 				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal") || inputStem.ends_with("_norm") || inputStem.ends_with("-norm")) {
-					options.flags |= vtfpp::VTF::FLAG_NORMAL;
+					options.flags |= vtfpp::VTF::FLAG_V0_NORMAL;
 				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
@@ -1678,10 +1678,10 @@ int main(int argc, const char* const argv[]) {
 
 				// Add/remove flags
 				for (const auto& flag : addFlags) {
-					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag));
+					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
 				}
 				for (const auto& flag : removeFlags) {
-					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTFFlags>(flag));
+					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
 				}
 
 				// Set size
@@ -1840,9 +1840,9 @@ int main(int argc, const char* const argv[]) {
 							if (extractAllFaces && vtf.getFaceCount() > 1) {
 								outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
 							}
-							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getSliceCount() : extractSlice + 1); slice++) {
+							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
 								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
-								if (extractAllSlices && vtf.getSliceCount() > 1) {
+								if (extractAllSlices && vtf.getDepth() > 1) {
 									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 2) + outputPathFixupSlice.extension().string());
 								}
 								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
@@ -1926,8 +1926,8 @@ int main(int argc, const char* const argv[]) {
 					tfout << '\n' << GREEN << BOLD << " ――― IMAGE ―――" << END << tfendl;
 
 					tfout << BOLD << "Format:        " << CYAN << not_magic_enum::enum_name(vtf.getFormat()) << END << tfendl;
-					if (vtf.getSliceCount() > 1) {
-						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getSliceCount() << END << tfendl;
+					if (vtf.getDepth() > 1) {
+						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << " x " << CYAN << vtf.getDepth() << END << tfendl;
 					} else {
 						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
@@ -2134,7 +2134,7 @@ int main(int argc, const char* const argv[]) {
 					kv["image"]["format"] = not_magic_enum::enum_name(vtf.getFormat());
 					kv["image"]["dimensions"]["width"] = static_cast<int>(vtf.getWidth());
 					kv["image"]["dimensions"]["height"] = static_cast<int>(vtf.getHeight());
-					kv["image"]["dimensions"]["depth"] = static_cast<int>(vtf.getSliceCount());
+					kv["image"]["dimensions"]["depth"] = static_cast<int>(vtf.getDepth());
 					kv["image"]["dimensions"]["mips"] = static_cast<int>(vtf.getMipCount());
 					kv["image"]["dimensions"]["frames"] = static_cast<int>(vtf.getFrameCount());
 					kv["image"]["dimensions"]["faces"] = static_cast<int>(vtf.getFaceCount());
