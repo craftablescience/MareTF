@@ -2023,11 +2023,32 @@ int main(int argc, const char* const argv[]) {
 					}
 					tfout << END << tfendl;
 
+					tfout << BOLD << "Hotspot Data:   ";
+					const auto* hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
+					if (hotspotDataResourcePtr) {
+						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
+							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+						} else {
+							tfout << RED << "Exists, but failed to parse";
+						}
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
 					tfout << BOLD << "Image:          ";
 					if (vtf.hasImageData()) {
 						tfout << GREEN << "Exists";
 					} else {
 						tfout << RED << "Doesn't exist (HUH?)";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "Extended Flags: ";
+					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
+						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0ResourcePtr->getDataAsExtendedFlags() << std::dec;
+					} else {
+						tfout << RED << "Doesn't exist";
 					}
 					tfout << END << tfendl;
 
@@ -2056,27 +2077,6 @@ int main(int argc, const char* const argv[]) {
 					if (kvdResourcePtr) {
 						const auto keyvalues = kvdResourcePtr->getDataAsKeyValuesData();
 						tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
-					} else {
-						tfout << RED << "Doesn't exist";
-					}
-					tfout << END << tfendl;
-
-					tfout << BOLD << "Hotspot Data:   ";
-					const auto* hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
-					if (hotspotDataResourcePtr) {
-						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
-						} else {
-							tfout << RED << "Exists, but failed to parse";
-						}
-					} else {
-						tfout << RED << "Doesn't exist";
-					}
-					tfout << END << tfendl;
-
-					tfout << BOLD << "Extended Flags: ";
-					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0ResourcePtr->getDataAsExtendedFlags() << std::dec;
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -2119,11 +2119,6 @@ int main(int argc, const char* const argv[]) {
 						}
 					}
 
-					if (kvdResourcePtr) {
-						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
-						tfout << kvdResourcePtr->getDataAsKeyValuesData() << END << tfendl;
-					}
-
 					if (hotspotDataResourcePtr) {
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
@@ -2151,6 +2146,11 @@ int main(int argc, const char* const argv[]) {
 								tfout << '\t' << BOLD << "Bounds: " << END << '(' << CYAN << rect.x1 << END << ", " << CYAN << rect.y1 << END << "), (" << CYAN << rect.x2 << END << ", " << CYAN << rect.y2 << END << ')' << tfendl;
 							}
 						}
+					}
+
+					if (kvdResourcePtr) {
+						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
+						tfout << kvdResourcePtr->getDataAsKeyValuesData() << END << tfendl;
 					}
 				} else if (infoOutputMode == "kv1") {
 					kvpp::KV1Writer kv;
@@ -2226,19 +2226,6 @@ int main(int argc, const char* const argv[]) {
 							kv["resources"]["particle_sheet"]["malformed"] = true;
 						}
 					}
-					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						kv["resources"]["crc"] = static_cast<int>(crcResourcePtr->getDataAsCRC());
-					}
-					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
-						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
-						kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
-						kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
-						kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
-						kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
-					}
-					if (const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
-						kv["resources"]["kvd"] = kvdResourcePtr->getDataAsKeyValuesData();
-					}
 					if (const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
 						if (const auto hotspots = hotspotResource->getDataAsHotspotData()) {
 							kv["resources"]["hotspot_data"]["malformed"] = false;
@@ -2259,6 +2246,19 @@ int main(int argc, const char* const argv[]) {
 					}
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsExtendedFlags());
+					}
+					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
+						kv["resources"]["crc"] = static_cast<int>(crcResourcePtr->getDataAsCRC());
+					}
+					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
+						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
+						kv["resources"]["lod"]["u"] = static_cast<int>(std::get<0>(lod));
+						kv["resources"]["lod"]["v"] = static_cast<int>(std::get<1>(lod));
+						kv["resources"]["lod"]["u360"] = static_cast<int>(std::get<2>(lod));
+						kv["resources"]["lod"]["v360"] = static_cast<int>(std::get<3>(lod));
+					}
+					if (const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
+						kv["resources"]["kvd"] = kvdResourcePtr->getDataAsKeyValuesData();
 					}
 
 					// ...and print it all out
