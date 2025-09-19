@@ -107,11 +107,11 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl] [--hdri]
               [--hdri-no-filter] [--resize-method RESIZE_METHOD]
               [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
-              [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
-              [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
-              [--particle-sheet-resource PATH] [--crc-resource CRC] [--lod-resource U.V]
-              [--ts0-resource COMBINED_FLAGS] [--kvd-resource PATH]
-              [--hotspot-data-resource PATH]
+              [--xbox-mip-scale SCALE] [--gamma-correct] [--gamma-correct-amount GAMMA]
+              [--srgb] [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear]
+              [--aniso] [--normal] [--ssbump] [--particle-sheet-resource PATH]
+              [--crc-resource CRC] [--lod-resource U.V] [--ts0-resource COMBINED_FLAGS]
+              [--kvd-resource PATH] [--hotspot-data-resource PATH]
               [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
               [--set-format IMAGE_FORMAT] [--set-width WIDTH] [--set-height HEIGHT]
               [--edit-filter RESIZE_FILTER] [--add-flag FLAG]... [--remove-flag FLAG]...
@@ -119,11 +119,11 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
               [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD]
               [--set-compression-level LEVEL] [--set-start-frame FRAME_INDEX]
-              [--set-bumpmap-scale SCALE] [--set-particle-sheet-resource PATH]
-              [--remove-particle-sheet-resource] [--set-crc-resource CRC]
-              [--remove-crc-resource] [--set-lod-resource U.V] [--remove-lod-resource]
-              [--set-ts0-resource COMBINED_FLAGS] [--remove-ts0-resource]
-              [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--set-bumpmap-scale SCALE] [--set-xbox-mip-scale SCALE]
+              [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
+              [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
+              [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
+              [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-data-resource PATH] [--remove-hotspot-data-resource]
               [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
               [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
@@ -147,8 +147,8 @@ Optional arguments:
                                                mode outputs a file). Ignored if the input
                                                path is a directory.
   -y, --yes                                    Automatically say yes to any prompts.
-  -n, --no                                     Automatically say no to any prompts.
-                                               Overrides --yes.
+  --no                                         Automatically say no to any prompts. Overrides
+                                               --yes.
   --quiet                                      Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
                                                successfully).
@@ -181,9 +181,9 @@ Optional arguments:
                                                power of 2 (if necessary). [nargs=0..1]
                                                [default: "KAISER"]
   --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA,
-                                               MULTI_BIT_ALPHA, NO_MIP, and NO_LOD flags are
-                                               applied automatically based on the VTF
-                                               properties. [may be repeated]
+                                               MULTI_BIT_ALPHA, and NO_MIP flags are applied
+                                               automatically based on the VTF properties.
+                                               [may be repeated]
   --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
@@ -224,6 +224,14 @@ Optional arguments:
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
   --height-resize-method                       How to resize the texture's height to match a
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
+  --xbox-mip-scale                             On the XBOX platform, expands the perceived
+                                               size of the texture when applied to map
+                                               geometry and models. For example, given a
+                                               256x256 texture, setting a mip scale of 1 will
+                                               cause it to be perceived as 512x512 without
+                                               actually increasing memory requirements.
+                                               Ignored on all other platforms. [nargs=0..1]
+                                               [default: 0]
   --gamma-correct                              Perform gamma correction on the input image. 
   --gamma-correct-amount                       The gamma to use in gamma correction. A value
                                                of 2.2 is assumed by a good deal of code in
@@ -318,6 +326,9 @@ Optional arguments:
   --set-start-frame FRAME_INDEX                Set the start frame.
   --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
                                                point.
+  --set-xbox-mip-scale                         Set the mip scale. Only has effect on the XBOX
+                                               platform. See --xbox-mip-scale for more
+                                               information. [nargs=0..1] [default: 0]
   --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should
                                                point to a valid particle sheet file.
   --remove-particle-sheet-resource             Remove the particle sheet resource. If set
@@ -449,41 +460,39 @@ FLAG
  • CLAMP_S
  • CLAMP_T
  • ANISOTROPIC
- • HINT_DXT5
  • NORMAL
- • NO_MIP
  • NO_LOD
+ • LOAD_SMALL_MIPS
  • PROCEDURAL
  • ONE_BIT_ALPHA
  • MULTI_BIT_ALPHA
- • ENVMAP
  • RENDERTARGET
  • DEPTH_RENDERTARGET
  • NO_DEBUG_OVERRIDE
  • SINGLE_COPY
- • V2_NO_DEPTH_BUFFER
- • V2_CLAMP_U
+ • NO_DEPTH_BUFFER
+ • CLAMP_U
  • XBOX_CACHEABLE
  • XBOX_UNFILTERABLE_OK
- • V3_LOAD_ALL_MIPS
- • V3_VERTEX_TEXTURE
- • V3_SSBUMP
- • V3_BORDER
- • V4_SRGB
- • V4_TF2_STAGING_MEMORY
- • V4_TF2_IMMEDIATE_CLEANUP
- • V4_TF2_IGNORE_PICMIP
- • V4_TF2_STREAMABLE_COARSE
- • V4_TF2_STREAMABLE_FINE
- • V5_PWL_CORRECTED
- • V5_SRGB
- • V5_DEFAULT_POOL
- • V5_LOAD_MOST_MIPS
- • V5_CSGO_COMBINED
- • V5_CSGO_ASYNC_DOWNLOAD
- • V5_CSGO_SKIP_INITIAL_DOWNLOAD
- • V5_CSGO_YCOCG
- • V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES
+ • LOAD_ALL_MIPS
+ • VERTEX_TEXTURE
+ • SSBUMP
+ • BORDER
+ • SRGB_V4
+ • TF2_STAGING_MEMORY
+ • TF2_IMMEDIATE_CLEANUP
+ • TF2_IGNORE_PICMIP
+ • TF2_STREAMABLE_COARSE
+ • TF2_STREAMABLE_FINE
+ • PWL_CORRECTED
+ • SRGB_V5
+ • DEFAULT_POOL
+ • LOAD_MOST_MIPS
+ • CSGO_COMBINED
+ • CSGO_ASYNC_DOWNLOAD
+ • CSGO_SKIP_INITIAL_DOWNLOAD
+ • CSGO_YCOCG
+ • CSGO_ASYNC_SKIP_INITIAL_LOW_RES
 
 HOTSPOT_RECT_FLAGS
  • RANDOM_ROTATION
