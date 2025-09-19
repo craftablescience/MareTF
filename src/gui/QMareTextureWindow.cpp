@@ -445,6 +445,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	resPaletteLayout->addRow(tr("Preview"), this->resPalettePreview);
 
 	this->resPaletteFrame = new QSpinBox{resWidget};
+	this->resPaletteFrame->setDisabled(true);
 	resPaletteLayout->addRow(tr("Frame"), this->resPaletteFrame);
 
 	resWidgetLayout->addWidget(this->resPaletteGroup);
@@ -626,6 +627,7 @@ void QMareTextureWindow::regenerateDetails() {
 		(void) this->resPaletteFrame->disconnect();
 		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setRange(0, 0);
+		this->resPaletteFrame->setDisabled(true);
 
 		this->resFallbackGroup->setVisible(false);
 		this->resFallbackWidth->setValue(0);
@@ -739,12 +741,13 @@ void QMareTextureWindow::regenerateDetails() {
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA)) {
 		this->resPaletteGroup->setVisible(true);
 
-		std::vector<std::vector<std::byte>> paletteFramesPreviewImageData;
+		std::vector<std::byte> paletteFramesPreviewImageData;
 		for (int i = 0; i < vtf.getFrameCount(); i++) {
-			paletteFramesPreviewImageData.push_back(vtfpp::ImageConversion::convertImageDataToFormat(resource->getDataAsPalette(i), vtfpp::ImageFormat::BGRA8888, vtfpp::ImageFormat::BGR888, 16, 16));
+			const auto data = vtfpp::ImageConversion::convertImageDataToFormat(resource->getDataAsPalette(i), vtfpp::ImageFormat::BGRA8888, vtfpp::ImageFormat::BGR888, 16, 16);
+			paletteFramesPreviewImageData.insert(paletteFramesPreviewImageData.begin(), data.begin(), data.end());
 		}
 		connect(this->resPaletteFrame, &QSpinBox::valueChanged, this, [this, paletteFramesPreviewImageData_ = std::move(paletteFramesPreviewImageData)](int value) {
-			this->resPalettePreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(paletteFramesPreviewImageData_.at(value).data()), 16, 16, QImage::Format_BGR888}).scaledToWidth(64));
+			this->resPalettePreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(paletteFramesPreviewImageData_.data() + value * 256 * sizeof(vtfpp::ImagePixel::BGRA8888)), 16, 16, QImage::Format_BGR888}).scaledToWidth(64));
 		});
 
 		if (this->resPaletteFrame->value() == 0) {
@@ -753,12 +756,14 @@ void QMareTextureWindow::regenerateDetails() {
 			this->resPaletteFrame->setValue(0);
 		}
 		this->resPaletteFrame->setRange(0, vtf.getFrameCount() - 1);
+		this->resPaletteFrame->setDisabled(vtf.getFrameCount() <= 1);
 	} else {
 		this->resPaletteGroup->setVisible(false);
 		this->resPalettePreview->clear();
 		(void) this->resPaletteFrame->disconnect();
 		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setRange(0, 0);
+		this->resPaletteFrame->setDisabled(true);
 	}
 
 	if (vtf.hasFallbackData()) {

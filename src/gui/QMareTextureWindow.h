@@ -76,6 +76,7 @@ protected:
 
 	QGroupBox* resPaletteGroup;
 	QLabel* resPalettePreview;
+	// todo: use the frame spinbox in the preview section
 	QSpinBox* resPaletteFrame;
 
 	QGroupBox* resFallbackGroup;
