@@ -60,9 +60,9 @@ protected:
 
 	QGroupBox* detailsMiscellaneousGroup;
 	QDoubleSpinBox* detailsBumpmapScale;
-	QDoubleSpinBox* detailsReflectivityR;
-	QDoubleSpinBox* detailsReflectivityG;
-	QDoubleSpinBox* detailsReflectivityB;
+	QLabel* detailsReflectivityR;
+	QLabel* detailsReflectivityG;
+	QLabel* detailsReflectivityB;
 	QSpinBox* detailsXboxMipScale;
 
 	QGroupBox* detailsCompressionGroup;

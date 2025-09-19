@@ -333,6 +333,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsMiscellaneousLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->detailsBumpmapScale = new QDoubleSpinBox{this->detailsMiscellaneousGroup};
+	this->detailsBumpmapScale->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
 	this->detailsBumpmapScale->setSingleStep(0.1);
 	this->detailsBumpmapScale->setDecimals(3);
 	detailsMiscellaneousLayout->addRow(tr("Bumpmap Scale"), this->detailsBumpmapScale);
@@ -341,16 +342,12 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* detailsReflectivityLayout = new QFormLayout{detailsReflectivityGroup};
 	detailsReflectivityLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->detailsReflectivityR = new QDoubleSpinBox{detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("R"), this->detailsReflectivityR);
-	this->detailsReflectivityG = new QDoubleSpinBox{detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("G"), this->detailsReflectivityG);
-	this->detailsReflectivityB = new QDoubleSpinBox{detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("B"), this->detailsReflectivityB);
-	for (auto* spinBox : {this->detailsReflectivityR, this->detailsReflectivityG, this->detailsReflectivityB}) {
-		spinBox->setDecimals(6);
-		spinBox->setDisabled(true);
-	}
+	this->detailsReflectivityR = new QLabel{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("R:"), this->detailsReflectivityR);
+	this->detailsReflectivityG = new QLabel{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("G:"), this->detailsReflectivityG);
+	this->detailsReflectivityB = new QLabel{detailsReflectivityGroup};
+	detailsReflectivityLayout->addRow(tr("B:"), this->detailsReflectivityB);
 
 	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), detailsReflectivityGroup);
 
@@ -608,9 +605,9 @@ void QMareTextureWindow::regenerateDetails() {
 
 		this->detailsMiscellaneousGroup->setVisible(false);
 		this->detailsBumpmapScale->setValue(0.0);
-		this->detailsReflectivityR->setValue(0.0);
-		this->detailsReflectivityG->setValue(0.0);
-		this->detailsReflectivityB->setValue(0.0);
+		this->detailsReflectivityR->setText("0.0f");
+		this->detailsReflectivityG->setText("0.0f");
+		this->detailsReflectivityB->setText("0.0f");
 		this->detailsXboxMipScale->setValue(0);
 
 		this->detailsCompressionGroup->setVisible(false);
@@ -701,9 +698,9 @@ void QMareTextureWindow::regenerateDetails() {
 
 	this->detailsMiscellaneousGroup->setVisible(true);
 	this->detailsBumpmapScale->setValue(vtf.getBumpMapScale());
-	this->detailsReflectivityR->setValue(vtf.getReflectivity()[0]);
-	this->detailsReflectivityG->setValue(vtf.getReflectivity()[1]);
-	this->detailsReflectivityB->setValue(vtf.getReflectivity()[2]);
+	this->detailsReflectivityR->setText(QString{"%1f"}.arg(vtf.getReflectivity()[0]));
+	this->detailsReflectivityG->setText(QString{"%1f"}.arg(vtf.getReflectivity()[1]));
+	this->detailsReflectivityB->setText(QString{"%1f"}.arg(vtf.getReflectivity()[2]));
 	this->detailsXboxMipScale->setValue(vtf.getXBOXMipScale());
 
 	// Visibility is controlled elsewhere
