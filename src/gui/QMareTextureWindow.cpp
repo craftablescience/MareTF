@@ -271,14 +271,11 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsFileTypeLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->detailsPlatform = new QComboBox{this->detailsFileTypeGroup};
-	this->detailsPlatform->addItem(tr("PC"));
-	this->detailsPlatform->setItemData(0, vtfpp::VTF::PLATFORM_PC);
-	this->detailsPlatform->addItem(tr("Xbox 360"));
-	this->detailsPlatform->setItemData(1, vtfpp::VTF::PLATFORM_X360);
-	this->detailsPlatform->addItem(tr("PS3 (Orange Box)"));
-	this->detailsPlatform->setItemData(2, vtfpp::VTF::PLATFORM_PS3_ORANGEBOX);
-	this->detailsPlatform->addItem(tr("PS3 (P2, CS:GO)"));
-	this->detailsPlatform->setItemData(3, vtfpp::VTF::PLATFORM_PS3_PORTAL2);
+	this->detailsPlatform->addItem(tr("PC"),               vtfpp::VTF::PLATFORM_PC);
+	this->detailsPlatform->addItem(tr("Xbox"),             vtfpp::VTF::PLATFORM_XBOX);
+	this->detailsPlatform->addItem(tr("Xbox 360"),         vtfpp::VTF::PLATFORM_X360);
+	this->detailsPlatform->addItem(tr("PS3 (Orange Box)"), vtfpp::VTF::PLATFORM_PS3_ORANGEBOX);
+	this->detailsPlatform->addItem(tr("PS3 (P2, CS:GO)"),  vtfpp::VTF::PLATFORM_PS3_PORTAL2);
 	detailsFileTypeLayout->addRow(tr("Platform"), this->detailsPlatform);
 
 	this->detailsVersion = new QComboBox{this->detailsFileTypeGroup};
@@ -649,7 +646,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 	this->detailsFileTypeGroup->setVisible(true);
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
-	this->detailsVersion->setCurrentIndex(vtf.getVersion());
+	this->detailsVersion->setCurrentIndex(static_cast<int>(vtf.getVersion()));
 	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
 
 	this->detailsDimsGroup->setVisible(true);
