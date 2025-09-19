@@ -63,6 +63,7 @@ protected:
 	QDoubleSpinBox* detailsReflectivityR;
 	QDoubleSpinBox* detailsReflectivityG;
 	QDoubleSpinBox* detailsReflectivityB;
+	QSpinBox* detailsXboxMipScale;
 
 	QGroupBox* detailsCompressionGroup;
 	QComboBox* detailsCompressionMethod;

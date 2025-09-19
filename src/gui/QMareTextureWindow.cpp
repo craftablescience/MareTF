@@ -357,6 +357,10 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), detailsReflectivityGroup);
 
+	this->detailsXboxMipScale = new QSpinBox{this->detailsMiscellaneousGroup};
+	this->detailsXboxMipScale->setRange(0, 31);
+	detailsMiscellaneousLayout->addRow(tr("Xbox Mip Scale"), this->detailsXboxMipScale);
+
 	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
 
 	this->detailsCompressionGroup = new QGroupBox{tr("Compression"), detailsWidget};
@@ -580,6 +584,7 @@ void QMareTextureWindow::regenerateDetails() {
 		this->detailsReflectivityR->setValue(0.0);
 		this->detailsReflectivityG->setValue(0.0);
 		this->detailsReflectivityB->setValue(0.0);
+		this->detailsXboxMipScale->setValue(0);
 
 		this->detailsCompressionGroup->setVisible(false);
 		this->detailsCompressionMethod->setCurrentIndex(0);
@@ -661,6 +666,7 @@ void QMareTextureWindow::regenerateDetails() {
 	this->detailsReflectivityR->setValue(vtf.getReflectivity()[0]);
 	this->detailsReflectivityG->setValue(vtf.getReflectivity()[1]);
 	this->detailsReflectivityB->setValue(vtf.getReflectivity()[2]);
+	this->detailsXboxMipScale->setValue(vtf.getXBOXMipScale());
 
 	// Visibility is controlled elsewhere
 	//this->detailsCompressionGroup->setVisible(true);
