@@ -440,6 +440,36 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	resWidgetLayout->addWidget(this->resThumbnailGroup);
 
+	this->resPaletteGroup = new QGroupBox{tr("Palette"), resWidget};
+	auto* resPaletteLayout = new QFormLayout{this->resPaletteGroup};
+	resPaletteLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resPalettePreview = new QLabel{resWidget};
+	resPaletteLayout->addRow(tr("Preview"), this->resPalettePreview);
+
+	this->resPaletteFrame = new QSpinBox{resWidget};
+	resPaletteLayout->addRow(tr("Frame"), this->resPaletteFrame);
+
+	resWidgetLayout->addWidget(this->resPaletteGroup);
+
+	this->resFallbackGroup = new QGroupBox{tr("Fallback"), resWidget};
+	auto* resFallbackLayout = new QFormLayout{this->resFallbackGroup};
+	resFallbackLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resFallbackWidth = new QSpinBox{resWidget};
+	this->resFallbackWidth->setDisabled(true);
+	resFallbackLayout->addRow(tr("Width"), this->resFallbackWidth);
+
+	this->resFallbackHeight = new QSpinBox{resWidget};
+	this->resFallbackHeight->setDisabled(true);
+	resFallbackLayout->addRow(tr("Height"), this->resFallbackHeight);
+
+	this->resFallbackMips = new QSpinBox{resWidget};
+	this->resFallbackMips->setDisabled(true);
+	resFallbackLayout->addRow(tr("Mips"), this->resFallbackMips);
+
+	resWidgetLayout->addWidget(this->resFallbackGroup);
+
 	this->resCRCGroup = new QGroupBox{tr("CRC"), resWidget};
 	auto* resCRCLayout = new QFormLayout{this->resCRCGroup};
 	resCRCLayout->setFormAlignment(Qt::AlignHCenter);
@@ -594,6 +624,17 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resThumbnailWidth->setValue(0);
 		this->resThumbnailHeight->setValue(0);
 
+		this->resPaletteGroup->setVisible(false);
+		this->resPalettePreview->clear();
+		(void) this->resPaletteFrame->disconnect();
+		this->resPaletteFrame->setValue(0);
+		this->resPaletteFrame->setRange(0, 0);
+
+		this->resFallbackGroup->setVisible(false);
+		this->resFallbackWidth->setValue(0);
+		this->resFallbackHeight->setValue(0);
+		this->resFallbackMips->setValue(0);
+
 		this->resCRCGroup->setVisible(false);
 		this->resCRCValue->setText("00000000");
 
@@ -696,6 +737,43 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resThumbnailPreview->clear();
 		this->resThumbnailWidth->setValue(0);
 		this->resThumbnailHeight->setValue(0);
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA)) {
+		this->resPaletteGroup->setVisible(true);
+
+		std::vector<std::vector<std::byte>> paletteFramesPreviewImageData;
+		for (int i = 0; i < vtf.getFrameCount(); i++) {
+			paletteFramesPreviewImageData.push_back(vtfpp::ImageConversion::convertImageDataToFormat(resource->getDataAsPalette(i), vtfpp::ImageFormat::BGRA8888, vtfpp::ImageFormat::BGR888, 16, 16));
+		}
+		connect(this->resPaletteFrame, &QSpinBox::valueChanged, this, [this, paletteFramesPreviewImageData_ = std::move(paletteFramesPreviewImageData)](int value) {
+			this->resPalettePreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(paletteFramesPreviewImageData_.at(value).data()), 16, 16, QImage::Format_BGR888}).scaledToWidth(64));
+		});
+
+		if (this->resPaletteFrame->value() == 0) {
+			this->resPaletteFrame->valueChanged(0);
+		} else {
+			this->resPaletteFrame->setValue(0);
+		}
+		this->resPaletteFrame->setRange(0, vtf.getFrameCount() - 1);
+	} else {
+		this->resPaletteGroup->setVisible(false);
+		this->resPalettePreview->clear();
+		(void) this->resPaletteFrame->disconnect();
+		this->resPaletteFrame->setValue(0);
+		this->resPaletteFrame->setRange(0, 0);
+	}
+
+	if (vtf.hasFallbackData()) {
+		this->resFallbackGroup->setVisible(true);
+		this->resFallbackWidth->setValue(vtf.getFallbackWidth());
+		this->resFallbackHeight->setValue(vtf.getFallbackHeight());
+		this->resFallbackMips->setValue(vtf.getFallbackMipCount());
+	} else {
+		this->resFallbackGroup->setVisible(false);
+		this->resFallbackWidth->setValue(0);
+		this->resFallbackHeight->setValue(0);
+		this->resFallbackMips->setValue(0);
 	}
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {

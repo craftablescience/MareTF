@@ -74,6 +74,15 @@ protected:
 	QSpinBox* resThumbnailWidth;
 	QSpinBox* resThumbnailHeight;
 
+	QGroupBox* resPaletteGroup;
+	QLabel* resPalettePreview;
+	QSpinBox* resPaletteFrame;
+
+	QGroupBox* resFallbackGroup;
+	QSpinBox* resFallbackWidth;
+	QSpinBox* resFallbackHeight;
+	QSpinBox* resFallbackMips;
+
 	QGroupBox* resCRCGroup;
 	QLineEdit* resCRCValue;
 
