@@ -12,7 +12,7 @@
 #include <QToolBar>
 
 #include "../common/Config.h"
-#include "Credits.h"
+#include "QMareCredits.h"
 #include "QMareTextureWindow.h"
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
@@ -56,7 +56,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	});
 
 	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
-		::showMareTFCredits(this);
+		QMareCredits::show(this);
 	});
 
 	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {

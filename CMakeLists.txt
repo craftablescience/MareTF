@@ -44,9 +44,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static ind
 if(MARETF_BUILD_GUI)
     add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/Credits.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/Credits.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.cpp"

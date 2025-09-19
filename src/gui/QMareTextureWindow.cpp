@@ -26,7 +26,7 @@
 #include "../common/Common.h"
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
-#include "Credits.h"
+#include "QMareCredits.h"
 #include "QMareTextureWidget.h"
 
 QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
@@ -80,7 +80,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
-		::showMareTFCredits(this);
+		QMareCredits::show(this);
 	});
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {

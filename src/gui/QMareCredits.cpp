@@ -1,10 +1,10 @@
-#include "Credits.h"
+#include "QMareCredits.h"
 
 #include <QMessageBox>
 
 #include "../common/Config.h"
 
-void showMareTFCredits(QWidget* parent) {
+void QMareCredits::show(QWidget* parent) {
 	auto* box = new QMessageBox{parent};
 	box->setWindowTitle(QObject::tr("About"));
 	box->setIconPixmap(QPixmap{":/logo.png"}.scaledToWidth(64));
