@@ -2010,6 +2010,22 @@ int main(int argc, const char* const argv[]) {
 					}
 					tfout << END << tfendl;
 
+					tfout << BOLD << "Palette:        ";
+					if (vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA)) {
+						tfout << GREEN << "Exists";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
+					tfout << BOLD << "Fallback:       ";
+					if (vtf.hasFallbackData()) {
+						tfout << GREEN << "Exists" << END << " — " << BOLD << "Dimensions: " << CYAN << static_cast<int>(vtf.getFallbackWidth()) << END << " x " << CYAN << static_cast<int>(vtf.getFallbackHeight()) << END << " — " << BOLD << "Mips: " << CYAN << static_cast<int>(vtf.getFallbackMipCount());
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
 					tfout << BOLD << "Particle Sheet: ";
 					const auto* particleSheetResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
 					if (particleSheetResourcePtr) {
@@ -2193,6 +2209,15 @@ int main(int argc, const char* const argv[]) {
 					kv["resources"]["thumbnail"]["format"] = not_magic_enum::enum_name(vtf.getThumbnailFormat());
 					kv["resources"]["thumbnail"]["width"] = static_cast<int>(vtf.getThumbnailWidth());
 					kv["resources"]["thumbnail"]["height"] = static_cast<int>(vtf.getThumbnailHeight());
+
+					// Palette
+					kv["resources"]["palette"]["present"] = static_cast<bool>(vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA));
+
+					// Fallback
+					kv["resources"]["fallback"]["present"] = vtf.hasFallbackData();
+					kv["resources"]["fallback"]["width"] = static_cast<int>(vtf.getFallbackWidth());
+					kv["resources"]["fallback"]["height"] = static_cast<int>(vtf.getFallbackHeight());
+					kv["resources"]["fallback"]["mips"] = static_cast<int>(vtf.getFallbackMipCount());
 
 					// Bail here if requested
 					if (infoSkipResources) {
