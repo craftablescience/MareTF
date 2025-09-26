@@ -107,7 +107,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl] [--hdri]
               [--hdri-no-filter] [--resize-method RESIZE_METHOD]
               [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
-              [--xbox-mip-scale SCALE] [--gamma-correct] [--gamma-correct-amount GAMMA]
+              [--console-mip-scale SCALE] [--gamma-correct] [--gamma-correct-amount GAMMA]
               [--srgb] [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear]
               [--aniso] [--normal] [--ssbump] [--particle-sheet-resource PATH]
               [--crc-resource CRC] [--lod-resource U.V] [--ts0-resource COMBINED_FLAGS]
@@ -119,7 +119,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
               [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
               [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD]
               [--set-compression-level LEVEL] [--set-start-frame FRAME_INDEX]
-              [--set-bumpmap-scale SCALE] [--set-xbox-mip-scale SCALE]
+              [--set-bumpmap-scale SCALE] [--set-console-mip-scale SCALE]
               [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
               [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
               [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
@@ -224,14 +224,13 @@ Optional arguments:
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
   --height-resize-method                       How to resize the texture's height to match a
                                                power of 2. [nargs=0..1] [default: "BIGGER"]
-  --xbox-mip-scale                             On the XBOX platform, expands the perceived
+  --console-mip-scale                          On console platforms, expands the perceived
                                                size of the texture when applied to map
                                                geometry and models. For example, given a
                                                256x256 texture, setting a mip scale of 1 will
                                                cause it to be perceived as 512x512 without
                                                actually increasing memory requirements.
-                                               Ignored on all other platforms. [nargs=0..1]
-                                               [default: 0]
+                                               Ignored on PC. [nargs=0..1] [default: 0]
   --gamma-correct                              Perform gamma correction on the input image. 
   --gamma-correct-amount                       The gamma to use in gamma correction. A value
                                                of 2.2 is assumed by a good deal of code in
@@ -326,8 +325,8 @@ Optional arguments:
   --set-start-frame FRAME_INDEX                Set the start frame.
   --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
                                                point.
-  --set-xbox-mip-scale                         Set the mip scale. Only has effect on the XBOX
-                                               platform. See --xbox-mip-scale for more
+  --set-console-mip-scale                      Set the mip scale. Only has effect on console
+                                               platforms. See --console-mip-scale for more
                                                information. [nargs=0..1] [default: 0]
   --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should
                                                point to a valid particle sheet file.

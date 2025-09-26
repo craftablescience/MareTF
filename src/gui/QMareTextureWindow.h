@@ -57,13 +57,13 @@ protected:
 	QSpinBox* detailsStartFrame;
 	QCheckBox* detailsCubemap;
 	QCheckBox* detailsMipmaps;
+	QSpinBox* detailsConsoleMipScale;
 
 	QGroupBox* detailsMiscellaneousGroup;
 	QDoubleSpinBox* detailsBumpmapScale;
 	QLabel* detailsReflectivityR;
 	QLabel* detailsReflectivityG;
 	QLabel* detailsReflectivityB;
-	QSpinBox* detailsXboxMipScale;
 
 	QGroupBox* detailsCompressionGroup;
 	QComboBox* detailsCompressionMethod;

@@ -440,15 +440,15 @@ int main(int argc, const char* const argv[]) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
 		.default_value(heightResizeMethod).store_into(heightResizeMethod);
 
-	int xboxMipScale = 0;
+	int consoleMipScale = 0;
 	createCLI
-		.add_argument("--xbox-mip-scale")
+		.add_argument("--console-mip-scale")
 		.metavar("SCALE")
-		.help("On the XBOX platform, expands the perceived size of the texture when applied to map geometry and"
+		.help("On console platforms, expands the perceived size of the texture when applied to map geometry and"
 		      " models. For example, given a 256x256 texture, setting a mip scale of 1 will cause it to be perceived"
-		      " as 512x512 without actually increasing memory requirements. Ignored on all other platforms.")
+		      " as 512x512 without actually increasing memory requirements. Ignored on PC.")
 		.scan<'d', int>()
-		.default_value(xboxMipScale).store_into(xboxMipScale);
+		.default_value(consoleMipScale).store_into(consoleMipScale);
 
 	bool gammaCorrection;
 	createCLI
@@ -740,13 +740,13 @@ int main(int argc, const char* const argv[]) {
 		.scan<'g', float>()
 		.store_into(setBumpMapScale);
 
-	int setXboxMipScale = 0;
+	int setConsoleMipScale = 0;
 	createCLI
-		.add_argument("--set-xbox-mip-scale")
+		.add_argument("--set-console-mip-scale")
 		.metavar("SCALE")
-		.help("Set the mip scale. Only has effect on the XBOX platform. See --xbox-mip-scale for more information.")
+		.help("Set the mip scale. Only has effect on console platforms. See --console-mip-scale for more information.")
 		.scan<'d', int>()
-		.default_value(setXboxMipScale).store_into(setXboxMipScale);
+		.default_value(setConsoleMipScale).store_into(setConsoleMipScale);
 
 	std::string setParticleSheetResource;
 	editCLI
@@ -1313,8 +1313,8 @@ int main(int argc, const char* const argv[]) {
 				// Set inversion of green channel
 				options.invertGreenChannel = invertGreenChannel || invertGreenChannelAlt;
 
-				// Set XBOX mip scale
-				options.xboxMipScale = xboxMipScale;
+				// Set console mip scale
+				options.consoleMipScale = consoleMipScale;
 
 				// Start stopwatch
 				::ElapsedTime stopwatch;
@@ -1726,9 +1726,9 @@ int main(int argc, const char* const argv[]) {
 					vtf.setBumpMapScale(setBumpMapScale);
 				}
 
-				// Set XBOX mip scale
-				if (cli.is_used("--set-xbox-mip-scale")) {
-					vtf.setXBOXMipScale(setXboxMipScale);
+				// Set console mip scale
+				if (cli.is_used("--set-console-mip-scale")) {
+					vtf.setConsoleMipScale(setConsoleMipScale);
 				}
 
 				// Recompute/remove mips
@@ -1985,8 +1985,8 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << "Start Frame:   " << END << CYAN << vtf.getStartFrame() << END << tfendl;
 					tfout << BOLD << "Bumpmap Scale: " << END << CYAN << vtf.getBumpMapScale() << 'f' << END << tfendl;
 
-					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_XBOX) {
-						tfout << BOLD << "Mip Scale:     " << END << CYAN << vtf.getXBOXMipScale() << END << tfendl;
+					if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
+						tfout << BOLD << "Mip Scale:     " << END << CYAN << vtf.getConsoleMipScale() << END << tfendl;
 					}
 
 					tfout << BOLD << "Compression:   " << END;
@@ -2190,9 +2190,7 @@ int main(int argc, const char* const argv[]) {
 					kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
 					kv["image"]["start_frame"] = static_cast<int>(vtf.getStartFrame());
 					kv["image"]["bumpmap_scale"] = vtf.getBumpMapScale();
-					if (vtf.getPlatform() == vtfpp::VTF::PLATFORM_XBOX) {
-						kv["image"]["mip_scale"] = static_cast<int>(vtf.getXBOXMipScale());
-					}
+					kv["image"]["mip_scale"] = vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC ? static_cast<int>(vtf.getConsoleMipScale()) : 0;
 					if (vtf.getCompressionLevel() == 0) {
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC && vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) {
 							kv["image"]["compression"]["method"] = not_magic_enum::enum_name(vtf.getCompressionMethod());

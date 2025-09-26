@@ -325,6 +325,9 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsDimsLayout->addRow(tr("Cubemap"), this->detailsCubemap);
 	this->detailsMipmaps = new QCheckBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
+	this->detailsConsoleMipScale = new QSpinBox{this->detailsDimsGroup};
+	this->detailsConsoleMipScale->setRange(0, 31);
+	detailsDimsLayout->addRow(tr("Mip Scale"), this->detailsConsoleMipScale);
 
 	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
 
@@ -350,10 +353,6 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsReflectivityLayout->addRow(tr("B:"), this->detailsReflectivityB);
 
 	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), detailsReflectivityGroup);
-
-	this->detailsXboxMipScale = new QSpinBox{this->detailsMiscellaneousGroup};
-	this->detailsXboxMipScale->setRange(0, 31);
-	detailsMiscellaneousLayout->addRow(tr("Xbox Mip Scale"), this->detailsXboxMipScale);
 
 	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
 
@@ -603,13 +602,13 @@ void QMareTextureWindow::regenerateDetails() {
 		this->detailsStartFrame->setValue(0);
 		this->detailsCubemap->setChecked(false);
 		this->detailsMipmaps->setChecked(false);
+		this->detailsConsoleMipScale->setValue(0);
 
 		this->detailsMiscellaneousGroup->setVisible(false);
 		this->detailsBumpmapScale->setValue(0.0);
 		this->detailsReflectivityR->setText("0.0f");
 		this->detailsReflectivityG->setText("0.0f");
 		this->detailsReflectivityB->setText("0.0f");
-		this->detailsXboxMipScale->setValue(0);
 
 		this->detailsCompressionGroup->setVisible(false);
 		this->detailsCompressionMethod->setCurrentIndex(0);
@@ -697,13 +696,13 @@ void QMareTextureWindow::regenerateDetails() {
 	this->detailsStartFrame->setValue(vtf.getStartFrame());
 	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
 	this->detailsMipmaps->setChecked(vtf.getMipCount() > 1);
+	this->detailsConsoleMipScale->setValue(vtf.getConsoleMipScale());
 
 	this->detailsMiscellaneousGroup->setVisible(true);
 	this->detailsBumpmapScale->setValue(vtf.getBumpMapScale());
 	this->detailsReflectivityR->setText(QString{"%1f"}.arg(vtf.getReflectivity()[0]));
 	this->detailsReflectivityG->setText(QString{"%1f"}.arg(vtf.getReflectivity()[1]));
 	this->detailsReflectivityB->setText(QString{"%1f"}.arg(vtf.getReflectivity()[2]));
-	this->detailsXboxMipScale->setValue(vtf.getXBOXMipScale());
 
 	// Visibility is controlled elsewhere
 	//this->detailsCompressionGroup->setVisible(true);
