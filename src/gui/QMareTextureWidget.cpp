@@ -128,7 +128,12 @@ void QMareTextureWidget::mousePressEvent(QMouseEvent* e) {
 		e->accept();
 	} else {
 		this->mousePressPosition = e->position();
+		this->setCursor({Qt::CursorShape::ClosedHandCursor});
 	}
+}
+
+void QMareTextureWidget::mouseReleaseEvent(QMouseEvent* e) {
+	this->setCursor({Qt::CursorShape::ArrowCursor});
 }
 
 void QMareTextureWidget::paintEvent(QPaintEvent*) {

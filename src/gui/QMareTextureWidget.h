@@ -53,6 +53,8 @@ protected:
 
 	void mousePressEvent(QMouseEvent* e) override;
 
+	void mouseReleaseEvent(QMouseEvent* e) override;
+
 	void paintEvent(QPaintEvent*) override;
 
 	void resizeEvent(QResizeEvent* e) override;
