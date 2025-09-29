@@ -26,6 +26,8 @@ public:
 
 	[[nodiscard]] vtfpp::VTF& getVTF();
 
+	void applyIncrementalZoom(float increment);
+
 	[[nodiscard]] uint8_t getCurrentMip() const;
 
 	void setCurrentMip(uint8_t mip);

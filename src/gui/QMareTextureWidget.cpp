@@ -1,13 +1,54 @@
 #include "QMareTextureWidget.h"
 
+#include <cmath>
 #include <stdexcept>
 
+#include <QApplication>
+#include <QClipboard>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QStyle>
 #include <QWheelEvent>
 
-QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget(parent) {}
+QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget(parent) {
+	this->setContextMenuPolicy(Qt::CustomContextMenu);
+
+	auto* contextMenu = new QMenu{this};
+
+	contextMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton), tr("&Copy Image"), [this] {
+		QApplication::clipboard()->setImage(this->textureCurrent, QClipboard::Clipboard);
+	});
+
+	contextMenu->addSeparator();
+
+	contextMenu->addAction(QIcon::fromTheme("zoom-in"), tr("Zoom &In"), [this] {
+		this->applyIncrementalZoom(1.f);
+		this->update();
+	});
+
+	contextMenu->addAction(QIcon::fromTheme("zoom-out"), tr("Zoom &Out"), [this] {
+		this->applyIncrementalZoom(-1.f);
+		this->update();
+	});
+
+	contextMenu->addAction(QIcon::fromTheme("zoom-original"), tr("Reset &Zoom"), [this] {
+		this->textureZoom = 1.f;
+		this->update();
+	});
+
+	contextMenu->addAction(QIcon::fromTheme("view-restore"), tr("Reset &Pan"), [this] {
+		this->textureOffset = {};
+		this->update();
+	});
+
+	QObject::connect(this, &QMareTextureWidget::customContextMenuRequested, this, [this, contextMenu](const QPoint& pos) {
+		if (!this->textureCurrent.isNull()) {
+			(void) contextMenu->exec(this->mapToGlobal(pos));
+		}
+	});
+}
 
 void QMareTextureWidget::loadTexture(const QString& path_) {
 	try {
@@ -21,7 +62,7 @@ void QMareTextureWidget::loadTexture(const QString& path_) {
 
 void QMareTextureWidget::reloadCurrentTexture() {
 	if (this->vtf) {
-		if (useAlpha()) {
+		if (this->useAlpha()) {
 			this->textureCurrentData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
 			// I don't want to implement premultiplied alpha calculations, but it's supposed to be faster for sw rendering, so let's do it when there's no alpha lol
 			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied};
@@ -50,6 +91,12 @@ const vtfpp::VTF& QMareTextureWidget::getVTF() const {
 
 vtfpp::VTF& QMareTextureWidget::getVTF() {
 	return this->vtf;
+}
+
+void QMareTextureWidget::applyIncrementalZoom(float increment) {
+	this->textureZoom *= std::exp(increment * 0.25f);
+	this->textureZoom = qMax(0.25f, this->textureZoom);
+	this->update();
 }
 
 uint8_t QMareTextureWidget::getCurrentMip() const {
@@ -103,7 +150,7 @@ bool& QMareTextureWidget::useAlpha() {
 }
 
 void QMareTextureWidget::mouseMoveEvent(QMouseEvent* e) {
-	if (e->buttons() & Qt::RightButton) {
+	if (!(e->buttons() & Qt::LeftButton || e->buttons() & Qt::MiddleButton)) {
 		return;
 	}
 
@@ -120,16 +167,12 @@ void QMareTextureWidget::mouseMoveEvent(QMouseEvent* e) {
 }
 
 void QMareTextureWidget::mousePressEvent(QMouseEvent* e) {
-	if (e->buttons() & Qt::RightButton) {
-		this->textureOffset = {};
-		this->textureZoom = 1.f;
-
-		this->update();
-		e->accept();
-	} else {
-		this->mousePressPosition = e->position();
-		this->setCursor({Qt::CursorShape::ClosedHandCursor});
+	if (!(e->buttons() & Qt::LeftButton || e->buttons() & Qt::MiddleButton)) {
+		return;
 	}
+
+	this->mousePressPosition = e->position();
+	this->setCursor({Qt::CursorShape::ClosedHandCursor});
 }
 
 void QMareTextureWidget::mouseReleaseEvent(QMouseEvent* e) {
@@ -168,14 +211,14 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 	QPainter painter{this};
 	painter.fillRect(0, 0, this->width(), this->height(), {20, 22, 24});
 
-	if (useBackground() && useAlpha() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
+	if (this->useBackground() && this->useAlpha() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
 		static constexpr auto SQUARE_SIZE = 32;
 		for (int x = targetRect.left(), i = 0; x < targetRect.left() + targetRect.width(); x += SQUARE_SIZE, i++) {
 			for (int y = targetRect.top(), j = 0; y < targetRect.top() + targetRect.height(); y += SQUARE_SIZE, j++) {
 				if ((i + j) % 2 == 0) {
-					painter.fillRect(x, y, std::min(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), std::min(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {214, 214, 214});
+					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {214, 214, 214});
 				} else {
-					painter.fillRect(x, y, std::min(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), std::min(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {242, 242, 242});
+					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {242, 242, 242});
 				}
 			}
 		}
@@ -193,9 +236,6 @@ void QMareTextureWidget::resizeEvent(QResizeEvent* e) {
 }
 
 void QMareTextureWidget::wheelEvent(QWheelEvent* e) {
-	this->textureZoom += static_cast<float>(e->angleDelta().y()) / 360.f;
-	this->textureZoom = qMax(0.25f, this->textureZoom);
-
-	this->update();
+	this->applyIncrementalZoom(static_cast<float>(e->angleDelta().y()) / 360.f);
 	e->accept();
 }
