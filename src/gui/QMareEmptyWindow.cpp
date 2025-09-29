@@ -73,6 +73,9 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
 	const auto scaledScreenSizeMinDim = qMax(qMin(scaledScreenSize.width(), scaledScreenSize.height()), 300);
 	this->setFixedSize(scaledScreenSizeMinDim, scaledScreenSizeMinDim + this->toolbar->height());
 
+	this->setContextMenuPolicy(Qt::NoContextMenu);
+	this->toolbar->setContextMenuPolicy(Qt::NoContextMenu);
+
 	this->setAcceptDrops(true);
 }
 
