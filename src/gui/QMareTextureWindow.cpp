@@ -341,18 +341,18 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->detailsBumpmapScale->setDecimals(3);
 	detailsMiscellaneousLayout->addRow(tr("Bumpmap Scale"), this->detailsBumpmapScale);
 
-	auto* detailsReflectivityGroup = new QGroupBox{this->detailsMiscellaneousGroup};
-	auto* detailsReflectivityLayout = new QFormLayout{detailsReflectivityGroup};
+	this->detailsReflectivityGroup = new QGroupBox{this->detailsMiscellaneousGroup};
+	auto* detailsReflectivityLayout = new QFormLayout{this->detailsReflectivityGroup};
 	detailsReflectivityLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->detailsReflectivityR = new QLabel{detailsReflectivityGroup};
+	this->detailsReflectivityR = new QLabel{this->detailsReflectivityGroup};
 	detailsReflectivityLayout->addRow(tr("R:"), this->detailsReflectivityR);
-	this->detailsReflectivityG = new QLabel{detailsReflectivityGroup};
+	this->detailsReflectivityG = new QLabel{this->detailsReflectivityGroup};
 	detailsReflectivityLayout->addRow(tr("G:"), this->detailsReflectivityG);
-	this->detailsReflectivityB = new QLabel{detailsReflectivityGroup};
+	this->detailsReflectivityB = new QLabel{this->detailsReflectivityGroup};
 	detailsReflectivityLayout->addRow(tr("B:"), this->detailsReflectivityB);
 
-	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), detailsReflectivityGroup);
+	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), this->detailsReflectivityGroup);
 
 	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
 
@@ -606,6 +606,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 		this->detailsMiscellaneousGroup->setVisible(false);
 		this->detailsBumpmapScale->setValue(0.0);
+		this->detailsReflectivityGroup->setStyleSheet("");
 		this->detailsReflectivityR->setText("0.0f");
 		this->detailsReflectivityG->setText("0.0f");
 		this->detailsReflectivityB->setText("0.0f");
@@ -700,6 +701,16 @@ void QMareTextureWindow::regenerateDetails() {
 
 	this->detailsMiscellaneousGroup->setVisible(true);
 	this->detailsBumpmapScale->setValue(vtf.getBumpMapScale());
+	if (
+		vtf.getReflectivity()[0] >= 0.f && vtf.getReflectivity()[1] >= 0.f && vtf.getReflectivity()[2] >= 0.f &&
+		vtf.getReflectivity()[0] <= 1.f && vtf.getReflectivity()[1] <= 1.f && vtf.getReflectivity()[2] <= 1.f
+	) {
+		this->detailsReflectivityGroup->setStyleSheet(
+			QString{"QGroupBox { border: 2px solid #%1%2%3; border-radius: 4px; }"}
+				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[0], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
+				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[1], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
+				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[2], 1 / 2.2f) * 255), 0, 255), 2, 16, '0'));
+	}
 	this->detailsReflectivityR->setText(QString{"%1f"}.arg(vtf.getReflectivity()[0]));
 	this->detailsReflectivityG->setText(QString{"%1f"}.arg(vtf.getReflectivity()[1]));
 	this->detailsReflectivityB->setText(QString{"%1f"}.arg(vtf.getReflectivity()[2]));

@@ -61,6 +61,7 @@ protected:
 
 	QGroupBox* detailsMiscellaneousGroup;
 	QDoubleSpinBox* detailsBumpmapScale;
+	QGroupBox* detailsReflectivityGroup;
 	QLabel* detailsReflectivityR;
 	QLabel* detailsReflectivityG;
 	QLabel* detailsReflectivityB;
