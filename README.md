@@ -233,9 +233,9 @@ Optional arguments:
                                                Ignored on PC. [nargs=0..1] [default: 0]
   --gamma-correct                              Perform gamma correction on the input image. 
   --gamma-correct-amount                       The gamma to use in gamma correction. A value
-                                               of 2.2 is assumed by a good deal of code in
+                                               of 1/2.2 is assumed by a good deal of code in
                                                Source engine, change this if you know what
-                                               you're doing. [nargs=0..1] [default: 2.2]
+                                               you're doing. [nargs=0..1] [default: 0.454545]
   --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
                                                adds SRGB flag otherwise.
   --clamps                                     Alias of --flag CLAMP_S, added for vtex2
