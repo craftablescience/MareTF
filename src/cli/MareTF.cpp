@@ -457,11 +457,11 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(gammaCorrection);
 
-	float gammaCorrectionAmount = 2.2f;
+	float gammaCorrectionAmount = 1.f / 2.2f;
 	createCLI
 		.add_argument("--gamma-correct-amount")
 		.metavar("GAMMA")
-		.help("The gamma to use in gamma correction. A value of 2.2 is assumed by a good deal of code in Source"
+		.help("The gamma to use in gamma correction. A value of 1/2.2 is assumed by a good deal of code in Source"
 		      " engine, change this if you know what you're doing.")
 		.scan<'g', float>()
 		.default_value(gammaCorrectionAmount).store_into(gammaCorrectionAmount);
