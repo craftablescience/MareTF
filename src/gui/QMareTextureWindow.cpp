@@ -707,9 +707,9 @@ void QMareTextureWindow::regenerateDetails() {
 	) {
 		this->detailsReflectivityGroup->setStyleSheet(
 			QString{"QGroupBox { border: 2px solid #%1%2%3; border-radius: 4px; }"}
-				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[0], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
-				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[1], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
-				.arg(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[2], 1 / 2.2f) * 255), 0, 255), 2, 16, '0'));
+				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[0], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
+				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[1], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
+				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[2], 1 / 2.2f) * 255), 0, 255), 2, 16, '0'));
 	}
 	this->detailsReflectivityR->setText(QString{"%1f"}.arg(vtf.getReflectivity()[0]));
 	this->detailsReflectivityG->setText(QString{"%1f"}.arg(vtf.getReflectivity()[1]));
