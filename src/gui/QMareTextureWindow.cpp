@@ -1,5 +1,6 @@
 #include "QMareTextureWindow.h"
 
+#include <format>
 #include <limits>
 
 #include <QCheckBox>
@@ -705,11 +706,12 @@ void QMareTextureWindow::regenerateDetails() {
 		vtf.getReflectivity()[0] >= 0.f && vtf.getReflectivity()[1] >= 0.f && vtf.getReflectivity()[2] >= 0.f &&
 		vtf.getReflectivity()[0] <= 1.f && vtf.getReflectivity()[1] <= 1.f && vtf.getReflectivity()[2] <= 1.f
 	) {
-		this->detailsReflectivityGroup->setStyleSheet(
-			QString{"QGroupBox { border: 2px solid #%1%2%3; border-radius: 4px; }"}
-				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[0], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
-				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[1], 1 / 2.2f) * 255), 0, 255), 2, 16, '0')
-				.arg<int>(std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[2], 1 / 2.2f) * 255), 0, 255), 2, 16, '0'));
+		this->detailsReflectivityGroup->setStyleSheet(std::format(
+			"QGroupBox {{ border: 2px solid #{:02X}{:02X}{:02X}; border-radius: 4px; }}",
+			std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[0], 1 / 2.2f) * 255), 0, 255),
+			std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[1], 1 / 2.2f) * 255), 0, 255),
+			std::clamp<int>(static_cast<int>(std::pow(vtf.getReflectivity()[2], 1 / 2.2f) * 255), 0, 255)
+		).c_str());
 	}
 	this->detailsReflectivityR->setText(QString{"%1f"}.arg(vtf.getReflectivity()[0]));
 	this->detailsReflectivityG->setText(QString{"%1f"}.arg(vtf.getReflectivity()[1]));
