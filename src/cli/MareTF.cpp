@@ -1648,6 +1648,9 @@ int main(int argc, const char* const argv[]) {
 				// Check output path
 				if (outputPath.empty()) {
 					outputPath = currentInputPath;
+					if (cli.is_used("--set-platform")) {
+						outputPath = std::filesystem::path{outputPath}.replace_extension(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf").string();
+					}
 				}
 				{
 					bool checkFileShouldRet;
