@@ -173,9 +173,11 @@ Optional arguments:
                                                [default: "DEFAULT"]
   -q, --quality                                The quality of DXTn/BCn format compression,
                                                between 0.0 and 1.0. Higher quality will take
-                                               significantly longer to create the texture.
-                                               Ignored if output format is uncompressed.
-                                               [nargs=0..1] [default: 0.105]
+                                               significantly longer to create the texture. If
+                                               quality is below 0.0, default compression
+                                               values will be used (0.1 for BC7, BC6H, and
+                                               1.0 for all others). Ignored if output format
+                                               is uncompressed. [nargs=0..1] [default: -1]
   -r, --filter                                 The resize filter used to generate mipmaps and
                                                when resizing the base texture to match a
                                                power of 2 (if necessary). [nargs=0..1]

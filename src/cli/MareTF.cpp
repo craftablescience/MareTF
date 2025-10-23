@@ -294,7 +294,9 @@ int main(int argc, const char* const argv[]) {
 	createCLI
 		.add_argument("-q", "--quality")
 		.metavar("COMPRESSION_QUALITY")
-		.help("The quality of DXTn/BCn format compression, between 0.0 and 1.0. Higher quality will take significantly longer to create the texture. Ignored if output format is uncompressed.")
+		.help("The quality of DXTn/BCn format compression, between 0.0 and 1.0. Higher quality will take"
+		      " significantly longer to create the texture. If quality is below 0.0, default compression values will be"
+		      " used (0.1 for BC7, BC6H, and 1.0 for all others). Ignored if output format is uncompressed.")
 		.scan<'g', float>()
 		.default_value(compressedFormatQuality).store_into(compressedFormatQuality);
 
