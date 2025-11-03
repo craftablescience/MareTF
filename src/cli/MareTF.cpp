@@ -1738,7 +1738,6 @@ int main(int argc, const char* const argv[]) {
 
 				// Recompute/remove mips
 				if (recomputeMips) {
-					vtf.setRecommendedMipCount();
 					vtf.computeMips(editFilterActual);
 				} else if (removeMips) {
 					vtf.setMipCount(1);
