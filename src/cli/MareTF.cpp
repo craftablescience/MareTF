@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <chrono>
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <format>
@@ -20,9 +21,12 @@
 #include <unordered_map>
 #include <utility>
 
-#ifdef _WIN32
+#if defined(_WIN32)
+#include <io.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#elif defined(__linux__)
+#include <unistd.h>
 #endif
 
 #include <argparse/argparse.hpp>
@@ -40,6 +44,17 @@
 using namespace std::literals;
 
 namespace {
+
+[[nodiscard]] bool runningInTTY() {
+#if defined(_WIN32)
+	static const bool check = _isatty(_fileno(stdin)) && _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
+#elif defined(__linux__)
+	static const bool check = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
+#else
+	static constexpr bool check = true;
+#endif
+	return check;
+}
 
 [[nodiscard]] std::string_view randomDeviantArtTFTrope() {
 	static constexpr std::array<std::string_view, 23> DEVIANTART_TF_TROPES{
@@ -226,7 +241,7 @@ int main(int argc, const char* const argv[]) {
 	bool overwrite;
 	cli
 		.add_argument("-y", "--yes")
-		.help("Automatically say yes to any prompts.")
+		.help("Automatically say yes to any prompts. Enabled by default if no TTY is detected.")
 		.flag()
 		.store_into(overwrite);
 
@@ -240,9 +255,18 @@ int main(int argc, const char* const argv[]) {
 	bool quiet;
 	cli
 		.add_argument("--quiet")
-		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully).")
+		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully)."
+		      " Enabled by default if no TTY is detected.")
 		.flag()
 		.store_into(quiet);
+
+	bool verbose;
+	cli
+		.add_argument("--verbose")
+		.help("Allow printing to stdout or stderr, even when no TTY is detected (assuming program arguments"
+		      " are parsed successfully).")
+		.flag()
+		.store_into(verbose);
 
 	bool noRecurse;
 	cli
@@ -254,7 +278,8 @@ int main(int argc, const char* const argv[]) {
 	bool noPrettyFormatting;
 	cli
 		.add_argument("--no-pretty-formatting")
-		.help("Disables printing ANSI color codes and emojis.")
+		.help("Disables printing ANSI color codes and emojis. Pretty formatting is disabled by default"
+		      " if no TTY is detected.")
 		.flag()
 		.store_into(noPrettyFormatting);
 
@@ -994,9 +1019,17 @@ int main(int argc, const char* const argv[]) {
 	try {
 		cli.parse_args(argc, argv);
 
-		if (quiet) {
+		if (!::runningInTTY()) {
+			overwrite = true;
+			quiet = true;
+			noPrettyFormatting = true;
+		}
+
+		if (quiet && !verbose) {
 			tfout_t::QUIET = true;
 			tferr_t::QUIET = true;
+		} else {
+			quiet = false;
 		}
 
 		// Pretty formatting colors
