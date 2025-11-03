@@ -47,9 +47,9 @@ namespace {
 
 [[nodiscard]] bool runningInTTY() {
 #if defined(_WIN32)
-	static const bool check = _isatty(_fileno(stdin)) && _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
+	static const bool check = _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
 #elif defined(__linux__)
-	static const bool check = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
+	static const bool check = isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
 #else
 	static constexpr bool check = true;
 #endif
