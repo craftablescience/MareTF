@@ -98,7 +98,7 @@ maretf info input.vtf
 ## Full CLI Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--no-recurse]
+Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
               [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--flag FLAG]...
               [--no-automatic-transparency-flags] [--no-mips] [--no-animation]
@@ -146,15 +146,22 @@ Optional arguments:
   -o, --output PATH                            The path to the output file (if the current
                                                mode outputs a file). Ignored if the input
                                                path is a directory.
-  -y, --yes                                    Automatically say yes to any prompts.
+  -y, --yes                                    Automatically say yes to any prompts. Enabled
+                                               by default if no TTY is detected.
   --no                                         Automatically say no to any prompts. Overrides
                                                --yes.
   --quiet                                      Don't print anything to stdout or stderr
                                                (assuming program arguments are parsed
-                                               successfully).
+                                               successfully). Enabled by default if no TTY is
+                                               detected.
+  --verbose                                    Allow printing to stdout or stderr, even when
+                                               no TTY is detected (assuming program arguments
+                                               are parsed successfully).
   --no-recurse                                 If the input path is a directory, do not enter
                                                subdirectories when scanning for files.
   --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
+                                               Pretty formatting is disabled by default if no
+                                               TTY is detected.
 
 "create" mode (detailed usage):
   --watch                                      After creation is complete, watch the input
