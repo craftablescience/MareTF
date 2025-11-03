@@ -741,7 +741,7 @@ int main(int argc, const char* const argv[]) {
 		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
 		      " LZMA is supported for console VTFs.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::CompressionMethod>, "COMPRESSION_METHOD"))
-		.store_into(compressionMethod);
+		.store_into(setCompressionMethod);
 
 	int setCompressionLevel;
 	editCLI
