@@ -65,10 +65,10 @@ void QMareTextureWidget::reloadCurrentTexture() {
 		if (this->useAlpha()) {
 			this->textureCurrentData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
 			// I don't want to implement premultiplied alpha calculations, but it's supposed to be faster for sw rendering, so let's do it when there's no alpha lol
-			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidthWithoutPadding(this->currentMip), this->vtf.getHeightWithoutPadding(this->currentMip), vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied};
+			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied};
 		} else {
 			this->textureCurrentData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGR888, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
-			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidthWithoutPadding(this->currentMip), this->vtf.getHeightWithoutPadding(this->currentMip), QImage::Format_BGR888};
+			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), QImage::Format_BGR888};
 		}
 		this->update();
 	}
