@@ -128,6 +128,37 @@ namespace {
 	return "";
 }
 
+[[nodiscard]] std::string getOutputPathForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform) {
+	std::string inputLowercase{inputPath};
+	sourcepp::string::toLower(inputLowercase);
+
+	const bool lowercaseExtension = std::filesystem::path{inputPath}.extension() == std::filesystem::path{inputLowercase}.extension();
+
+	std::string out;
+	if (inputLowercase.ends_with(".360.vtf") || inputLowercase.ends_with(".ps3.vtf")) {
+		out = inputPath.substr(0, inputPath.size() - 8);
+	} else if (inputLowercase.ends_with(".vtf") || inputLowercase.ends_with(".xtf")) {
+		out = inputPath.substr(0, inputPath.size() - 4);
+	} else {
+		out = inputPath.substr(0, inputPath.size() - std::filesystem::path{inputPath}.extension().string().size());
+	}
+
+	switch (outputPlatform) {
+		case vtfpp::VTF::PLATFORM_UNKNOWN:
+			break;
+		case vtfpp::VTF::PLATFORM_PC:
+			return out + (lowercaseExtension ? ".vtf" : ".VTF");
+		case vtfpp::VTF::PLATFORM_XBOX:
+			return out + (lowercaseExtension ? ".xtf" : ".XTF");
+		case vtfpp::VTF::PLATFORM_X360:
+			return out + (lowercaseExtension ? ".360.vtf" : ".360.VTF");
+		case vtfpp::VTF::PLATFORM_PS3_ORANGEBOX:
+		case vtfpp::VTF::PLATFORM_PS3_PORTAL2:
+			return out + (lowercaseExtension ? ".ps3.vtf" : ".PS3.VTF");
+	}
+	return "";
+}
+
 template<not_magic_enum::SupportedEnum E>
 void enumValueValidityCheck(std::string_view enumName, const std::string& arg) {
 	if (!not_magic_enum::enum_cast<E>(arg)) {
@@ -1191,8 +1222,7 @@ int main(int argc, const char* const argv[]) {
 			const auto create = [&](const std::string& currentInputPath) {
 				// Check output path
 				if (outputPath.empty()) {
-					const std::filesystem::path inputPathPath{currentInputPath};
-					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string() + (*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf");
+					outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 				}
 				{
 					bool checkFileShouldRet;
@@ -1657,7 +1687,7 @@ int main(int argc, const char* const argv[]) {
 									create(path);
 									break;
 								case efsw::Actions::Delete: {
-									const auto vtfPath = std::filesystem::path{path}.replace_extension(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf").string();
+									const auto vtfPath = ::getOutputPathForInput(path, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 									if (std::error_code ec; std::filesystem::exists(vtfPath, ec)) {
 										ec.clear();
 										std::filesystem::remove(vtfPath, ec);
@@ -1682,7 +1712,7 @@ int main(int argc, const char* const argv[]) {
 				if (outputPath.empty()) {
 					outputPath = currentInputPath;
 					if (cli.is_used("--set-platform")) {
-						outputPath = std::filesystem::path{outputPath}.replace_extension(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform) == vtfpp::VTF::PLATFORM_XBOX ? ".xtf" : ".vtf").string();
+						outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
 					}
 				}
 				{
