@@ -1354,6 +1354,22 @@ int main(int argc, const char* const argv[]) {
 				// Start stopwatch
 				::ElapsedTime stopwatch;
 
+				// Function to bake the VTF
+				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image) {
+					const auto vtfData = vtf.bake();
+					if (vtfData.empty()) {
+						tferr << "Failed to TF input " << image << " at " << BOLD << currentInputPath << END << "." << tfendl;
+						return EXIT_FAILURE;
+					}
+					const auto elapsed = stopwatch.get().count();
+					if (!sourcepp::fs::writeFileBuffer(outputPath, vtfData)) {
+						tferr << "Failed to write to " << BOLD << outputPath << END << "." << tfendl;
+						return EXIT_FAILURE;
+					}
+					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+					return EXIT_SUCCESS;
+				};
+
 				// Special case for HDRI -> cubemap conversion
 				if (hdri) {
 					options.isCubeMap = true;
@@ -1370,14 +1386,14 @@ int main(int argc, const char* const argv[]) {
 					int hdriWidth, hdriHeight, hdriFrameCount;
 					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
 					if (hdriData.empty() || !hdriWidth || !hdriHeight || !hdriFrameCount) {
-						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 						return EXIT_FAILURE;
 					}
 
 					// Split HDRI
 					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, 0, !hdriNoFilter);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
-						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
+						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
 						return EXIT_FAILURE;
 					}
 
@@ -1388,7 +1404,7 @@ int main(int argc, const char* const argv[]) {
 					// Set faces
 					for (int face = 0; face < 6; face++) {
 						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face)) {
-							tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
+							tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
 							return EXIT_FAILURE;
 						}
 					}
@@ -1409,13 +1425,7 @@ int main(int argc, const char* const argv[]) {
 					handleSettingResourcesForVTF(vtf, false);
 
 					// Bake VTF
-					if (!vtf.bake(outputPath)) {
-						tferr << "Failed to CUBE input HDRI at " << BOLD << currentInputPath << END << "." << tfendl;
-						return EXIT_FAILURE;
-					}
-					const auto elapsed = stopwatch.get().count();
-					tfout << BOLD << currentInputPath << END << " was CUBE'd in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 📦") << tfendl;
-					return EXIT_SUCCESS;
+					return bake(vtf, "HDRI");
 				}
 
 				// Special case for animated VTFs
@@ -1430,7 +1440,7 @@ int main(int argc, const char* const argv[]) {
 					// Create initial VTF
 					auto vtf = vtfpp::VTF::create(currentInputPath, options);
 					if (!vtf) {
-						tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+						tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 						return EXIT_FAILURE;
 					}
 
@@ -1448,7 +1458,7 @@ int main(int argc, const char* const argv[]) {
 					}
 					for (int frame = frameNumberStart; frame < options.initialFrameCount; frame++) {
 						if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
-							tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
+							tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
 							return EXIT_FAILURE;
 						}
 						if (bar) {
@@ -1475,13 +1485,7 @@ int main(int argc, const char* const argv[]) {
 					handleSettingResourcesForVTF(vtf, false);
 
 					// Bake VTF
-					if (!vtf.bake(outputPath)) {
-						tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << "." << tfendl;
-						return EXIT_FAILURE;
-					}
-					const auto elapsed = stopwatch.get().count();
-					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
-					return EXIT_SUCCESS;
+					return bake(vtf, "animation");
 				}
 
 				// Create VTF
@@ -1495,13 +1499,7 @@ int main(int argc, const char* const argv[]) {
 				handleSettingResourcesForVTF(vtf, false);
 
 				// Bake VTF
-				if (!vtf.bake(outputPath)) {
-					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << "." << tfendl;
-					return EXIT_FAILURE;
-				}
-				const auto elapsed = stopwatch.get().count();
-				tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
-				return EXIT_SUCCESS;
+				return bake(vtf, "image");
 			};
 
 			// Check input path
@@ -1822,11 +1820,17 @@ int main(int argc, const char* const argv[]) {
 				handleSettingResourcesForVTF(vtf, true);
 
 				// Bake VTF
-				if (!vtf.bake(outputPath)) {
+				const auto vtfData = vtf.bake();
+				if (vtfData.empty()) {
+					tferr << "Failed to bake edited VTF." << tfendl;
+					return EXIT_FAILURE;
+				}
+				const auto time = editStopwatch.get().count();
+				if (!sourcepp::fs::writeFileBuffer(outputPath, vtfData)) {
 					tferr << "Failed to save edited VTF at " << BOLD << outputPath << END << "." << tfendl;
 					return EXIT_FAILURE;
 				}
-				tfout << "Saved edited VTF to " << BOLD << outputPath << END << " in " << CYAN << editStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+				tfout << "Saved edited VTF to " << BOLD << outputPath << END << " in " << CYAN << time << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 				return EXIT_SUCCESS;
 			};
 
