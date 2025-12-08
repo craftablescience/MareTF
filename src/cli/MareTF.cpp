@@ -389,12 +389,12 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(noMips);
 
-	bool noAnimation;
+	bool animatedFrames;
 	createCLI
-		.add_argument("--no-animation")
-		.help("Disable addition of extra frames.")
+		.add_argument("-a", "--animated-frames")
+		.help("If input texture filename ends in two or more numbers, check for consecutive numbered files and add as animation frames if found.")
 		.flag()
-		.store_into(noAnimation);
+		.store_into(animatedFrames);
 
 	bool noThumbnail;
 	createCLI
@@ -1310,7 +1310,7 @@ int main(int argc, const char* const argv[]) {
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 					}
-				} else if (!noAnimation && !hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
+				} else if (animatedFrames && !hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
 					// At least 2 digits to avoid false positives
 					frameNumberCount = 2;
 					inputStem.pop_back();

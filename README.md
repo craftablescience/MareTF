@@ -101,7 +101,7 @@ maretf info input.vtf
 Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
               [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--flag FLAG]...
-              [--no-automatic-transparency-flags] [--no-mips] [--no-animation]
+              [--no-automatic-transparency-flags] [--no-mips] [--animated-frames]
               [--no-thumbnail] [--platform PLATFORM] [--compression-method COMPRESSION_METHOD]
               [--compression-level LEVEL] [--start-frame FRAME_INDEX]
               [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl] [--hdri]
@@ -197,7 +197,9 @@ Optional arguments:
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
   --no-mips                                    Disable mipmap generation.
-  --no-animation                               Disable addition of extra frames.
+  -a, --animated-frames                        If input texture filename ends in two or more
+                                               numbers, check for consecutive numbered files
+                                               and add as animation frames if found.
   --no-thumbnail                               Disable thumbnail generation.
   -p, --platform                               Set the platform (PC/console) to build for.
                                                [nargs=0..1] [default: "PC"]
