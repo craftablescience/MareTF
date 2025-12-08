@@ -32,7 +32,7 @@
 #include <argparse/argparse.hpp>
 #include <efsw/efsw.hpp>
 #include <indicators/progress_bar.hpp>
-#include <kvpp/KV1.h>
+#include <kvpp/KV1Writer.h>
 #include <sourcepp/FS.h>
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
