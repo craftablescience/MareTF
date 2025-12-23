@@ -12,6 +12,11 @@ const std::vector<std::string_view> HOT_RECT_FLAGS_S{
 	"RANDOM_REFLECTION",
 	"IS_ALTERNATE",
 };
+const std::vector<std::string_view> HOT_RECT_FLAGS_P{
+	"Random Rotation",
+	"Random Reflection",
+	"Is Alternate",
+};
 
 const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E{
 	vtfpp::VTF::FORMAT_UNCHANGED,
@@ -129,6 +134,7 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"BC7",
 	"BC6H",
 };
+const std::vector<std::string_view> IMAGE_FORMAT_P = IMAGE_FORMAT_S;
 
 const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORMAT_E{
 	vtfpp::ImageConversion::FileFormat::DEFAULT,
@@ -154,6 +160,7 @@ const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
 	"HDR",
 	"EXR",
 };
+const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_P = IMAGE_CONVERSION_FILE_FORMAT_S;
 
 const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_FILTER_E{
 	vtfpp::ImageConversion::ResizeFilter::DEFAULT,
@@ -177,6 +184,17 @@ const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_S{
 	"KAISER",
 	"NICE",
 };
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_P{
+	"Default",
+	"Box",
+	"Bilinear",
+	"Cubic BSpline",
+	"Catmull-Rom",
+	"Mitchell",
+	"Point Sample",
+	"Kaiser",
+	"NICE",
+};
 
 const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E{
 	vtfpp::ImageConversion::ResizeMethod::NONE,
@@ -190,6 +208,12 @@ const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_METHOD_S{
 	"SMALLER",
 	"NEAREST",
 };
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_METHOD_P{
+	"None",
+	"Power of 2 (Bigger)",
+	"Power of 2 (Smaller)",
+	"Power of 2 (Nearest)",
+};
 
 const std::vector<vtfpp::CompressionMethod> COMPRESSION_METHOD_E{
 	vtfpp::CompressionMethod::DEFLATE,
@@ -200,6 +224,11 @@ const std::vector<std::string_view> COMPRESSION_METHOD_S{
 	"DEFLATE",
 	"ZSTD",
 	"CONSOLE_LZMA",
+};
+const std::vector<std::string_view> COMPRESSION_METHOD_P{
+	"Deflate",
+	"Zstd",
+	"LZMA (Console)",
 };
 
 const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E{
@@ -227,6 +256,19 @@ const std::vector<std::string_view> RESOURCE_TYPE_S{
 	"KEYVALUES_DATA",
 	"HOTSPOT_DATA",
 	"AUX_COMPRESSION",
+};
+const std::vector<std::string_view> RESOURCE_TYPE_P{
+	"Thumbnail",
+	"Palette",
+	"Fallback",
+	"Image",
+	"Particle Sheet",
+	"CRC",
+	"LOD Control Info",
+	"Extended Flags",
+	"KeyValues Data",
+	"Hotspot Data",
+	"Compression Info",
 };
 
 const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E{
@@ -327,6 +369,7 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 	"CSGO_YCOCG",
 	"CSGO_ASYNC_SKIP_INITIAL_LOW_RES",
 };
+const std::vector<std::string_view> VTF_FLAGS_P = VTF_FLAGS_S;
 
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{
 	vtfpp::VTF::PLATFORM_PC,
@@ -341,6 +384,13 @@ const std::vector<std::string_view> VTF_PLATFORM_S{
 	"X360",
 	"PS3_ORANGEBOX",
 	"PS3_PORTAL2",
+};
+const std::vector<std::string_view> VTF_PLATFORM_P{
+	"PC",
+	"XBOX",
+	"X360",
+	"PS3 (Orange Box)",
+	"PS3 (P2, CS:GO)",
 };
 
 } // namespace not_magic_enum::detail

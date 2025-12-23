@@ -2210,7 +2210,22 @@ int main(int argc, const char* const argv[]) {
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
-							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END << tfendl;
+							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END;
+							if (hotspots.getFlags()) {
+								tfout << " (";
+								bool first = true;
+								for (const auto& [rectFlag, rectFlagName] : not_magic_enum::enum_entries<vtfpp::HOT::Rect::Flags>(true)) {
+									if (hotspots.getFlags() & rectFlag) {
+										if (!first) {
+											tfout << " | ";
+										}
+										first = false;
+										tfout << CYAN << rectFlagName << END;
+									}
+								}
+								tfout << ')';
+							}
+							tfout << tfendl;
 							for (int i = 0; i < hotspots.getRects().size(); i++) {
 								const auto& rect = hotspots.getRects().at(i);
 								tfout << BOLD << "Rect " << END << CYAN << (i + 1) << END << BOLD << ':' << END << tfendl;
