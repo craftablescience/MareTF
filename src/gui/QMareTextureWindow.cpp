@@ -281,8 +281,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	this->detailsVersion = new QComboBox{this->detailsFileTypeGroup};
 	for (int i = 0; i <= 6; i++) {
-		this->detailsVersion->addItem(QString{"7.%1"}.arg(i));
-		this->detailsVersion->setItemData(i, i);
+		this->detailsVersion->addItem(QString{"7.%1"}.arg(i), i);
 	}
 	detailsFileTypeLayout->addRow(tr("Version"), this->detailsVersion);
 
@@ -296,8 +295,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 		if (static_cast<int>(value) < 0) {
 			continue;
 		}
-		this->detailsFormat->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data());
-		this->detailsFormat->setItemData(this->detailsFormat->count() - 1, static_cast<int>(value));
+		this->detailsFormat->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data(), static_cast<int>(value));
 	}
 	detailsFileTypeLayout->addRow(tr("Format"), this->detailsFormat);
 
@@ -362,11 +360,9 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	detailsCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->detailsCompressionMethod = new QComboBox{this->detailsCompressionGroup};
-	this->detailsCompressionMethod->addItem("None");
-	this->detailsCompressionMethod->setItemData(0, 0);
-	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>()) {
-		this->detailsCompressionMethod->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data());
-		this->detailsCompressionMethod->setItemData(this->detailsCompressionMethod->count() - 1, static_cast<int>(value));
+	this->detailsCompressionMethod->addItem("None", 0);
+	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>(true)) {
+		this->detailsCompressionMethod->addItem(name.data(), static_cast<int>(value));
 	}
 	detailsCompressionLayout->addRow(tr("Method"), this->detailsCompressionMethod);
 
