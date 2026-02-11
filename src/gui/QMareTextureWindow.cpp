@@ -104,7 +104,6 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	this->textureTabs->setDocumentMode(true);
 	this->textureTabs->setIconSize({64, 64});
 	this->textureTabs->setMovable(true);
-	this->textureTabs->setTabBarAutoHide(true);
 	this->textureTabs->setTabsClosable(true);
 	this->setCentralWidget(this->textureTabs);
 
