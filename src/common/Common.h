@@ -5,4 +5,4 @@
 
 #include <vtfpp/VTF.h>
 
-std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform);
+[[nodiscard]] std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform);

@@ -72,9 +72,11 @@ const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E{
 	vtfpp::ImageFormat::CONSOLE_RGBA16161616_LINEAR,
 	vtfpp::ImageFormat::CONSOLE_BGRX8888_LE,
 	vtfpp::ImageFormat::CONSOLE_BGRA8888_LE,
-	vtfpp::ImageFormat::R8,
-	vtfpp::ImageFormat::BC7,
-	vtfpp::ImageFormat::BC6H,
+	vtfpp::ImageFormat::TFALL2_BC6H,
+	vtfpp::ImageFormat::TFALL2_BC7,
+	vtfpp::ImageFormat::STRATA_R8,
+	vtfpp::ImageFormat::STRATA_BC7,
+	vtfpp::ImageFormat::STRATA_BC6H,
 };
 const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"UNCHANGED",
@@ -130,6 +132,8 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"CONSOLE_RGBA16161616_LINEAR",
 	"CONSOLE_BGRX8888_LE",
 	"CONSOLE_BGRA8888_LE",
+	"TFALL2_BC6H",
+	"TFALL2_BC7",
 	"R8",
 	"BC7",
 	"BC6H",
