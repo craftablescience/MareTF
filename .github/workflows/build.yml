@@ -134,7 +134,7 @@ jobs:
       matrix:
         build_type: [Debug, Release]
         cpack_generator: [DEB]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -143,6 +143,12 @@ jobs:
 
       - name: Install Necessary Packages
         run: sudo apt update && sudo apt install -y chrpath
+
+      - name: Install Newer GCC
+        uses: egor-tensin/setup-gcc@v2
+        with:
+          version: latest
+          platform: x64
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
