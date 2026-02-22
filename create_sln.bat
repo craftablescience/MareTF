@@ -10,7 +10,7 @@ if "%1" equ "" (
 ) else (
     echo Running CMake with Qt base directory set to "%1"...
     echo/
-    cmake -B build -G "Visual Studio 17 2022" -DQT_BASEDIR="%1"
+    cmake -B build -G "Visual Studio 18 2026" -DQT_BASEDIR="%1"
     echo/
     echo Assuming CMake setup went well, the project sln is located at "build/maretf.sln".
     echo/
