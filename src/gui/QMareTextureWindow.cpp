@@ -222,6 +222,18 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	auto* previewCubemapLayout = new QFormLayout{this->previewCubemapGroup};
 	previewCubemapLayout->setFormAlignment(Qt::AlignHCenter);
 
+	this->previewCubemapMode = new QComboBox{previewWidget};
+	this->previewCubemapMode->addItems({"Single Face", "Net"});
+	previewCubemapLayout->addRow(tr("Preview Mode"), this->previewCubemapMode);
+
+	// Change cubemap preview mode
+	connect(this->previewCubemapMode, &QComboBox::currentIndexChanged, this, [this](int index) {
+		this->previewCurrentFace->setDisabled(index != 0);
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setCurrentCubemapMode(index);
+		}
+	});
+
 	this->previewCurrentFace = new QSpinBox{previewWidget};
 	previewCubemapLayout->addRow(tr("Current Face"), this->previewCurrentFace);
 
@@ -580,6 +592,7 @@ void QMareTextureWindow::regenerateDetails() {
 		this->previewCurrentFrame->setValue(0);
 
 		this->previewCubemapGroup->setVisible(false);
+		this->previewCubemapMode->setCurrentIndex(0);
 		this->previewCurrentFace->setValue(0);
 
 		this->previewDepthGroup->setVisible(false);
@@ -673,6 +686,7 @@ void QMareTextureWindow::regenerateDetails() {
 	this->previewCurrentFrame->setRange(0, vtf.getFrameCount() - 1);
 
 	this->previewCubemapGroup->setVisible(vtf.getFaceCount() > 1);
+	this->previewCubemapMode->setCurrentIndex(activeTexture->getCurrentCubemapMode());
 	this->previewCurrentFace->setValue(activeTexture->getCurrentFace());
 	this->previewCurrentFace->setRange(0, vtf.getFaceCount() - 1);
 
@@ -687,10 +701,15 @@ void QMareTextureWindow::regenerateDetails() {
 
 	this->detailsDimsGroup->setVisible(true);
 	this->detailsWidth->setValue(vtf.getWidth());
+	this->detailsWidth->setRange(0, std::numeric_limits<uint16_t>::max());
 	this->detailsHeight->setValue(vtf.getHeight());
+	this->detailsHeight->setRange(0, std::numeric_limits<uint16_t>::max());
 	this->detailsDepth->setValue(vtf.getDepth());
+	this->detailsDepth->setRange(0, std::numeric_limits<uint16_t>::max());
 	this->detailsFrames->setValue(vtf.getFrameCount());
+	this->detailsFrames->setRange(0, std::numeric_limits<uint16_t>::max());
 	this->detailsStartFrame->setValue(vtf.getStartFrame());
+	this->detailsStartFrame->setRange(0, std::numeric_limits<uint16_t>::max());
 	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
 	this->detailsMipmaps->setChecked(vtf.getMipCount() > 1);
 	this->detailsConsoleMipScale->setValue(vtf.getConsoleMipScale());

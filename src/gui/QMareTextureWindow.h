@@ -39,6 +39,7 @@ protected:
 	QTimer* previewAnimateTimer;
 
 	QGroupBox* previewCubemapGroup;
+	QComboBox* previewCubemapMode;
 	QSpinBox* previewCurrentFace;
 
 	QGroupBox* previewDepthGroup;

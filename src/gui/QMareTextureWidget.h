@@ -44,6 +44,10 @@ public:
 
 	void setCurrentDepth(uint16_t depth);
 
+	[[nodiscard]] int getCurrentCubemapMode() const;
+
+	void setCurrentCubemapMode(int mode);
+
 	explicit operator bool() const;
 
 	[[nodiscard]] static bool& useBackground();
@@ -73,6 +77,7 @@ protected:
 	uint8_t currentFace = 0;
 	uint16_t currentFrame = 0;
 	uint16_t currentDepth = 0;
+	int cubemapMode = 0;
 
 	QPointF mousePressPosition;
 };
