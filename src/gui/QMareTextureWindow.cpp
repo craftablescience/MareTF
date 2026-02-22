@@ -367,7 +367,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	detailsWidgetLayout->addWidget(this->detailsMiscellaneousGroup);
 
-	this->detailsCompressionGroup = new QGroupBox{tr("Compression"), detailsWidget};
+	this->detailsCompressionGroup = new QGroupBox{tr("CPU Compression"), detailsWidget};
 	auto* detailsCompressionLayout = new QFormLayout{this->detailsCompressionGroup};
 	detailsCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -635,8 +635,8 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resPaletteGroup->setVisible(false);
 		this->resPalettePreview->clear();
 		(void) this->resPaletteFrame->disconnect();
-		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setRange(0, 0);
+		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setDisabled(true);
 
 		this->resFallbackGroup->setVisible(false);
@@ -678,22 +678,22 @@ void QMareTextureWindow::regenerateDetails() {
 	};
 
 	this->previewGeneralGroup->setVisible(true);
-	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());
 	this->previewCurrentMip->setRange(0, vtf.getMipCount() - 1);
+	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());
 	this->previewCurrentMip->setEnabled(vtf.getMipCount() > 1);
 
 	this->previewAnimationGroup->setVisible(vtf.getFrameCount() > 1);
-	this->previewCurrentFrame->setValue(activeTexture->getCurrentFrame());
 	this->previewCurrentFrame->setRange(0, vtf.getFrameCount() - 1);
+	this->previewCurrentFrame->setValue(activeTexture->getCurrentFrame());
 
 	this->previewCubemapGroup->setVisible(vtf.getFaceCount() > 1);
 	this->previewCubemapMode->setCurrentIndex(activeTexture->getCurrentCubemapMode());
-	this->previewCurrentFace->setValue(activeTexture->getCurrentFace());
 	this->previewCurrentFace->setRange(0, vtf.getFaceCount() - 1);
+	this->previewCurrentFace->setValue(activeTexture->getCurrentFace());
 
 	this->previewDepthGroup->setVisible(vtf.getDepth() > 1);
-	this->previewCurrentDepth->setValue(activeTexture->getCurrentDepth());
 	this->previewCurrentDepth->setRange(0, vtf.getDepth() - 1);
+	this->previewCurrentDepth->setValue(activeTexture->getCurrentDepth());
 
 	this->detailsFileTypeGroup->setVisible(true);
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
@@ -701,16 +701,16 @@ void QMareTextureWindow::regenerateDetails() {
 	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
 
 	this->detailsDimsGroup->setVisible(true);
-	this->detailsWidth->setValue(vtf.getWidth());
 	this->detailsWidth->setRange(0, std::numeric_limits<uint16_t>::max());
-	this->detailsHeight->setValue(vtf.getHeight());
+	this->detailsWidth->setValue(vtf.getWidth());
 	this->detailsHeight->setRange(0, std::numeric_limits<uint16_t>::max());
-	this->detailsDepth->setValue(vtf.getDepth());
+	this->detailsHeight->setValue(vtf.getHeight());
 	this->detailsDepth->setRange(0, std::numeric_limits<uint16_t>::max());
-	this->detailsFrames->setValue(vtf.getFrameCount());
+	this->detailsDepth->setValue(vtf.getDepth());
 	this->detailsFrames->setRange(0, std::numeric_limits<uint16_t>::max());
-	this->detailsStartFrame->setValue(vtf.getStartFrame());
+	this->detailsFrames->setValue(vtf.getFrameCount());
 	this->detailsStartFrame->setRange(0, std::numeric_limits<uint16_t>::max());
+	this->detailsStartFrame->setValue(vtf.getStartFrame());
 	this->detailsCubemap->setChecked(vtf.getFaceCount() > 1);
 	this->detailsMipmaps->setChecked(vtf.getMipCount() > 1);
 	this->detailsConsoleMipScale->setValue(vtf.getConsoleMipScale());
@@ -777,19 +777,19 @@ void QMareTextureWindow::regenerateDetails() {
 			this->resPalettePreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(paletteFramesPreviewImageData_.data() + value * 256 * sizeof(vtfpp::ImagePixel::BGRA8888)), 16, 16, QImage::Format_BGR888}).scaledToWidth(64));
 		});
 
+		this->resPaletteFrame->setRange(0, vtf.getFrameCount() - 1);
 		if (this->resPaletteFrame->value() == 0) {
 			this->resPaletteFrame->valueChanged(0);
 		} else {
 			this->resPaletteFrame->setValue(0);
 		}
-		this->resPaletteFrame->setRange(0, vtf.getFrameCount() - 1);
 		this->resPaletteFrame->setDisabled(vtf.getFrameCount() <= 1);
 	} else {
 		this->resPaletteGroup->setVisible(false);
 		this->resPalettePreview->clear();
 		(void) this->resPaletteFrame->disconnect();
-		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setRange(0, 0);
+		this->resPaletteFrame->setValue(0);
 		this->resPaletteFrame->setDisabled(true);
 	}
 
