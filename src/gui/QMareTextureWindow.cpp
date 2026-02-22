@@ -223,18 +223,19 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 	previewCubemapLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->previewCubemapMode = new QComboBox{previewWidget};
-	this->previewCubemapMode->addItems({"Single Face", "Net"});
+	this->previewCubemapMode->addItems({tr("Net"), tr("Single Face")});
 	previewCubemapLayout->addRow(tr("Preview Mode"), this->previewCubemapMode);
 
 	// Change cubemap preview mode
 	connect(this->previewCubemapMode, &QComboBox::currentIndexChanged, this, [this](int index) {
-		this->previewCurrentFace->setDisabled(index != 0);
+		this->previewCurrentFace->setDisabled(index != 1);
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentCubemapMode(index);
 		}
 	});
 
 	this->previewCurrentFace = new QSpinBox{previewWidget};
+	this->previewCurrentFace->setDisabled(true);
 	previewCubemapLayout->addRow(tr("Current Face"), this->previewCurrentFace);
 
 	// Change the current face
