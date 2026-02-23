@@ -70,7 +70,8 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		flags[21] = "[TF2] Ignore mat_picmip";
 		flags[22] = "Unused (1<<22)";
 		flags[24] = "Unused (1<<24)";
-		flags[30] = "[TF2] Streamable (Coarse)";
+		flags[30] = "[TF2] Internal (1<<30)";
+		flags[31] = "[TF2] Internal (1<<31)";
 	}
 	if (minorVersion >= 5) {
 		flags[6] = "PWL Corrected";
