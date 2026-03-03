@@ -323,6 +323,8 @@ const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E{
 	vtfpp::VTF::FLAG_V5_CSGO_SKIP_INITIAL_DOWNLOAD,
 	vtfpp::VTF::FLAG_V5_CSGO_YCOCG,
 	vtfpp::VTF::FLAG_V5_CSGO_ASYNC_SKIP_INITIAL_LOW_RES,
+	// v6
+	vtfpp::VTF::FLAG_V6_IGNORE_PICMIP,
 };
 const std::vector<std::string_view> VTF_FLAGS_S{
 	// v0
@@ -372,6 +374,8 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 	"CSGO_SKIP_INITIAL_DOWNLOAD",
 	"CSGO_YCOCG",
 	"CSGO_ASYNC_SKIP_INITIAL_LOW_RES",
+	// v6
+	"IGNORE_PICMIP",
 };
 const std::vector<std::string_view> VTF_FLAGS_P = VTF_FLAGS_S;
 

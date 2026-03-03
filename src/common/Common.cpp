@@ -75,6 +75,7 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 	if (minorVersion >= 5) {
 		flags[6] = "PWL Corrected";
 		flags[10] = "Unused (1<<10)";
+		flags[18] = "Unused (1<<18)";
 		flags[19] = "sRGB";
 		flags[20] = "Default Pool";
 		flags[21] = "[CS:GO] Combined";
@@ -85,6 +86,7 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		flags[31] = "[CS:GO] Async Skip Initial Low Res";
 	}
 	if (minorVersion >= 6) {
+		flags[18] = "Ignore mat_picmip";
 		flags[21] = "Combined";
 		flags[22] = "Async Download";
 		flags[24] = "Skip Initial Download";
