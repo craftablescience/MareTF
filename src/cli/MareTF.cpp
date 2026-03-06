@@ -82,6 +82,16 @@ namespace {
 		"Trotting through green fields and apple trees",
 		"Buying an orbitouch",
 		"Ponifying splines",
+		// Vylet Pony refrences by LunaKitty
+		"Becoming the antonymph of the internet",
+		"Entering the quickscope era",
+		"Turning girls into wizards",
+		"Crunkmaxxing in the locus", // TODO: find out what this means
+		"Crashing a Mercedes into McDonalds", // refrence to I'm Creekflow EP
+		"I'm Creekflow", 
+		"Getting a flair for the dramatic",
+		"Partying at the worst rave ever",
+		"Walking beside a dragonfly",
 	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
