@@ -57,7 +57,7 @@ namespace {
 }
 
 [[nodiscard]] std::string_view randomDeviantArtTFTrope() {
-	static constexpr std::array<std::string_view, 23> DEVIANTART_TF_TROPES{
+	static constexpr std::array DEVIANTART_TF_TROPES{
 		"Splicing DNA",
 		"Drinking a potion stolen from a wizard neighbor",
 		"Tampering with a sacred equine relic",
@@ -82,12 +82,12 @@ namespace {
 		"Trotting through green fields and apple trees",
 		"Buying an orbitouch",
 		"Ponifying splines",
-		// Vylet Pony refrences by LunaKitty
+		// The following are from @LunaKitty, thanks!
 		"Becoming the antonymph of the internet",
 		"Entering the quickscope era",
 		"Turning girls into wizards",
-		"Crunkmaxxing in the locus", // TODO: find out what this means
-		"Crashing a Mercedes into McDonalds", // refrence to I'm Creekflow EP
+		"Crunkmaxxing in the locus",
+		"Crashing a Mercedes into McDonalds",
 		"I'm Creekflow", 
 		"Getting a flair for the dramatic",
 		"Partying at the worst rave ever",
