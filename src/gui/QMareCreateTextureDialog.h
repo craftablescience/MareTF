@@ -5,11 +5,11 @@
 
 class QListWidget;
 
-class QMareCreateTexture : public QDialog {
+class QMareCreateTextureDialog : public QDialog {
 	Q_OBJECT;
 
 public:
-	explicit QMareCreateTexture(bool createFromDir, QWidget* parent = nullptr);
+	explicit QMareCreateTextureDialog(bool createFromDir, QWidget* parent = nullptr);
 
 signals:
 	void createdTexture(const QString& path);
