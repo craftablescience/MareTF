@@ -35,7 +35,7 @@ namespace {
 
 } // namespace
 
-QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget(parent) {
+QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget{parent} {
 	this->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	auto* contextMenu = new QMenu{this};

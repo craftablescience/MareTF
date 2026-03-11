@@ -8,11 +8,12 @@ class QDoubleSpinBox;
 class QGroupBox;
 class QLabel;
 class QLineEdit;
-class QListWidget;
 class QPlainTextEdit;
 class QSpinBox;
 class QTabWidget;
 class QTimer;
+
+class QMareFlagsWidget;
 
 class QMareTextureWindow : public QMainWindow {
 	Q_OBJECT;
@@ -101,5 +102,5 @@ protected:
 	QGroupBox* resKeyValuesGroup;
 	QPlainTextEdit* resKeyValuesData;
 
-	QListWidget* flagsChecks;
+	QMareFlagsWidget* flagsChecks;
 };

@@ -7,8 +7,8 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		"Clamp S",
 		"Clamp T",
 		"Anisotropic",
-		"(vtex) Hint DXT5",
-		"(vtex) No Compress",
+		"(VTEX) Hint DXT5",
+		"(VTEX) No Compress",
 		"Normal",
 		"No Mips",
 		"No LOD",
@@ -40,17 +40,17 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		flags[16] = "Depth Rendertarget";
 		flags[17] = "No Debug Override";
 		flags[18] = "Single Copy";
-		flags[19] = "(vtex) One Over Mip Level in Alpha";
-		flags[20] = "(vtex) Premultiply Color by One Over Mip Level in Alpha";
-		flags[21] = "(vtex) Convert Normal to DUDV";
+		flags[19] = "(VTEX) One Over Mip Level in Alpha";
+		flags[20] = "(VTEX) Premultiply Color by One Over Mip Level in Alpha";
+		flags[21] = "(VTEX) Convert Normal to DUDV";
 	}
 	if (minorVersion >= 2) {
-		flags[22] = "(vtex) Alpha Test Mip Generation";
+		flags[22] = "(VTEX) Alpha Test Mip Generation";
 		flags[23] = "No Depth Buffer";
-		flags[24] = "(vtex) NICE Filtered";
+		flags[24] = "(VTEX) NICE Filtered";
 		flags[25] = "Clamp U";
 		if (platform == vtfpp::VTF::Platform::PLATFORM_XBOX) {
-			flags[26] = "[XBOX] (vtex) Preswizzled";
+			flags[26] = "[XBOX] (VTEX) Preswizzled";
 			flags[27] = "[XBOX] Cacheable";
 			flags[28] = "[XBOX] Unfilterable OK";
 		}

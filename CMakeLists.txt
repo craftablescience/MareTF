@@ -49,6 +49,8 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareFlagsWidget.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareFlagsWidget.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.cpp"

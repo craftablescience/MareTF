@@ -13,7 +13,6 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
@@ -28,9 +27,10 @@
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
 #include "QMareCredits.h"
+#include "QMareFlagsWidget.h"
 #include "QMareTextureWidget.h"
 
-QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
+QMareTextureWindow::QMareTextureWindow() {
 	// Window setup ------------------------------------------
 
 	this->setWindowIcon(QIcon(":/logo.png"));
@@ -545,7 +545,7 @@ QMareTextureWindow::QMareTextureWindow() : QMainWindow(nullptr) {
 
 	auto* flagsDock = new QDockWidget{tr("&Flags"), this};
 	flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	this->flagsChecks = new QListWidget{flagsDock};
+	this->flagsChecks = new QMareFlagsWidget{flagsDock};
 	flagsDock->setWidget(this->flagsChecks);
 	this->addDockWidget(Qt::RightDockWidgetArea, flagsDock);
 	this->tabifyDockWidget(flagsDock, resDock);
@@ -737,20 +737,7 @@ void QMareTextureWindow::regenerateDetails() {
 	searchAndSetCombo(this->detailsCompressionMethod, static_cast<int>(vtf.getCompressionMethod()), vtf.getCompressionLevel() > 0 || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA);
 	this->detailsCompressionLevel->setValue(vtf.getCompressionLevel());
 
-	this->flagsChecks->clear();
-	const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
-	for (int i = 0; i < 32; i++) {
-		auto* flagItem = new QListWidgetItem{prettyFlagNames[i].data(), this->flagsChecks};
-		flagItem->setCheckState(activeTexture->getVTF().getFlags() & (vtf.getFlags() & 1 << i) ? Qt::Checked : Qt::Unchecked);
-		// basically just populate this differently per VTF version/platform - repopulate on every tab change
-		if (1 << i & vtfpp::VTF::FLAG_MASK_INTERNAL) {
-			flagItem->setFlags(flagItem->flags() & ~Qt::ItemIsEnabled);
-		}
-		if (flagItem->text().startsWith("Unused") || flagItem->text().contains("(vtex)")) {
-			flagItem->setForeground(Qt::gray);
-		}
-		this->flagsChecks->addItem(flagItem);
-	}
+	this->flagsChecks->repopulateFlagList(vtf.getFlags(), vtf.getPlatform(), vtf.getVersion());
 
 	if (vtf.hasThumbnailData()) {
 		this->resThumbnailGroup->setVisible(true);

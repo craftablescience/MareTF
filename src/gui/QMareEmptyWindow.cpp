@@ -15,7 +15,7 @@
 #include "QMareCredits.h"
 #include "QMareTextureWindow.h"
 
-QMareEmptyWindow::QMareEmptyWindow() : QMainWindow(nullptr) {
+QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->setWindowTitle(PROJECT_TITLE);
 	this->setWindowIcon(QIcon{":/logo.png"});
 
