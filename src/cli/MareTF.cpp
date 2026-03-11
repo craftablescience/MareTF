@@ -509,6 +509,13 @@ int main(int argc, const char* const argv[]) {
 		.flag()
 		.store_into(hdri);
 
+	bool hdriAutodetect;
+	createCLI
+		.add_argument("--hdri-autodetect")
+		.help("Automatically detects if given image is an equirectangular HDRI and creates a cubemap if it is.")
+		.flag()
+		.store_into(hdriAutodetect);
+
 	bool hdriNoFilter;
 	createCLI
 		.add_argument("--hdri-no-filter")
@@ -1502,6 +1509,16 @@ int main(int argc, const char* const argv[]) {
 					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 					return EXIT_SUCCESS;
 				};
+
+				// We need to test if input texture is an HDRI. Yes this is expensive
+				if (hdriAutodetect) {
+					vtfpp::ImageFormat hdriFormat;
+					int hdriWidth, hdriHeight, hdriFrameCount;
+					static_cast<void>(vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount));
+					if (vtfpp::ImageFormatDetails::large(hdriFormat) && hdriWidth == hdriHeight * 2) {
+						hdri = true;
+					}
+				}
 
 				// Special case for HDRI -> cubemap conversion
 				if (hdri) {
