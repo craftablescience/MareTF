@@ -26,7 +26,7 @@
 #include "../common/Common.h"
 #include "../common/Config.h"
 #include "../common/EnumMappings.h"
-#include "QMareCreateTexture.h"
+#include "QMareCreateTextureDialog.h"
 #include "QMareCredits.h"
 #include "QMareFlagsWidget.h"
 #include "QMareTextureWidget.h"
@@ -42,15 +42,15 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
 
 	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTexture{false, this};
-		connect(createTextureDialog, &QMareCreateTexture::createdTexture, this, [this](const QString& path) {
+		auto* createTextureDialog = new QMareCreateTextureDialog{false, this};
+		connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
 			this->loadTexture(path);
 		});
 		createTextureDialog->exec();
 	});
 
 	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTexture{true, this};
+		auto* createTextureDialog = new QMareCreateTextureDialog{true, this};
 		createTextureDialog->exec();
 	});
 

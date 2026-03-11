@@ -1,4 +1,4 @@
-#include "QMareCreateTexture.h"
+#include "QMareCreateTextureDialog.h"
 
 #include <format>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "../common/EnumMappings.h"
 #include "src/common/Common.h"
 
-QMareCreateTexture::QMareCreateTexture(bool createFromDir, QWidget* parent) : QDialog{parent} {
+QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));
 
 	auto* layout = new QGridLayout{this};
@@ -564,5 +564,5 @@ QMareCreateTexture::QMareCreateTexture(bool createFromDir, QWidget* parent) : QD
 		emit this->accept();
 	});
 
-	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTexture::reject);
+	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTextureDialog::reject);
 }
