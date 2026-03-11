@@ -375,6 +375,78 @@ int main(int argc, const char* const argv[]) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
 		.default_value(filter).store_into(filter);
 
+	int size = 0;
+	createCLI
+		.add_argument("-s", "--size")
+		.metavar("SIZE")
+		.help("Sets the width and height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(size);
+
+	int sizeWidth = 0;
+	createCLI
+		.add_argument("--width")
+		.metavar("WIDTH")
+		.help("Sets the width of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(sizeWidth);
+
+	int sizeHeight = 0;
+	createCLI
+		.add_argument("--height")
+		.metavar("HEIGHT")
+		.help("Sets the height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(sizeHeight);
+
+	int maxSize = 0;
+	createCLI
+		.add_argument("--max-size")
+		.metavar("SIZE")
+		.help("Sets the maximum width and height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(maxSize);
+
+	int maxSizeWidth = 0;
+	createCLI
+		.add_argument("--max-width")
+		.metavar("WIDTH")
+		.help("Sets the maximum width of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(maxSizeWidth);
+
+	int maxSizeHeight = 0;
+	createCLI
+		.add_argument("--max-height")
+		.metavar("HEIGHT")
+		.help("Sets the maximum height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(maxSizeHeight);
+
+	int minSize = 0;
+	createCLI
+		.add_argument("--min-size")
+		.metavar("SIZE")
+		.help("Sets the minimum width and height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(minSize);
+
+	int minSizeWidth = 0;
+	createCLI
+		.add_argument("--min-width")
+		.metavar("WIDTH")
+		.help("Sets the minimum width of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(minSizeWidth);
+
+	int minSizeHeight = 0;
+	createCLI
+		.add_argument("--min-height")
+		.metavar("HEIGHT")
+		.help("Sets the minimum height of the output texture if nonzero.")
+		.scan<'d', int>()
+		.store_into(minSizeHeight);
+
 	std::vector<std::string> flags;
 	createCLI
 		.add_argument("--flag")
@@ -676,6 +748,16 @@ int main(int argc, const char* const argv[]) {
 		      " information. Recommended to pair this with the recompute transparency flags argument.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
 		.store_into(setFormat);
+
+	int setSize = 0;
+	editCLI
+		.add_argument("--set-size")
+		.metavar("SIZE")
+		.help("Set the largest mip's width and height. Ignores power of two resize rule. Keep in mind this operation"
+			  " will result in information loss, especially if the texture is using a lossy format. Recommended to pair"
+			  " this with the recompute mips argument if the input texture is using a lossless format.")
+		.scan<'d', int>()
+		.store_into(setSize);
 
 	int setWidth = 0;
 	editCLI
@@ -1377,8 +1459,12 @@ int main(int argc, const char* const argv[]) {
 				options.bumpMapScale = bumpMapScale;
 
 				// Set resize methods
-				options.widthResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--width-resize-method") ? widthResizeMethod : resizeMethod);
-				options.heightResizeMethod = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--height-resize-method") ? heightResizeMethod : resizeMethod);
+				options.widthResizeMethod = !size && !sizeWidth
+					? *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--width-resize-method") ? widthResizeMethod : resizeMethod)
+					: vtfpp::ImageConversion::ResizeMethod::NONE;
+				options.heightResizeMethod = !size && !sizeHeight
+					? *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeMethod>(cli.is_used("--height-resize-method") ? heightResizeMethod : resizeMethod)
+					: vtfpp::ImageConversion::ResizeMethod::NONE;
 
 				// Set gamma correction
 				if (gammaCorrection) {
@@ -1393,6 +1479,52 @@ int main(int argc, const char* const argv[]) {
 
 				// Start stopwatch
 				::ElapsedTime stopwatch;
+
+				// Function to find requested resize dimensions of image data
+				const auto findRequestedSize = [size, sizeWidth, sizeHeight, maxSize, maxSizeWidth, maxSizeHeight, minSize, minSizeWidth, minSizeHeight](uint16_t imageWidth, uint16_t imageHeight) -> std::pair<uint16_t, uint16_t> {
+					auto realWidth = imageWidth, realHeight = imageHeight;
+
+					// Exact size
+					if (size) {
+						realWidth = size;
+						realHeight = size;
+					} else {
+						if (sizeWidth) {
+							realWidth = sizeWidth;
+						}
+						if (sizeHeight) {
+							realHeight = sizeHeight;
+						}
+					}
+
+					// Maximum size
+					if (maxSize) {
+						realWidth = std::min<int>(realWidth, maxSize);
+						realHeight = std::min<int>(realHeight, maxSize);
+					} else {
+						if (maxSizeWidth) {
+							realWidth = std::min<int>(realWidth, maxSizeWidth);
+						}
+						if (maxSizeHeight) {
+							realHeight = std::min<int>(realHeight, maxSizeHeight);
+						}
+					}
+
+					// Minimum size
+					if (minSize) {
+						realWidth = std::max<int>(realWidth, minSize);
+						realHeight = std::max<int>(realHeight, minSize);
+					} else {
+						if (minSizeWidth) {
+							realWidth = std::max<int>(realWidth, minSizeWidth);
+						}
+						if (minSizeHeight) {
+							realHeight = std::max<int>(realHeight, minSizeHeight);
+						}
+					}
+
+					return {realWidth, realHeight};
+				};
 
 				// Function to bake the VTF
 				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image) {
@@ -1430,11 +1562,26 @@ int main(int argc, const char* const argv[]) {
 						return EXIT_FAILURE;
 					}
 
+					// Find requested size
+					auto [requestedWidth, requestedHeight] = findRequestedSize(hdriHeight, hdriHeight);
+					uint16_t requestedSize = 0;
+					if (requestedWidth && requestedHeight && requestedWidth != requestedHeight) {
+						tferr << "Requested width and height are not square, yet cubemaps must be square! Using requested height for both..." << tfendl;
+					}
+					if (requestedHeight) {
+						requestedSize = requestedHeight;
+					} else if (requestedWidth) {
+						requestedSize = requestedWidth;
+					}
+
 					// Split HDRI
-					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, 0, !hdriNoFilter);
+					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
 						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
 						return EXIT_FAILURE;
+					}
+					if (requestedSize > 0) {
+						hdriHeight = requestedSize;
 					}
 
 					// Create VTF
@@ -1466,6 +1613,26 @@ int main(int argc, const char* const argv[]) {
 
 					// Bake VTF
 					return bake(vtf, "HDRI");
+				}
+
+				// Set resize bounds
+				if (size || sizeWidth) {
+					options.resizeBounds.resizeMinWidth = options.resizeBounds.resizeMaxWidth = sizeWidth ? sizeWidth : size;
+				}
+				if (size || sizeHeight) {
+					options.resizeBounds.resizeMinHeight = options.resizeBounds.resizeMaxHeight = sizeHeight ? sizeHeight : size;
+				}
+				if (maxSize || maxSizeWidth) {
+					options.resizeBounds.resizeMaxWidth = maxSizeWidth ? maxSizeWidth : maxSize;
+				}
+				if (maxSize || maxSizeHeight) {
+					options.resizeBounds.resizeMaxHeight = maxSizeHeight ? maxSizeHeight : maxSize;
+				}
+				if (minSize || minSizeWidth) {
+					options.resizeBounds.resizeMinWidth = minSizeWidth ? minSizeWidth : minSize;
+				}
+				if (minSize || minSizeHeight) {
+					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
 				}
 
 				// Special case for animated VTFs
@@ -1784,7 +1951,9 @@ int main(int argc, const char* const argv[]) {
 				// Set size
 				vtf.setImageWidthResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
 				vtf.setImageHeightResizeMethod(vtfpp::ImageConversion::ResizeMethod::NONE);
-				if (cli.is_used("--set-width") && cli.is_used("--set-height")) {
+				if (cli.is_used("--set-size")) {
+					vtf.setSize(setSize, setSize, editFilterActual);
+				} else if (cli.is_used("--set-width") && cli.is_used("--set-height")) {
 					vtf.setSize(setWidth, setHeight, editFilterActual);
 				} else if (cli.is_used("--set-width")) {
 					vtf.setSize(setWidth, vtf.getHeight(), editFilterActual);
