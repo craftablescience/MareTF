@@ -1,5 +1,66 @@
 #include "Common.h"
 
+#include <sourcepp/String.h>
+
+using namespace sourcepp;
+
+bool fileIsASupportedImageFileFormat(std::string_view extension) {
+	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
+		".apng",
+		".bmp",
+		".exr",
+		".gif",
+		".hdr",
+		".jpeg",
+		".jpg",
+		".pic",
+		".png",
+		".pgm",
+		".ppm",
+		".psd",
+		".qoi",
+		".tga",
+		".webp",
+	};
+	return std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(extension)) != SUPPORTED_EXTENSIONS.end();
+}
+
+std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat) {
+	switch (fileFormat) {
+		using enum vtfpp::ImageConversion::FileFormat;
+		case DEFAULT:
+			// We should not be here!
+			break;
+		case PNG:  return ".png";
+		case JPG:  return ".jpg";
+		case BMP:  return ".bmp";
+		case TGA:  return ".tga";
+		case WEBP: return ".webp";
+		case QOI:  return ".qoi";
+		case HDR:  return ".hdr";
+		case EXR:  return ".exr";
+	}
+	return "";
+}
+
+vtfpp::ImageConversion::FileFormat supportedImageFileFormatExtension(std::string_view fileFormatExtension) {
+	using enum vtfpp::ImageConversion::FileFormat;
+	if (string::iequals(fileFormatExtension, ".png")) return PNG;
+	if (string::iequals(fileFormatExtension, ".jpg") || string::iequals(fileFormatExtension, ".jpeg")) return JPG;
+	if (string::iequals(fileFormatExtension, ".bmp")) return BMP;
+	if (string::iequals(fileFormatExtension, ".tga")) return TGA;
+	if (string::iequals(fileFormatExtension, ".webp")) return WEBP;
+	if (string::iequals(fileFormatExtension, ".qoi")) return QOI;
+	if (string::iequals(fileFormatExtension, ".hdr")) return HDR;
+	if (string::iequals(fileFormatExtension, ".exr")) return EXR;
+	// We should not be here!
+	return DEFAULT;
+}
+
+std::string_view supportedImageFileFormatsForSave() {
+	return "Image Formats (*.png *.jpg *.jpeg *.bmp *.tga *.webp *.qoi *.hdr *.exr)";
+}
+
 std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform) {
 	std::array<std::string_view, 32> flags{
 		"Point Sample",

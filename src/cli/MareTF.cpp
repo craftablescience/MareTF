@@ -99,45 +99,6 @@ namespace {
 	return DEVIANTART_TF_TROPES.at(dist(generator));
 }
 
-[[nodiscard]] bool fileIsASupportedImageFileFormat(std::string_view extension) {
-	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
-		".apng",
-		".bmp",
-		".exr",
-		".gif",
-		".hdr",
-		".jpeg",
-		".jpg",
-		".pic",
-		".png",
-		".pgm",
-		".ppm",
-		".psd",
-		".qoi",
-		".tga",
-		".webp",
-	};
-	return std::ranges::find(SUPPORTED_EXTENSIONS, sourcepp::string::toLower(extension)) != SUPPORTED_EXTENSIONS.end();
-}
-
-[[nodiscard]] std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat) {
-	switch (fileFormat) {
-		using enum vtfpp::ImageConversion::FileFormat;
-		case DEFAULT:
-			// We should not be here!
-			break;
-		case PNG:  return ".png";
-		case JPG:  return ".jpg";
-		case BMP:  return ".bmp";
-		case TGA:  return ".tga";
-		case WEBP: return ".webp";
-		case QOI:  return ".qoi";
-		case HDR:  return ".hdr";
-		case EXR:  return ".exr";
-	}
-	return "";
-}
-
 [[nodiscard]] std::string getOutputPathForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform) {
 	std::string inputLowercase{inputPath};
 	sourcepp::string::toLower(inputLowercase);

@@ -18,6 +18,8 @@ public:
 
 	void reloadCurrentTexture();
 
+	void saveCurrentTexture();
+
 	[[nodiscard]] QIcon getIcon() const;
 
 	[[nodiscard]] QString getPath() const;

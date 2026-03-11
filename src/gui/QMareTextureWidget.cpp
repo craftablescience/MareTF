@@ -5,12 +5,16 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QFileDialog>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
 #include <QStyle>
 #include <QWheelEvent>
+
+#include "../common/Common.h"
 
 namespace {
 
@@ -42,6 +46,9 @@ QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget{parent} {
 
 	contextMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton), tr("&Copy Image"), [this] {
 		QApplication::clipboard()->setImage(this->textureCurrent, QClipboard::Clipboard);
+	});
+	contextMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton), tr("&Save Image As..."), [this] {
+		this->saveCurrentTexture();
 	});
 
 	contextMenu->addSeparator();
@@ -143,6 +150,25 @@ void QMareTextureWidget::reloadCurrentTexture() {
 		}
 		this->update();
 	}
+}
+
+void QMareTextureWidget::saveCurrentTexture() {
+	const std::filesystem::path savePath{reinterpret_cast<const char8_t*>(QFileDialog::getSaveFileName(this, tr("Save Image"), QString{}, ::supportedImageFileFormatsForSave().data()).toUtf8().constData())};
+	if (savePath.empty()) {
+		return;
+	}
+	const auto fileFormat = ::supportedImageFileFormatExtension(std::filesystem::path{savePath}.extension().string());
+	if (this->vtf.getFaceCount() > 1 && this->cubemapMode == 0) {
+		// ReSharper disable once CppRedundantCastExpression
+		const std::span imageData{reinterpret_cast<const std::byte*>(this->textureCurrent.constBits()), static_cast<uint64_t>(this->textureCurrent.sizeInBytes())};
+		const auto fileData = vtfpp::ImageConversion::convertImageDataToFile(imageData, vtfpp::ImageFormat::BGRA8888, this->textureCurrent.width(), this->textureCurrent.height());
+		if (!fileData.empty() && sourcepp::fs::writeFileBuffer(savePath, fileData)) {
+			return;
+		}
+	} else if (this->vtf.saveImageToFile(savePath, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth, fileFormat)) {
+		return;
+	}
+	QMessageBox::warning(this, tr("Error"), tr("Failed to save image."));
 }
 
 QIcon QMareTextureWidget::getIcon() const {
