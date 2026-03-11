@@ -9,6 +9,7 @@ class QGroupBox;
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
+class QPushButton;
 class QSpinBox;
 class QTabWidget;
 class QTimer;
@@ -30,8 +31,11 @@ protected:
 
 	QGroupBox* previewGeneralGroup;
 	QSpinBox* previewCurrentMip;
-	QCheckBox* previewAlpha;
-	QCheckBox* previewBackground;
+	QPushButton* previewR;
+	QPushButton* previewG;
+	QPushButton* previewB;
+	QPushButton* previewA;
+	QPushButton* previewBackground;
 
 	QGroupBox* previewAnimationGroup;
 	QSpinBox* previewCurrentFrame;
