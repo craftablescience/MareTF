@@ -12,6 +12,7 @@
 #include <QToolBar>
 
 #include "../common/Config.h"
+#include "QMareCreateTexture.h"
 #include "QMareCredits.h"
 #include "QMareTextureWindow.h"
 
@@ -28,13 +29,21 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	toolbarExpanderBegin->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	this->toolbar->addWidget(toolbarExpanderBegin);
 
-	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [] {
-		// todo: create new texture from image
-	})->setDisabled(true);
+	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
+		auto* createTextureDialog = new QMareCreateTexture{false, this};
+		connect(createTextureDialog, &QMareCreateTexture::createdTexture, this, [this](const QString& path) {
+			auto* window = new QMareTextureWindow;
+			window->loadTexture(path);
+			window->show();
+			this->close();
+		});
+		createTextureDialog->exec();
+	});
 
-	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [] {
-		// todo: create new textures from folder
-	})->setDisabled(true);
+	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+		auto* createTextureDialog = new QMareCreateTexture{true, this};
+		createTextureDialog->exec();
+	});
 
 	this->toolbar->addSeparator();
 

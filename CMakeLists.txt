@@ -49,7 +49,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static ind
 if(MARETF_BUILD_GUI)
     add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE
             "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCreateTexture.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCreateTexture.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.cpp"
@@ -59,15 +68,10 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.h")
     cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
     target_use_qt(${PROJECT_NAME}_gui)
-    target_link_libraries(${PROJECT_NAME}_gui PRIVATE discord-rpc sourcepp::vtfpp)
+    target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 endif()
 
 # installer
