@@ -46,15 +46,31 @@ public:
 
 	void setCurrentDepth(uint16_t depth);
 
+	[[nodiscard]] bool useR() const;
+
+	void setR(bool newR);
+
+	[[nodiscard]] bool useG() const;
+
+	void setG(bool newG);
+
+	[[nodiscard]] bool useB() const;
+
+	void setB(bool newB);
+
+	[[nodiscard]] bool useA() const;
+
+	void setA(bool newA);
+
+	[[nodiscard]] bool useBackground() const;
+
+	void setBackground(bool newBackground);
+
 	[[nodiscard]] int getCurrentCubemapMode() const;
 
 	void setCurrentCubemapMode(int mode);
 
 	explicit operator bool() const;
-
-	[[nodiscard]] static bool& useBackground();
-
-	[[nodiscard]] static bool& useAlpha();
 
 protected:
 	void mouseMoveEvent(QMouseEvent* e) override;
@@ -79,6 +95,11 @@ protected:
 	uint8_t currentFace = 0;
 	uint16_t currentFrame = 0;
 	uint16_t currentDepth = 0;
+	bool r = true;
+	bool g = true;
+	bool b = true;
+	bool a = true;
+	bool background = true;
 	int cubemapMode = 0;
 
 	QPointF mousePressPosition;

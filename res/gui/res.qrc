@@ -1,6 +1,11 @@
 <RCC>
     <qresource prefix="/">
         <file>../logo.png</file>
+        <file>button_channel_a.png</file>
+        <file>button_channel_b.png</file>
+        <file>button_channel_background.png</file>
+        <file>button_channel_g.png</file>
+        <file>button_channel_r.png</file>
         <file>button_kofi.png</file>
         <file>button_load.png</file>
         <file>button_new.png</file>
