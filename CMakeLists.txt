@@ -32,12 +32,14 @@ cs_include_directory(ext)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
 add_executable(${PROJECT_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
 cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
+target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
 target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 
 # maretf_gui

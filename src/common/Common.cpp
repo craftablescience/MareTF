@@ -4,6 +4,37 @@
 
 using namespace sourcepp;
 
+[[nodiscard]] std::string getOutputPathForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform) {
+	std::string inputLowercase{inputPath};
+	sourcepp::string::toLower(inputLowercase);
+
+	const bool lowercaseExtension = std::filesystem::path{inputPath}.extension() == std::filesystem::path{inputLowercase}.extension();
+
+	std::string out;
+	if (inputLowercase.ends_with(".360.vtf") || inputLowercase.ends_with(".ps3.vtf")) {
+		out = inputPath.substr(0, inputPath.size() - 8);
+	} else if (inputLowercase.ends_with(".vtf") || inputLowercase.ends_with(".xtf")) {
+		out = inputPath.substr(0, inputPath.size() - 4);
+	} else {
+		out = inputPath.substr(0, inputPath.size() - std::filesystem::path{inputPath}.extension().string().size());
+	}
+
+	switch (outputPlatform) {
+	case vtfpp::VTF::PLATFORM_UNKNOWN:
+		break;
+	case vtfpp::VTF::PLATFORM_PC:
+		return out + (lowercaseExtension ? ".vtf" : ".VTF");
+	case vtfpp::VTF::PLATFORM_XBOX:
+		return out + (lowercaseExtension ? ".xtf" : ".XTF");
+	case vtfpp::VTF::PLATFORM_X360:
+		return out + (lowercaseExtension ? ".360.vtf" : ".360.VTF");
+	case vtfpp::VTF::PLATFORM_PS3_ORANGEBOX:
+	case vtfpp::VTF::PLATFORM_PS3_PORTAL2:
+		return out + (lowercaseExtension ? ".ps3.vtf" : ".PS3.VTF");
+	}
+	return "";
+}
+
 bool fileIsASupportedImageFileFormat(std::string_view extension) {
 	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
 		".apng",
@@ -57,8 +88,12 @@ vtfpp::ImageConversion::FileFormat supportedImageFileFormatExtension(std::string
 	return DEFAULT;
 }
 
+std::string_view supportedImageFileFormatsForLoad() {
+	return "Image Formats (*.apng *.bmp *.exr *.gif *.hdr *.jpg *.jpeg *.pic *.png *.pgm *.ppm *.psd *.qoi *.tga *.webp)";
+}
+
 std::string_view supportedImageFileFormatsForSave() {
-	return "Image Formats (*.png *.jpg *.jpeg *.bmp *.tga *.webp *.qoi *.hdr *.exr)";
+	return "Image Formats (*.bmp *.exr *.hdr *.jpg *.jpeg *.png *.qoi *.tga *.webp)";
 }
 
 std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform) {

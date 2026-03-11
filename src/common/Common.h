@@ -5,11 +5,15 @@
 
 #include <vtfpp/VTF.h>
 
+[[nodiscard]] std::string getOutputPathForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform);
+
 [[nodiscard]] bool fileIsASupportedImageFileFormat(std::string_view extension);
 
 [[nodiscard]] std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileFormat fileFormat);
 
 [[nodiscard]] vtfpp::ImageConversion::FileFormat supportedImageFileFormatExtension(std::string_view fileFormatExtension);
+
+[[nodiscard]] std::string_view supportedImageFileFormatsForLoad();
 
 [[nodiscard]] std::string_view supportedImageFileFormatsForSave();
 

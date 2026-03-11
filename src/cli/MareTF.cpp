@@ -1,6 +1,8 @@
 // ReSharper disable CppDFATimeOver
 // ReSharper disable CppUseStructuredBinding
 
+#include "MareTF.h"
+
 #include <algorithm>
 #include <chrono>
 #include <csignal>
@@ -36,6 +38,11 @@
 #include <sourcepp/FS.h>
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
+
+#ifndef MARETF_CLI
+#include <QMessageBox>
+#include <QProgressDialog>
+#endif
 
 #include "../common/Common.h"
 #include "../common/Config.h"
@@ -97,37 +104,6 @@ namespace {
 	static std::mt19937 generator(device());
 	std::uniform_int_distribution<> dist{0, DEVIANTART_TF_TROPES.size() - 1};
 	return DEVIANTART_TF_TROPES.at(dist(generator));
-}
-
-[[nodiscard]] std::string getOutputPathForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform) {
-	std::string inputLowercase{inputPath};
-	sourcepp::string::toLower(inputLowercase);
-
-	const bool lowercaseExtension = std::filesystem::path{inputPath}.extension() == std::filesystem::path{inputLowercase}.extension();
-
-	std::string out;
-	if (inputLowercase.ends_with(".360.vtf") || inputLowercase.ends_with(".ps3.vtf")) {
-		out = inputPath.substr(0, inputPath.size() - 8);
-	} else if (inputLowercase.ends_with(".vtf") || inputLowercase.ends_with(".xtf")) {
-		out = inputPath.substr(0, inputPath.size() - 4);
-	} else {
-		out = inputPath.substr(0, inputPath.size() - std::filesystem::path{inputPath}.extension().string().size());
-	}
-
-	switch (outputPlatform) {
-		case vtfpp::VTF::PLATFORM_UNKNOWN:
-			break;
-		case vtfpp::VTF::PLATFORM_PC:
-			return out + (lowercaseExtension ? ".vtf" : ".VTF");
-		case vtfpp::VTF::PLATFORM_XBOX:
-			return out + (lowercaseExtension ? ".xtf" : ".XTF");
-		case vtfpp::VTF::PLATFORM_X360:
-			return out + (lowercaseExtension ? ".360.vtf" : ".360.VTF");
-		case vtfpp::VTF::PLATFORM_PS3_ORANGEBOX:
-		case vtfpp::VTF::PLATFORM_PS3_PORTAL2:
-			return out + (lowercaseExtension ? ".ps3.vtf" : ".PS3.VTF");
-	}
-	return "";
 }
 
 template<not_magic_enum::SupportedEnum E>
@@ -198,8 +174,12 @@ template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 
 } // namespace
 
+#ifdef MARETF_CLI
 int main(int argc, const char* const argv[]) {
-#ifdef _WIN32
+#else
+int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
+#endif
+#if defined(MARETF_CLI) && defined(_WIN32)
 	SetConsoleOutputCP(CP_UTF8); // Set up console to show UTF-8 characters
 	setvbuf(stdout, nullptr, _IOFBF, 1000); // Enable buffering so VS terminal won't chop up UTF-8 byte sequences
 #endif
@@ -1110,11 +1090,16 @@ int main(int argc, const char* const argv[]) {
 	try {
 		cli.parse_args(argc, argv);
 
+#ifdef MARETF_CLI
 		if (!::runningInTTY()) {
 			overwrite = true;
 			quiet = true;
 			noPrettyFormatting = true;
 		}
+#else
+		quiet = true;
+		noPrettyFormatting = true;
+#endif
 
 		if (quiet && !verbose) {
 			tfout_t::QUIET = true;
@@ -1162,8 +1147,19 @@ int main(int argc, const char* const argv[]) {
 			if (exists && !overwrite) {
 				std::string in;
 				while (in.empty() || (!in.starts_with('y') && !in.starts_with('Y') && !in.starts_with('n') && !in.starts_with('N'))) {
+#ifdef MARETF_CLI
 					tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists.\nOverwrite? (" << RED << 'y' << END << '/' << GREEN << 'N' << END << ") ";
 					std::cin >> in;
+#else
+					if (
+						const auto btn = QMessageBox::question(guiParent, QObject::tr("Overwrite File"), QObject::tr("Output file at %1 already exists.\nOverwrite?").arg(currentOutputPath.data()));
+						btn == QMessageBox::StandardButton::Yes
+					) {
+						in = "y";
+					} else {
+						in = "n";
+					}
+#endif
 				}
 				if (in.empty() || in.starts_with('n') || in.starts_with('N')) {
 					tfout << "Output file at " << BOLD << currentOutputPath << END << " already exists, leaving unmodified." << tfendl;
@@ -1802,9 +1798,11 @@ int main(int argc, const char* const argv[]) {
 						}
 					}
 				};
-				fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse);
+				const auto watchID = fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse);
 
 				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
+				bool stillWatching = true;
+#ifdef MARETF_CLI
 #ifdef _WIN32
 				SetConsoleCtrlHandler(static_cast<PHANDLER_ROUTINE>(+[](unsigned long type) -> int {
 					if (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT) {
@@ -1822,41 +1820,53 @@ int main(int argc, const char* const argv[]) {
 				sigIntHandler.sa_flags = 0;
 				sigaction(SIGINT, &sigIntHandler, nullptr);
 #endif
+#else
+				auto* guiProgressDialog = new QProgressDialog{QObject::tr("Watching for any changes..."), QObject::tr("Stop"), 0, 0, guiParent};
+				QObject::connect(guiProgressDialog, &QProgressDialog::canceled, guiParent, [&stillWatching] {
+					stillWatching = false;
+				});
+#endif
 
 				fileWatcher.watch();
-				for (;; std::this_thread::sleep_for(250ms)) {
-					{
-						std::lock_guard fileActionsLock{fileActionsMutex};
+				for (;
+					stillWatching;
+#ifdef MARETF_CLI
+					std::this_thread::sleep_for(250ms)
+#else
+					std::this_thread::sleep_for(1ms)
+#endif
+				) {
+					std::lock_guard fileActionsLock{fileActionsMutex};
 
-						const auto pathsView = fileActions | std::views::keys;
-						for (std::vector<std::string> paths{pathsView.begin(), pathsView.end()}; const auto& path : paths) {
-							if (fileActions[path].first.get() < 750ms || !::fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
-								continue;
-							}
-							switch (fileActions[path].second) {
-								case efsw::Actions::Add:
-								case efsw::Actions::Modified:
-									if (!watchingSingleFile) {
-										outputPath = "";
-									}
-									create(path);
-									break;
-								case efsw::Actions::Delete: {
-									const auto vtfPath = ::getOutputPathForInput(path, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
-									if (std::error_code ec; std::filesystem::exists(vtfPath, ec)) {
-										ec.clear();
-										std::filesystem::remove(vtfPath, ec);
-										tfout << "Deleted " << BOLD << vtfPath << END << "." << tfendl;
-									}
-									break;
-								}
-								case efsw::Actions::Moved:
-									break;
-							}
-							fileActions.erase(path);
+					const auto pathsView = fileActions | std::views::keys;
+					for (std::vector<std::string> paths{pathsView.begin(), pathsView.end()}; const auto& path : paths) {
+						if (fileActions[path].first.get() < 750ms || !::fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
+							continue;
 						}
+						switch (fileActions[path].second) {
+							case efsw::Actions::Add:
+							case efsw::Actions::Modified:
+								if (!watchingSingleFile) {
+									outputPath = "";
+								}
+								create(path);
+								break;
+							case efsw::Actions::Delete: {
+								const auto vtfPath = ::getOutputPathForInput(path, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
+								if (std::error_code ec; std::filesystem::exists(vtfPath, ec)) {
+									ec.clear();
+									std::filesystem::remove(vtfPath, ec);
+									tfout << "Deleted " << BOLD << vtfPath << END << "." << tfendl;
+								}
+								break;
+							}
+							case efsw::Actions::Moved:
+								break;
+						}
+						fileActions.erase(path);
 					}
 				}
+				fileWatcher.removeWatch(watchID);
 			}
 
 			return EXIT_SUCCESS;
