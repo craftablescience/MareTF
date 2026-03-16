@@ -1,3 +1,5 @@
+// ReSharper disable CppUseFamiliarTemplateSyntaxForGenericLambdas
+
 #include "QMareCreateTextureDialog.h"
 
 #include <format>
@@ -147,6 +149,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 
 	auto* textureGammaCorrectionAmountSpin = new QDoubleSpinBox{textureGammaCorrectionGroup};
 	textureGammaCorrectionAmountSpin->setMinimum(0.0);
+	textureGammaCorrectionAmountSpin->setValue(1.0);
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
 	textureGammaCorrectionLayout->addRow(tr("Amount"), textureGammaCorrectionAmountSpin);
 
@@ -224,6 +227,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	auto* resourcesSHTPathParent = new QWidget{resourcesSHTGroup};
 	auto* resourcesSHTPathLayout = new QHBoxLayout{resourcesSHTPathParent};
 	resourcesSHTPathLayout->setSpacing(4);
+	resourcesSHTPathLayout->setContentsMargins(0, 0, 0, 0);
 
 	auto* resourcesSHTPath = new QLineEdit{resourcesSHTGroup};
 	resourcesSHTPath->setMinimumWidth(200);
@@ -289,6 +293,23 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	auto* filesystemLayout = new QFormLayout{filesystemGroup};
 	filesystemLayout->setFormAlignment(Qt::AlignHCenter);
 
+	/* ------------------------------  Output Path ------------------------------ */
+
+	auto* filesystemOutputPathParent = new QWidget{filesystemGroup};
+	auto* filesystemOutputPathLayout = new QHBoxLayout{filesystemOutputPathParent};
+	filesystemOutputPathLayout->setSpacing(4);
+	filesystemOutputPathLayout->setContentsMargins(0, 0, 0, 0);
+
+	auto* filesystemOutputPath = new QLineEdit{filesystemGroup};
+	filesystemOutputPath->setMinimumWidth(200);
+	filesystemOutputPathLayout->addWidget(filesystemOutputPath);
+
+	auto* filesystemOutputPathSearch = new QPushButton{filesystemGroup};
+	filesystemOutputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
+	filesystemOutputPathLayout->addWidget(filesystemOutputPathSearch);
+
+	filesystemLayout->addRow(tr("Output Path"), filesystemOutputPathParent);
+
 	/* ------------------------------- Overwrite -------------------------------- */
 
 	auto* overwriteGroup = new QGroupBox{filesystemGroup};
@@ -318,7 +339,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	/* ----------------------------- Recurse/Watch ------------------------------ */
 
 	auto* recurseIntoSubdirsCheck = new QCheckBox{filesystemGroup};
-	recurseIntoSubdirsCheck->setChecked(Qt::Checked);
+	recurseIntoSubdirsCheck->setChecked(createFromDir);
+	recurseIntoSubdirsCheck->setDisabled(!createFromDir);
 	filesystemLayout->addRow(tr("Enter Subfolders"), recurseIntoSubdirsCheck);
 
 	auto* watchFilesCheck = new QCheckBox{filesystemGroup};
@@ -338,6 +360,13 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	layout->addWidget(dialogButtons, 7, 2, Qt::AlignBottom | Qt::AlignRight);
 
 	/* ------------------------------ LOGIC BEGIN ------------------------------- */
+
+	// Disable "Compressed Quality" when format is uncompressed
+
+	connect(textureOpaqueFormatCombo, &QComboBox::currentIndexChanged, this, [textureOpaqueFormatCombo, textureCompressionQualitySpin](int index) {
+		const auto format = static_cast<vtfpp::ImageFormat>(textureOpaqueFormatCombo->itemData(index).toInt());
+		textureCompressionQualitySpin->setEnabled(format == vtfpp::VTF::FORMAT_UNCHANGED || format == vtfpp::VTF::FORMAT_DEFAULT || vtfpp::ImageFormatDetails::compressed(format));
+	});
 
 	// Disable "Filter" and "Scale (Console)" when mipmaps aren't computed, or "Scale (Console)" when platform is not PC
 
@@ -527,31 +556,39 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 
 		std::vector<std::string> arguments{"maretf", "create", inputPath.toUtf8().constData()};
 
-		const auto applyForEnum = [&arguments]<typename E>(const QComboBox* combo, std::string_view name) {
+		const auto addArg = [&arguments](auto&& arg1, auto&& arg2) {
+			arguments.emplace_back(std::forward<decltype(arg1)>(arg1));
+			arguments.emplace_back(std::forward<decltype(arg2)>(arg2));
+		};
+
+		const auto addFlag = [&arguments](const QCheckBox* checkBox, auto&& arg, bool negated = false) {
+			if ((!negated && checkBox->isChecked()) || (negated && !checkBox->isChecked())) {
+				arguments.emplace_back(std::forward<decltype(arg)>(arg));
+			}
+		};
+
+		const auto addInt = [&addArg](const QSpinBox* spinBox, auto&& arg) {
+			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
+		};
+
+		const auto addFloat = [&addArg](const QDoubleSpinBox* spinBox, auto&& arg) {
+			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
+		};
+
+		const auto applyForEnum = [&addArg]<typename E>(const QComboBox* combo, std::string_view name) {
 			const auto e = static_cast<E>(combo->itemData(combo->currentIndex()).toInt());
-			arguments.emplace_back(name);
-			arguments.emplace_back(not_magic_enum::enum_name(e));
+			addArg(name, not_magic_enum::enum_name(e));
 		};
 
 		applyForEnum.operator()<vtfpp::VTF::Platform>(platformCombo, "--platform");
-
-		const auto version = versionCombo->itemData(versionCombo->currentIndex()).toInt();
-		arguments.emplace_back("--version");
-		arguments.push_back(std::format("7.{}", version));
-
+		addArg("--version", std::format("7.{}", versionCombo->itemData(versionCombo->currentIndex()).toInt()));
 		applyForEnum.operator()<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
-
-		arguments.emplace_back("--quality");
-		arguments.push_back(std::format("{}", textureCompressionQualitySpin->value()));
-
+		addArg("--quality", std::format("{}", textureCompressionQualitySpin->value()));
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureResizeMethodWidthCombo, "--width-resize-method");
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureResizeMethodHeightCombo, "--height-resize-method");
-
-		if (!textureMipmapsGenerateCheck->isChecked()) {
-			arguments.emplace_back("--no-mips");
-		}
-
+		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
+		addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 
 		std::unique_ptr<const char*[]> cArgs{new const char*[arguments.size()]};
 		for (int i = 0; i < arguments.size(); i++) {
