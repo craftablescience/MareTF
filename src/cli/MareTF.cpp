@@ -635,8 +635,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	std::string lodResource;
 	createCLI
 		.add_argument("--lod-resource")
-		.metavar("U.V")
-		.help("Set the LOD resource. U and V values should be separated by a period.")
+		.metavar("U.V[.U360.V360]")
+		.help("Set the LOD resource. U and V values should be separated by a period. U and V for console are optional.")
 		.store_into(lodResource);
 
 	int ts0Resource;
@@ -879,8 +879,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	std::string setLODResource;
 	editCLI
 		.add_argument("--set-lod-resource")
-		.metavar("U.V")
-		.help("Set the LOD resource. U and V values should be separated by a period.")
+		.metavar("U.V[.U360.V360]")
+		.help("Set the LOD resource. U and V values should be separated by a period. U and V for console are optional.")
 		.store_into(setLODResource);
 
 	bool removeLODResource;
@@ -1197,11 +1197,17 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 			// Modify LOD resource
 			if ((editMode && cli.is_used("--set-lod-resource")) || (!editMode && cli.is_used("--lod-resource"))) {
-				uint8_t setU, setV;
+				uint8_t setU = 0, setV = 0, setU360 = 0, setV360 = 0;
 				const auto uv = sourcepp::string::split(editMode ? setLODResource : lodResource, '.');
-				sourcepp::string::toInt(uv[0], setU);
-				sourcepp::string::toInt(uv[1], setV);
-				vtf.setLODResource(setU, setV);
+				if (uv.size() > 1) {
+					sourcepp::string::toInt(uv[0], setU);
+					sourcepp::string::toInt(uv[1], setV);
+					if (uv.size() > 3) {
+						sourcepp::string::toInt(uv[2], setU360);
+						sourcepp::string::toInt(uv[3], setV360);
+					}
+				}
+				vtf.setLODResource(setU, setV, setU360, setV360);
 			} else if (editMode && removeLODResource) {
 				vtf.removeLODResource();
 			}
