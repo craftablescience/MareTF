@@ -6,6 +6,7 @@ CMakeSettings.json
 
 
 # Build
+.cache/
 build/
 dist/
 cmake-build-*/
