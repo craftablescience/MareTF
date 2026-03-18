@@ -5,8 +5,6 @@ project(maretf
         DESCRIPTION "A utility to create, edit, and display every type of VTF file ever made."
         VERSION 0.9.3
         HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
-set(PROJECT_NAME_PRETTY "MareTF")
-set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -17,6 +15,11 @@ option(MARETF_BUILD_INSTALLER "Build ${PROJECT_NAME_PRETTY} installer" OFF)
 # add helpers
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
 include(CS_All)
+
+# extra metadata variables
+set(PROJECT_NAME_PRETTY "MareTF" CACHE STRING "" FORCE)
+cs_version_pretty() # PROJECT_VERSION_PRETTY
+set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 
 # initial VS integration
 cs_setup_vs_defaults(STARTUP_PROJECT "${PROJECT_NAME}")
