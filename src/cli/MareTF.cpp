@@ -398,6 +398,15 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.append()
 		.store_into(flags);
 
+	unsigned int flagsUInt = 0;
+	createCLI
+		.add_argument("--flags-uint")
+		.metavar("FLAGS")
+		.help("Extra flags to add, specified as an unsigned integer. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA,"
+			  " and NO_MIP flags are applied automatically based on the VTF properties. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(flagsUInt);
+
 	bool noTransparencyFlags;
 	createCLI
 		.add_argument("--no-automatic-transparency-flags")
@@ -745,6 +754,14 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.append()
 		.store_into(addFlags);
 
+	unsigned int addFlagsUInt = 0;
+	createCLI
+		.add_argument("--add-flags-uint")
+		.metavar("FLAGS")
+		.help("Flags to add, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(addFlagsUInt);
+
 	std::vector<std::string> removeFlags;
 	editCLI
 		.add_argument("--remove-flag")
@@ -753,6 +770,14 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(removeFlags);
+
+	unsigned int removeFlagsUInt = 0;
+	createCLI
+		.add_argument("--remove-flags-uint")
+		.metavar("FLAGS")
+		.help("Flags to remove, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(removeFlagsUInt);
 
 	bool recomputeTransparencyFlags;
 	editCLI
@@ -1327,6 +1352,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				options.filter = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter);
 
 				// Set flags
+				options.flags |= flagsUInt;
 				for (const auto& flag : flags) {
 					options.flags |= *not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag);
 				}
@@ -1935,9 +1961,11 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				}
 
 				// Add/remove flags
+				vtf.addFlags(addFlagsUInt);
 				for (const auto& flag : addFlags) {
 					vtf.addFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
 				}
+				vtf.removeFlags(removeFlagsUInt);
 				for (const auto& flag : removeFlags) {
 					vtf.removeFlags(*not_magic_enum::enum_cast<vtfpp::VTF::Flags>(flag));
 				}
