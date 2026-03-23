@@ -30,19 +30,21 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->toolbar->addWidget(toolbarExpanderBegin);
 
 	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTextureDialog{false, this};
-		connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
-			auto* window = new QMareTextureWindow;
-			window->loadTexture(path);
-			window->show();
-			this->close();
-		});
-		createTextureDialog->exec();
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
+				auto* window = new QMareTextureWindow;
+				window->loadTexture(path);
+				window->show();
+				this->close();
+			});
+			createTextureDialog->exec();
+		}
 	});
 
 	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTextureDialog{true, this};
-		createTextureDialog->exec();
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
+			createTextureDialog->exec();
+		}
 	});
 
 	this->toolbar->addSeparator();

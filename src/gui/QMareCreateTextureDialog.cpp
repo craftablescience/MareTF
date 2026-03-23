@@ -26,7 +26,7 @@
 #include "../common/EnumMappings.h"
 #include "src/common/Common.h"
 
-QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* parent) : QDialog{parent} {
+QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));
 
 	auto* layout = new QGridLayout{this};
@@ -283,6 +283,47 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 
 	resourcesLayout->addRow(tr("LOD Control Info"), resourcesLODGroup);
 
+	/* ---------------------------------- TS0 ----------------------------------- */
+
+	auto* resourcesTS0Group = new QGroupBox{resourcesGroup};
+	auto* resourcesTS0Layout = new QFormLayout{resourcesTS0Group};
+	resourcesTS0Layout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* resourcesTS0EnableCheck = new QCheckBox{resourcesTS0Group};
+	resourcesTS0Layout->addRow(tr("Add Resource"), resourcesTS0EnableCheck);
+
+	auto* resourcesTS0Value = new QLineEdit{resourcesTS0Group};
+	resourcesTS0Value->setInputMask("HHHHHHHH");
+	resourcesTS0Layout->addRow(tr("Value"), resourcesTS0Value);
+
+	resourcesLayout->addRow(tr("Extended Flags"), resourcesTS0Group);
+
+	/* ---------------------------------- KVD ----------------------------------- */
+
+	auto* resourcesKVDGroup = new QGroupBox{resourcesGroup};
+	auto* resourcesKVDLayout = new QFormLayout{resourcesKVDGroup};
+	resourcesKVDLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* resourcesKVDEnableCheck = new QCheckBox{resourcesKVDGroup};
+	resourcesKVDLayout->addRow(tr("Add Resource"), resourcesKVDEnableCheck);
+
+	auto* resourcesKVDPathParent = new QWidget{resourcesKVDGroup};
+	auto* resourcesKVDPathLayout = new QHBoxLayout{resourcesKVDPathParent};
+	resourcesKVDPathLayout->setSpacing(4);
+	resourcesKVDPathLayout->setContentsMargins(0, 0, 0, 0);
+
+	auto* resourcesKVDPath = new QLineEdit{resourcesKVDGroup};
+	resourcesKVDPath->setMinimumWidth(200);
+	resourcesKVDPathLayout->addWidget(resourcesKVDPath);
+
+	auto* resourcesKVDPathSearch = new QPushButton{resourcesKVDGroup};
+	resourcesKVDPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
+	resourcesKVDPathLayout->addWidget(resourcesKVDPathSearch);
+
+	resourcesKVDLayout->addRow(tr("Path"), resourcesKVDPathParent);
+
+	resourcesLayout->addRow(tr("KeyValues Data"), resourcesKVDGroup);
+
 	/* ----------------------------- RESOURCES END ------------------------------ */
 
 	layout->addWidget(resourcesGroup, 0, 2, 6, 1);
@@ -292,6 +333,24 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	auto* filesystemGroup = new QGroupBox{tr("Filesystem"), this};
 	auto* filesystemLayout = new QFormLayout{filesystemGroup};
 	filesystemLayout->setFormAlignment(Qt::AlignHCenter);
+
+	/* ------------------------------- Input Path ------------------------------- */
+
+	auto* filesystemInputPathParent = new QWidget{filesystemGroup};
+	auto* filesystemInputPathLayout = new QHBoxLayout{filesystemInputPathParent};
+	filesystemInputPathLayout->setSpacing(4);
+	filesystemInputPathLayout->setContentsMargins(0, 0, 0, 0);
+
+	auto* filesystemInputPath = new QLineEdit{filesystemGroup};
+	filesystemInputPath->setText(inputPath);
+	filesystemInputPath->setMinimumWidth(200);
+	filesystemInputPathLayout->addWidget(filesystemInputPath);
+
+	auto* filesystemInputPathSearch = new QPushButton{filesystemGroup};
+	filesystemInputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
+	filesystemInputPathLayout->addWidget(filesystemInputPathSearch);
+
+	filesystemLayout->addRow(tr("Input Path"), filesystemInputPathParent);
 
 	/* ------------------------------  Output Path ------------------------------ */
 
@@ -412,10 +471,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	// - Disable Deflate and Zstd options in "Method" combo when platform is PS3_PORTAL2 or X360, and disable LZMA (Console) option in "Method" combo when platform is PC
 	// Disable "Scale (Console)" in "Mipmaps" group if mipmaps are not enabled or platform is not PC
 	// Disable "U (Console)" and "V (Console)" in "LOD" group if platform is PC
-	// Disable "Particle Sheet", "CRC32", and "LOD" groups if platform is PC and version is less than 3, or platform is XBOX
+	// Disable "Particle Sheet", "CRC32", "LOD", "Extended Flags", "KeyValues Data" groups if platform is PC and version is less than 3, or platform is XBOX
 	// Repopulate "Flags" group checklist
 
-	connect(platformCombo, &QComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin](int index) {
+	connect(platformCombo, &QComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(index).toInt());
 
 		versionCombo->setDisabled(currentPlatform != vtfpp::VTF::PLATFORM_PC);
@@ -471,12 +530,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 		resourcesSHTGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesCRCGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, versionCombo->currentIndex());
 	});
 	platformCombo->currentIndexChanged(platformCombo->currentIndex());
 
-	connect(versionCombo, &QComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup](int index) {
+	connect(versionCombo, &QComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		textureCompressionGroup->setDisabled(index != 6);
@@ -484,10 +545,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 		resourcesSHTGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesCRCGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, index);
 	});
 	versionCombo->currentIndexChanged(versionCombo->currentIndex());
+
+	// Set path in "Particle Sheet" group when "Search" clicked
+
+	connect(resourcesSHTPathSearch, &QPushButton::pressed, this, [this, resourcesSHTPath] {
+		if (const auto path = QFileDialog::getOpenFileName(this, tr("Open Particle Sheet"), QString{}, "Particle Sheet (*.sht)"); !path.isEmpty()) {
+			resourcesSHTPath->setText(path);
+		}
+	});
 
 	// Disable "Path" and "Search" in "Particle Sheet" group if disabled
 
@@ -544,18 +615,75 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	resourcesLODEnableCheck->stateChanged(resourcesLODEnableCheck->isChecked());
 #endif
 
+	// Disable "Value" in "TS0" group if disabled
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(resourcesTS0EnableCheck, &QCheckBox::checkStateChanged, this, [resourcesTS0Value](Qt::CheckState state) {
+		resourcesTS0Value->setDisabled(state != Qt::Checked);
+	});
+	resourcesTS0EnableCheck->checkStateChanged(resourcesTS0EnableCheck->checkState());
+#else
+	connect(resourcesTS0EnableCheck, &QCheckBox::stateChanged, this, [resourcesTS0Value](bool state) {
+		resourcesTS0Value->setDisabled(!state);
+	});
+	resourcesTS0EnableCheck->stateChanged(resourcesTS0EnableCheck->isChecked());
+#endif
+
+	// Set path in "KeyValues Data" group when "Search" clicked
+
+	connect(resourcesKVDPathSearch, &QPushButton::pressed, this, [this, resourcesKVDPath] {
+		if (const auto path = QFileDialog::getOpenFileName(this, tr("Open KeyValues File"), QString{}, "KeyValues File (*.kv *.txt *.vdf)"); !path.isEmpty()) {
+			resourcesKVDPath->setText(path);
+		}
+	});
+
+	// Disable "Path" and "Search" in "KeyValues Data" group if disabled
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(resourcesKVDEnableCheck, &QCheckBox::checkStateChanged, this, [resourcesKVDPath, resourcesKVDPathSearch](Qt::CheckState state) {
+		resourcesKVDPath->setDisabled(state != Qt::Checked);
+		resourcesKVDPathSearch->setDisabled(state != Qt::Checked);
+	});
+	resourcesKVDEnableCheck->checkStateChanged(resourcesKVDEnableCheck->checkState());
+#else
+	connect(resourcesKVDEnableCheck, &QCheckBox::stateChanged, this, [resourcesKVDPath, resourcesKVDPathSearch](bool state) {
+		resourcesKVDPath->setDisabled(!state);
+		resourcesKVDPathSearch->setDisabled(!state);
+	});
+	resourcesKVDEnableCheck->stateChanged(resourcesKVDEnableCheck->isChecked());
+#endif
+
+	// Set input path in "Filesystem" group when "Input Search" clicked
+
+	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemInputPath] {
+		if (
+			const auto path = !createFromDir
+				? QFileDialog::getOpenFileName(this, tr("Open Image"), QString{}, ::supportedImageFileFormatsForLoad().data())
+				: QFileDialog::getExistingDirectory(this, tr("Open Folder"));
+			!path.isEmpty()
+		) {
+			filesystemInputPath->setText(path);
+		}
+	});
+
+	// Set output path in "Filesystem" group when "Output Search" clicked
+
+	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemOutputPath] {
+		if (
+			const auto path = !createFromDir
+				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QString{}, "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
+				: QFileDialog::getExistingDirectory(this, tr("Save to Folder"));
+			!path.isEmpty()
+		) {
+			filesystemOutputPath->setText(path);
+		}
+	});
+
 	// On "OK", create the texture
 	// On "Cancel", close the dialog
 
 	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
-		const auto inputPath = !createFromDir
-			? QFileDialog::getOpenFileName(this, tr("Open Image"), QString{}, ::supportedImageFileFormatsForLoad().data())
-			: QFileDialog::getExistingDirectory(this, tr("Open Folder"));
-		if (inputPath.isEmpty()) {
-			return;
-		}
-
-		std::vector<std::string> arguments{"maretf", "create", inputPath.toUtf8().constData()};
+		std::vector<std::string> arguments{"maretf", "create", filesystemInputPath->text().toUtf8().constData()};
 
 		const auto addArg = [&arguments](auto&& arg1, auto&& arg2) {
 			arguments.emplace_back(std::forward<decltype(arg1)>(arg1));
@@ -615,11 +743,19 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 			addArg("--crc-resource", std::format("{}", crc));
 		}
 		if (resourcesLODGroup->isEnabled() && resourcesLODEnableCheck->isChecked()) {
-			if (resourcesLODUConsoleSpin->value() > 0 || resourcesLODVConsoleSpin->value() > 0) {
+			if (resourcesLODUConsoleSpin->isEnabled() || resourcesLODVConsoleSpin->isEnabled()) {
 				addArg("--lod-resource", std::format("{}.{}.{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value(), resourcesLODUConsoleSpin->value(), resourcesLODVConsoleSpin->value()));
 			} else {
 				addArg("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()));
 			}
+		}
+		if (resourcesTS0Group->isEnabled() && resourcesTS0EnableCheck->isChecked()) {
+			uint32_t ts0;
+			sourcepp::string::toInt(resourcesTS0Value->text().toUtf8().constData(), ts0, 16);
+			addArg("--ts0-resource", std::format("{}", ts0));
+		}
+		if (resourcesKVDGroup->isEnabled() && resourcesKVDEnableCheck->isChecked()) {
+			addArg("--kvd-resource", resourcesKVDPath->text().toUtf8().constData());
 		}
 		if (!filesystemOutputPath->text().isEmpty()) {
 			addArg("--output", filesystemOutputPath->text().toUtf8().constData());
@@ -636,9 +772,27 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 		if (maretf_cli(static_cast<int>(arguments.size()), cArgs.get())) {
 			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
 		}
-		emit this->createdTexture(::getOutputPathForInput(arguments[2], static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt())).c_str());
+		if (!createFromDir) {
+			emit this->createdTexture(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(arguments[2], static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt())).c_str() : filesystemOutputPath->text());
+		}
 		emit this->accept();
 	});
 
 	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTextureDialog::reject);
+}
+
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromImage(QWidget* parent) {
+	const auto inputPath = QFileDialog::getOpenFileName(parent, tr("Open Image"), QString{}, ::supportedImageFileFormatsForLoad().data());
+	if (inputPath.isEmpty()) {
+		return nullptr;
+	}
+	return new QMareCreateTextureDialog{inputPath, false, parent};
+}
+
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
+	const auto inputPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"));
+	if (inputPath.isEmpty()) {
+		return nullptr;
+	}
+	return new QMareCreateTextureDialog{inputPath, true, parent};
 }

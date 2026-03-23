@@ -43,16 +43,18 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* fileMenu = this->menuBar()->addMenu(tr("&File"));
 
 	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTextureDialog{false, this};
-		connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
-			this->loadTexture(path);
-		});
-		createTextureDialog->exec();
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
+				this->loadTexture(path);
+			});
+			createTextureDialog->exec();
+		}
 	});
 
 	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
-		auto* createTextureDialog = new QMareCreateTextureDialog{true, this};
-		createTextureDialog->exec();
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
+			createTextureDialog->exec();
+		}
 	});
 
 	fileMenu->addSeparator();
