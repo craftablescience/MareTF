@@ -108,3 +108,5 @@ protected:
 
 	QMareFlagsWidget* flagsChecks;
 };
+
+extern QMareTextureWindow* g_ManeWindow;
