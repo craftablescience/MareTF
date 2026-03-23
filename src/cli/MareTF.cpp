@@ -40,8 +40,10 @@
 #include <vtfpp/vtfpp.h>
 
 #ifndef MARETF_CLI
+#include <QEventLoop>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <QTimer>
 #endif
 
 #include "../common/Common.h"
@@ -1821,6 +1823,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 										break;
 								case efsw::Actions::Delete:
 										fileActions[path] = {{}, efsw::Actions::Delete};
+										break;
 								case efsw::Actions::Moved:
 										break;
 								}
@@ -1833,45 +1836,16 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				const auto watchID = fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse);
 
 				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
-				bool stillWatching = true;
-#ifdef MARETF_CLI
-#ifdef _WIN32
-				SetConsoleCtrlHandler(static_cast<PHANDLER_ROUTINE>(+[](unsigned long type) -> int {
-					if (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT) {
-						tfout << tfendl << "Closing..." << tfendl;
-					}
-					return false;
-				}), true);
-#else
-				struct sigaction sigIntHandler{};
-				sigIntHandler.sa_handler = +[](int) {
-					tfout << tfendl << "Closing..." << tfendl;
-					std::exit(0);
-				};
-				sigemptyset(&sigIntHandler.sa_mask);
-				sigIntHandler.sa_flags = 0;
-				sigaction(SIGINT, &sigIntHandler, nullptr);
-#endif
-#else
-				auto* guiProgressDialog = new QProgressDialog{QObject::tr("Watching for any changes..."), QObject::tr("Stop"), 0, 0, guiParent};
-				QObject::connect(guiProgressDialog, &QProgressDialog::canceled, guiParent, [&stillWatching] {
-					stillWatching = false;
-				});
-#endif
-
 				fileWatcher.watch();
-				for (;
-					stillWatching;
-#ifdef MARETF_CLI
-					std::this_thread::sleep_for(250ms)
-#else
-					std::this_thread::sleep_for(1ms)
-#endif
-				) {
-					std::lock_guard fileActionsLock{fileActionsMutex};
 
-					const auto pathsView = fileActions | std::views::keys;
-					for (std::vector<std::string> paths{pathsView.begin(), pathsView.end()}; const auto& path : paths) {
+				const auto processEvents = [&platform, BOLD, END, &create, &outputPath, watchingSingleFile, &fileActions, &fileActionsMutex] {
+					std::vector<std::string> paths;
+					{
+						std::lock_guard fileActionsLock{fileActionsMutex};
+						const auto pathsView = fileActions | std::views::keys;
+						paths = {pathsView.begin(), pathsView.end()};
+					}
+					for (const auto& path : paths) {
 						if (fileActions[path].first.get() < 750ms || !::fileIsASupportedImageFileFormat(std::filesystem::path{path}.extension().string())) {
 							continue;
 						}
@@ -1897,7 +1871,52 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						}
 						fileActions.erase(path);
 					}
+				};
+
+#ifdef MARETF_CLI
+#ifdef _WIN32
+				SetConsoleCtrlHandler(static_cast<PHANDLER_ROUTINE>(+[](unsigned long type) -> int {
+					if (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT) {
+						tfout << tfendl << "Closing..." << tfendl;
+					}
+					return false;
+				}), true);
+#else
+				struct sigaction sigIntHandler{};
+				sigIntHandler.sa_handler = +[](int) {
+					tfout << tfendl << "Closing..." << tfendl;
+					std::exit(0);
+				};
+				sigemptyset(&sigIntHandler.sa_mask);
+				sigIntHandler.sa_flags = 0;
+				sigaction(SIGINT, &sigIntHandler, nullptr);
+#endif
+
+				for (;; std::this_thread::sleep_for(250ms)) {
+					processEvents();
 				}
+#else
+				auto* guiProgressDialog = new QProgressDialog{QObject::tr("Watching for any changes..."), QObject::tr("Stop"), 0, 0, guiParent};
+				guiProgressDialog->setWindowTitle(QObject::tr("Watch"));
+				guiProgressDialog->setWindowModality(Qt::ApplicationModal);
+				guiProgressDialog->show();
+				QObject::connect(guiProgressDialog, &QProgressDialog::rejected, guiProgressDialog, &QProgressDialog::cancel);
+
+				auto* guiEventLoop = new QEventLoop{guiParent};
+				QObject::connect(guiProgressDialog, &QProgressDialog::canceled, guiEventLoop, &QEventLoop::quit);
+
+				QTimer timer;
+				QObject::connect(&timer, &QTimer::timeout, guiEventLoop, [&processEvents, guiProgressDialog, guiEventLoop] {
+					processEvents();
+					if (guiProgressDialog->wasCanceled()) {
+						guiProgressDialog->close();
+						guiEventLoop->quit();
+					}
+				});
+				timer.start(2);
+				guiEventLoop->exec();
+#endif
+
 				fileWatcher.removeWatch(watchID);
 			}
 

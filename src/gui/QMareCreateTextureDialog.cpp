@@ -301,6 +301,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 	filesystemOutputPathLayout->setContentsMargins(0, 0, 0, 0);
 
 	auto* filesystemOutputPath = new QLineEdit{filesystemGroup};
+	filesystemOutputPath->setPlaceholderText(tr("Leave empty for default"));
 	filesystemOutputPath->setMinimumWidth(200);
 	filesystemOutputPathLayout->addWidget(filesystemOutputPath);
 
@@ -561,10 +562,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 			arguments.emplace_back(std::forward<decltype(arg2)>(arg2));
 		};
 
-		const auto addFlag = [&arguments](const QCheckBox* checkBox, auto&& arg, bool negated = false) {
-			if ((!negated && checkBox->isChecked()) || (negated && !checkBox->isChecked())) {
+		const auto addFlagPredicate = [&arguments](bool p, auto&& arg) {
+			if (p) {
 				arguments.emplace_back(std::forward<decltype(arg)>(arg));
 			}
+		};
+
+		const auto addFlag = [&addFlagPredicate](const QAbstractButton* checkBox, auto&& arg, bool negated = false) {
+			addFlagPredicate((!negated && checkBox->isChecked()) || (negated && !checkBox->isChecked()), std::forward<decltype(arg)>(arg));
 		};
 
 		const auto addInt = [&addArg](const QSpinBox* spinBox, auto&& arg) {
@@ -589,6 +594,40 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
 		addInt(textureMipmapsScaleSpin, "--console-mip-scale");
+		addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
+		addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
+		addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
+		addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+		addFlag(textureInvertGreenCheck, "--invert-green");
+		addFloat(textureBumpmapScaleSpin, "--bumpscale");
+		if (textureCompressionGroup->isEnabled() && textureCompressionMethodCombo->currentIndex() != 0) {
+			applyForEnum.operator()<vtfpp::CompressionMethod>(textureCompressionMethodCombo, "--compression-method");
+			addInt(textureCompressionLevelSpin, "--compression-level");
+		}
+		addArg("--flags-uint", std::format("{}", flagsChecks->getFlags()));
+		addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
+		if (resourcesSHTGroup->isEnabled() && resourcesSHTEnableCheck->isChecked()) {
+			addArg("--particle-sheet-resource", resourcesSHTPath->text().toUtf8().constData());
+		}
+		if (resourcesCRCGroup->isEnabled() && resourcesCRCEnableCheck->isChecked()) {
+			int crc;
+			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
+			addArg("--crc-resource", std::format("{}", crc));
+		}
+		if (resourcesLODGroup->isEnabled() && resourcesLODEnableCheck->isChecked()) {
+			if (resourcesLODUConsoleSpin->value() > 0 || resourcesLODVConsoleSpin->value() > 0) {
+				addArg("--lod-resource", std::format("{}.{}.{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value(), resourcesLODUConsoleSpin->value(), resourcesLODVConsoleSpin->value()));
+			} else {
+				addArg("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()));
+			}
+		}
+		if (!filesystemOutputPath->text().isEmpty()) {
+			addArg("--output", filesystemOutputPath->text().toUtf8().constData());
+		}
+		addFlag(overwriteRadioYes, "--yes");
+		addFlag(overwriteRadioNo, "--no");
+		addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
+		addFlag(watchFilesCheck, "--watch");
 
 		std::unique_ptr<const char*[]> cArgs{new const char*[arguments.size()]};
 		for (int i = 0; i < arguments.size(); i++) {
