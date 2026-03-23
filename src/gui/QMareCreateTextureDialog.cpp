@@ -23,8 +23,8 @@
 
 #include "QMareFlagsWidget.h"
 #include "../cli/MareTF.h"
+#include "../common/Common.h"
 #include "../common/EnumMappings.h"
-#include "src/common/Common.h"
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));
