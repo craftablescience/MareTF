@@ -9,7 +9,7 @@ if(WIN32)
 
         # Qt
         install(IMPORTED_RUNTIME_ARTIFACTS
-                Qt6::Core Qt6::Gui Qt6::Widgets
+                Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
                 RUNTIME DESTINATION .
                 LIBRARY DESTINATION .)
 
@@ -23,6 +23,11 @@ if(WIN32)
             install(FILES "${QT_BASEDIR}/plugins/styles/qwindowsvistastyle${QT_LIB_SUFFIX}.dll"
                     DESTINATION "styles")
         endif()
+
+        install(FILES
+                "${QT_BASEDIR}/plugins/tls/qcertonlybackend${QT_LIB_SUFFIX}.dll"
+                "${QT_BASEDIR}/plugins/tls/qschannelbackend${QT_LIB_SUFFIX}.dll"
+                DESTINATION tls)
 
         # NSIS install commands
         configure_file(
@@ -106,7 +111,7 @@ else()
     if(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
         if(MARETF_BUILD_GUI)
-            set(CPACK_DEBIAN_PACKAGE_DEPENDS "libxcb-cursor0, libqt6core6 (>= 6.4.2), libqt6gui6 (>= 6.4.2), libqt6widgets6 (>= 6.4.2)")
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "libxcb-cursor0, libqt6core6 (>= 6.4.2), libqt6gui6 (>= 6.4.2), libqt6widgets6 (>= 6.4.2), libqt6network6 (>= 6.4.2)")
         endif()
         set(CPACK_DEBIAN_COMPRESSION_TYPE "zstd")
     elseif(CPACK_GENERATOR STREQUAL "RPM")

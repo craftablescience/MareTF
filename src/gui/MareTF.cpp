@@ -1,12 +1,11 @@
-#include "QMareTextureWindow.h"
-
 #include <cstdlib>
 
 #include <discord_rpc.h>
 #include <QApplication>
+#include <QLocalServer>
+#include <QLocalSocket>
 #include <QTranslator>
 
-#include "../common/Common.h"
 #include "../common/Config.h"
 #include "QMareEmptyWindow.h"
 #include "QMareTextureWindow.h"
@@ -42,6 +41,39 @@ int main(int argc, char* argv[]) {
 	QGuiApplication::setDesktopFileName(PROJECT_NAME);
 #endif
 
+	const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
+	QLocalSocket socket;
+	socket.connectToServer(serverName);
+	if (socket.waitForConnected(500)) {
+		QByteArray data;
+		QDataStream stream{&data, QIODevice::WriteOnly};
+		stream << QCoreApplication::arguments();
+		socket.write(data);
+		socket.waitForBytesWritten(500);
+		return 0;
+	}
+
+	QLocalServer server;
+	QLocalServer::removeServer(serverName);
+	QObject::connect(&server, &QLocalServer::newConnection, [&server] {
+		auto* client = server.nextPendingConnection();
+		QObject::connect(client, &QLocalSocket::readyRead, [client] {
+			if (g_ManeWindow) {
+				const QByteArray data = client->readAll();
+				QDataStream stream{data};
+				QStringList args;
+				stream >> args;
+				for (int i = 1; i < args.size(); i++) {
+					g_ManeWindow->loadTexture(args[i]);
+				}
+				g_ManeWindow->raise();
+				g_ManeWindow->activateWindow();
+			}
+			client->deleteLater();
+		});
+	});
+	server.listen(serverName);
+
 	const QLocale locale;
 	QTranslator translatorQtBase;
 	if (translatorQtBase.load(locale, "qtbase", "_", ":/i18n")) {
@@ -62,11 +94,11 @@ int main(int argc, char* argv[]) {
 
 	// Show a window
 	if (argc > 1) {
-		auto* window = new QMareTextureWindow;
+		g_ManeWindow = new QMareTextureWindow;
 		for (int i = 1; i < argc; i++) {
-			window->loadTexture(argv[i]);
+			g_ManeWindow->loadTexture(argv[i]);
 		}
-		window->show();
+		g_ManeWindow->show();
 	} else {
 		auto* emptyWindow = new QMareEmptyWindow;
 		emptyWindow->show();

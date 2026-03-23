@@ -32,9 +32,9 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
 			connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
-				auto* window = new QMareTextureWindow;
-				window->loadTexture(path);
-				window->show();
+				g_ManeWindow = new QMareTextureWindow;
+				g_ManeWindow->loadTexture(path);
+				g_ManeWindow->show();
 				this->close();
 			});
 			createTextureDialog->exec();
@@ -51,11 +51,11 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
 		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
-			auto* window = new QMareTextureWindow;
+			g_ManeWindow = new QMareTextureWindow;
 			for (const auto& file : files) {
-				window->loadTexture(file);
+				g_ManeWindow->loadTexture(file);
 			}
-			window->show();
+			g_ManeWindow->show();
 			this->close();
 		}
 	});
@@ -111,11 +111,11 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 }
 
 void QMareEmptyWindow::dropEvent(QDropEvent* event) {
-	auto* window = new QMareTextureWindow;
+	g_ManeWindow = new QMareTextureWindow;
 	for (const auto& url : event->mimeData()->urls()) {
-		window->loadTexture(url.toLocalFile());
+		g_ManeWindow->loadTexture(url.toLocalFile());
 	}
-	window->show();
+	g_ManeWindow->show();
 	event->acceptProposedAction();
 	this->close();
 }

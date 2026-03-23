@@ -32,6 +32,8 @@
 #include "QMareFlagsWidget.h"
 #include "QMareTextureWidget.h"
 
+QMareTextureWindow* g_ManeWindow = nullptr;
+
 QMareTextureWindow::QMareTextureWindow() {
 	// Window setup ------------------------------------------
 
