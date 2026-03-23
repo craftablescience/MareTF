@@ -134,75 +134,61 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewGeneralLayout = new QFormLayout{this->previewGeneralGroup};
 	previewGeneralLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* rgbabParent = new QWidget{previewWidget};
-	auto* rgbabLayout = new QHBoxLayout{rgbabParent};
+	auto* rgbaParent = new QWidget{previewWidget};
+	auto* rgbaLayout = new QHBoxLayout{rgbaParent};
+	rgbaLayout->setContentsMargins(0, 0, 0, 0);
 
-	this->previewR = new QPushButton{QIcon{":/button_channel_r.png"}, QString{}, previewWidget};
-	this->previewR->setCheckable(true);
-	this->previewR->setIconSize({32, 32});
-	this->previewR->setStyleSheet("QPushButton { padding: 0; }");
-	rgbabLayout->addWidget(this->previewR);
+	this->previewR = new QCheckBox{tr("R"), rgbaParent};
+	rgbaLayout->addWidget(this->previewR);
 
 	// Change red
-	connect(this->previewR, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewR, &QCheckBox::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setR(checked);
 		}
 	});
 
-	this->previewG = new QPushButton{QIcon{":/button_channel_g.png"}, QString{}, previewWidget};
-	this->previewG->setCheckable(true);
-	this->previewG->setIconSize({32, 32});
-	this->previewG->setStyleSheet("QPushButton { padding: 0; }");
-	rgbabLayout->addWidget(this->previewG);
+	this->previewG = new QCheckBox{tr("G"), rgbaParent};
+	rgbaLayout->addWidget(this->previewG);
 
 	// Change green
-	connect(this->previewG, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewG, &QCheckBox::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setG(checked);
 		}
 	});
 
-	this->previewB = new QPushButton{QIcon{":/button_channel_b.png"}, QString{}, previewWidget};
-	this->previewB->setCheckable(true);
-	this->previewB->setIconSize({32, 32});
-	this->previewB->setStyleSheet("QPushButton { padding: 0; }");
-	rgbabLayout->addWidget(this->previewB);
+	this->previewB = new QCheckBox{tr("B"), rgbaParent};
+	rgbaLayout->addWidget(this->previewB);
 
 	// Change blue
-	connect(this->previewB, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewB, &QCheckBox::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setB(checked);
 		}
 	});
 
-	this->previewA = new QPushButton{QIcon{":/button_channel_a.png"}, QString{}, previewWidget};
-	this->previewA->setCheckable(true);
-	this->previewA->setIconSize({32, 32});
-	this->previewA->setStyleSheet("QPushButton { padding: 0; }");
-	rgbabLayout->addWidget(this->previewA);
+	this->previewA = new QCheckBox{tr("A"), rgbaParent};
+	rgbaLayout->addWidget(this->previewA);
 
 	// Change alpha
-	connect(this->previewA, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewA, &QCheckBox::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setA(checked);
 		}
 	});
 
-	this->previewBackground = new QPushButton{QIcon{":/button_channel_background.png"}, QString{}, previewWidget};
-	this->previewBackground->setCheckable(true);
-	this->previewBackground->setIconSize({32, 32});
-	this->previewBackground->setStyleSheet("QPushButton { padding: 0; }");
-	rgbabLayout->addWidget(this->previewBackground);
+	previewGeneralLayout->addRow(tr("Channels"), rgbaParent);
+
+	this->previewBackground = new QCheckBox{previewWidget};
+	previewGeneralLayout->addRow(tr("Background"), this->previewBackground);
 
 	// Change background
-	connect(this->previewBackground, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewBackground, &QCheckBox::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setBackground(checked);
 		}
 	});
-
-	previewGeneralLayout->addRow(rgbabParent);
 
 	this->previewCurrentMip = new QSpinBox{previewWidget};
 	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);

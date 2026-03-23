@@ -31,11 +31,11 @@ protected:
 
 	QGroupBox* previewGeneralGroup;
 	QSpinBox* previewCurrentMip;
-	QPushButton* previewR;
-	QPushButton* previewG;
-	QPushButton* previewB;
-	QPushButton* previewA;
-	QPushButton* previewBackground;
+	QCheckBox* previewR;
+	QCheckBox* previewG;
+	QCheckBox* previewB;
+	QCheckBox* previewA;
+	QCheckBox* previewBackground;
 
 	QGroupBox* previewAnimationGroup;
 	QSpinBox* previewCurrentFrame;
