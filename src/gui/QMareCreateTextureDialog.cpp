@@ -111,7 +111,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	for (const auto& [filter, filterName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeFilter>(true)) {
 		textureMipmapsFilterCombo->addItem(filterName.data(), static_cast<int>(filter));
 	}
-	textureMipmapsFilterCombo->setCurrentIndex(7); // Kaiser
+	textureMipmapsFilterCombo->setCurrentIndex(8); // NICE
 	textureMipmapsLayout->addRow(tr("Filter"), textureMipmapsFilterCombo);
 
 	auto* textureMipmapsScaleSpin = new QSpinBox{textureMipmapsGroup};

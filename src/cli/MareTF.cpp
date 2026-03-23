@@ -309,7 +309,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.scan<'g', float>()
 		.default_value(compressedFormatQuality).store_into(compressedFormatQuality);
 
-	std::string filter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
+	std::string filter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::NICE)};
 	createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
@@ -738,7 +738,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.scan<'d', int>()
 		.store_into(setHeight);
 
-	std::string editFilter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::KAISER)};
+	std::string editFilter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::NICE)};
 	editCLI
 		.add_argument("--edit-filter")
 		.metavar("RESIZE_FILTER")
