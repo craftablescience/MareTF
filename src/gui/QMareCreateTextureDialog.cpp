@@ -78,24 +78,98 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureCompressionQualitySpin->setValue(100);
 	textureLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
 
-	/* --------------------------------- Resize --------------------------------- */
+	/* --------------------------------- Width ---------------------------------- */
 
-	auto* textureResizeGroup = new QGroupBox{textureGroup};
-	auto* textureResizeLayout = new QFormLayout{textureResizeGroup};
-	textureResizeLayout->setFormAlignment(Qt::AlignHCenter);
+	auto* textureWidthGroup = new QGroupBox{textureGroup};
+	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
+	textureWidthLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureResizeMethodWidthCombo = new QComboBox{textureResizeGroup};
-	auto* textureResizeMethodHeightCombo = new QComboBox{textureResizeGroup};
+	auto* textureWidthSizeModeCombo = new QComboBox{textureWidthGroup};
+	textureWidthSizeModeCombo->addItems({
+		tr("Resize Method"),
+		tr("Exact"),
+		tr("Clamp"),
+	});
+	textureWidthLayout->addRow(tr("Set"), textureWidthSizeModeCombo);
+
+	auto* textureWidthResizeMethodCombo = new QComboBox{textureWidthGroup};
 	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
-		textureResizeMethodWidthCombo->addItem(methodName.data(), static_cast<int>(method));
-		textureResizeMethodHeightCombo->addItem(methodName.data(), static_cast<int>(method));
+		textureWidthResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
 	}
-	textureResizeMethodWidthCombo->setCurrentIndex(1); // Power of 2 (Bigger)
-	textureResizeMethodHeightCombo->setCurrentIndex(1); // Power of 2 (Bigger)
-	textureResizeLayout->addRow(tr("Width"), textureResizeMethodWidthCombo);
-	textureResizeLayout->addRow(tr("Height"), textureResizeMethodHeightCombo);
+	textureWidthResizeMethodCombo->setCurrentIndex(1); // Power of 2 (Bigger)
+	textureWidthLayout->addRow(tr("Resize Method"), textureWidthResizeMethodCombo);
+	textureWidthLayout->setRowVisible(1, true);
 
-	textureLayout->addRow(tr("Resize"), textureResizeGroup);
+	auto* textureWidthExactSizeSpin = new QSpinBox{textureWidthGroup};
+	textureWidthExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureWidthExactSizeSpin->setValue(1024);
+	textureWidthExactSizeSpin->setSuffix("px");
+	textureWidthLayout->addRow(tr("Exact"), textureWidthExactSizeSpin);
+	textureWidthLayout->setRowVisible(2, false);
+
+	auto* textureWidthMinimumSizeSpin = new QSpinBox{textureWidthGroup};
+	textureWidthMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureWidthMinimumSizeSpin->setValue(512);
+	textureWidthMinimumSizeSpin->setSuffix("px");
+	textureWidthMinimumSizeSpin->setVisible(false);
+	textureWidthLayout->addRow(tr("Minimum"), textureWidthMinimumSizeSpin);
+	textureWidthLayout->setRowVisible(3, false);
+
+	auto* textureWidthMaximumSizeSpin = new QSpinBox{textureWidthGroup};
+	textureWidthMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureWidthMaximumSizeSpin->setValue(2048);
+	textureWidthMaximumSizeSpin->setSuffix("px");
+	textureWidthMinimumSizeSpin->setVisible(false);
+	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeSpin);
+	textureWidthLayout->setRowVisible(4, false);
+
+	textureLayout->addRow(tr("Width"), textureWidthGroup);
+
+	/* --------------------------------- Height --------------------------------- */
+
+	auto* textureHeightGroup = new QGroupBox{textureGroup};
+	auto* textureHeightLayout = new QFormLayout{textureHeightGroup};
+	textureHeightLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* textureHeightSizeModeCombo = new QComboBox{textureHeightGroup};
+	textureHeightSizeModeCombo->addItems({
+		tr("Resize Method"),
+		tr("Exact"),
+		tr("Clamp"),
+	});
+	textureHeightLayout->addRow(tr("Set"), textureHeightSizeModeCombo);
+
+	auto* textureHeightResizeMethodCombo = new QComboBox{textureHeightGroup};
+	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
+		textureHeightResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
+	}
+	textureHeightResizeMethodCombo->setCurrentIndex(1); // Power of 2 (Bigger)
+	textureHeightLayout->addRow(tr("Resize Method"), textureHeightResizeMethodCombo);
+	textureHeightLayout->setRowVisible(1, true);
+
+	auto* textureHeightExactSizeSpin = new QSpinBox{textureHeightGroup};
+	textureHeightExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureHeightExactSizeSpin->setValue(1024);
+	textureHeightExactSizeSpin->setSuffix("px");
+	textureHeightLayout->addRow(tr("Exact"), textureHeightExactSizeSpin);
+	textureHeightLayout->setRowVisible(2, false);
+
+	auto* textureHeightMinimumSizeSpin = new QSpinBox{textureHeightGroup};
+	textureHeightMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureHeightMinimumSizeSpin->setValue(512);
+	textureHeightMinimumSizeSpin->setSuffix("px");
+	textureHeightLayout->addRow(tr("Minimum"), textureHeightMinimumSizeSpin);
+	textureHeightLayout->setRowVisible(3, false);
+
+	auto* textureHeightMaximumSizeSpin = new QSpinBox{textureHeightGroup};
+	textureHeightMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureHeightMaximumSizeSpin->setValue(2048);
+	textureHeightMaximumSizeSpin->setSuffix("px");
+	textureHeightExactSizeSpin->setVisible(false);
+	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeSpin);
+	textureHeightLayout->setRowVisible(4, false);
+
+	textureLayout->addRow(tr("Height"), textureHeightGroup);
 
 	/* -------------------------------- Mipmaps --------------------------------- */
 
@@ -428,6 +502,60 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		textureCompressionQualitySpin->setEnabled(format == vtfpp::VTF::FORMAT_UNCHANGED || format == vtfpp::VTF::FORMAT_DEFAULT || vtfpp::ImageFormatDetails::compressed(format));
 	});
 
+	// Change visibility of items in "Width" depending on mode
+
+	connect(textureWidthSizeModeCombo, &QComboBox::currentIndexChanged, this, [textureWidthLayout](int index) {
+		switch (index) {
+			case 0:
+				textureWidthLayout->setRowVisible(1, true);
+				textureWidthLayout->setRowVisible(2, false);
+				textureWidthLayout->setRowVisible(3, false);
+				textureWidthLayout->setRowVisible(4, false);
+				break;
+			case 1:
+				textureWidthLayout->setRowVisible(1, false);
+				textureWidthLayout->setRowVisible(2, true);
+				textureWidthLayout->setRowVisible(3, false);
+				textureWidthLayout->setRowVisible(4, false);
+				break;
+			case 2:
+				textureWidthLayout->setRowVisible(1, false);
+				textureWidthLayout->setRowVisible(2, false);
+				textureWidthLayout->setRowVisible(3, true);
+				textureWidthLayout->setRowVisible(4, true);
+				break;
+			default:
+				break;
+		}
+	});
+
+	// Change visibility of items in "Height" depending on mode
+
+	connect(textureHeightSizeModeCombo, &QComboBox::currentIndexChanged, this, [textureHeightLayout](int index) {
+		switch (index) {
+			case 0:
+				textureHeightLayout->setRowVisible(1, true);
+				textureHeightLayout->setRowVisible(2, false);
+				textureHeightLayout->setRowVisible(3, false);
+				textureHeightLayout->setRowVisible(4, false);
+				break;
+			case 1:
+				textureHeightLayout->setRowVisible(1, false);
+				textureHeightLayout->setRowVisible(2, true);
+				textureHeightLayout->setRowVisible(3, false);
+				textureHeightLayout->setRowVisible(4, false);
+				break;
+			case 2:
+				textureHeightLayout->setRowVisible(1, false);
+				textureHeightLayout->setRowVisible(2, false);
+				textureHeightLayout->setRowVisible(3, true);
+				textureHeightLayout->setRowVisible(4, true);
+				break;
+			default:
+				break;
+		}
+	});
+
 	// Disable "Filter" and "Scale (Console)" when mipmaps aren't computed, or "Scale (Console)" when platform is not PC
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
@@ -717,8 +845,34 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		addArg("--version", std::format("7.{}", versionCombo->itemData(versionCombo->currentIndex()).toInt()));
 		applyForEnum.operator()<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
 		addArg("--quality", std::format("{}", textureCompressionQualitySpin->value()));
-		applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureResizeMethodWidthCombo, "--width-resize-method");
-		applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureResizeMethodHeightCombo, "--height-resize-method");
+		switch (textureWidthSizeModeCombo->currentIndex()) {
+			case 0:
+				applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
+				break;
+			case 1:
+				addInt(textureWidthExactSizeSpin, "--width");
+				break;
+			case 2:
+				addInt(textureWidthMinimumSizeSpin, "--min-width");
+				addInt(textureWidthMaximumSizeSpin, "--max-width");
+				break;
+			default:
+				break;
+		}
+		switch (textureHeightSizeModeCombo->currentIndex()) {
+			case 0:
+				applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
+				break;
+			case 1:
+				addInt(textureHeightExactSizeSpin, "--height");
+				break;
+			case 2:
+				addInt(textureHeightMinimumSizeSpin, "--min-height");
+				addInt(textureHeightMaximumSizeSpin, "--max-height");
+				break;
+			default:
+				break;
+		}
 		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
 		addInt(textureMipmapsScaleSpin, "--console-mip-scale");
