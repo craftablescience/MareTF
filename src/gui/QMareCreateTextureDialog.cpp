@@ -610,7 +610,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(bool createFromDir, QWidget* 
 			addArg("--particle-sheet-resource", resourcesSHTPath->text().toUtf8().constData());
 		}
 		if (resourcesCRCGroup->isEnabled() && resourcesCRCEnableCheck->isChecked()) {
-			int crc;
+			uint32_t crc;
 			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
 			addArg("--crc-resource", std::format("{}", crc));
 		}

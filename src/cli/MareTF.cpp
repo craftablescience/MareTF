@@ -635,12 +635,12 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.help("Set the particle sheet resource. Path should point to a valid particle sheet file.")
 		.store_into(particleSheetResource);
 
-	int crcResource;
+	unsigned int crcResource;
 	createCLI
 		.add_argument("--crc-resource")
 		.metavar("CRC")
 		.help("Set the CRC resource.")
-		.scan<'d', int>()
+		.scan<'u', unsigned int>()
 		.store_into(crcResource);
 
 	std::string lodResource;
@@ -650,13 +650,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.help("Set the LOD resource. U and V values should be separated by a period. U and V for console are optional.")
 		.store_into(lodResource);
 
-	int ts0Resource;
+	unsigned int ts0Resource;
 	createCLI
 		.add_argument("--ts0-resource")
 		.metavar("COMBINED_FLAGS")
 		.help("Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags"
 		      " into one integer yourself.")
-		.scan<'d', int>()
+		.scan<'u', unsigned int>()
 		.store_into(ts0Resource);
 
 	std::string kvdResource;
@@ -888,12 +888,12 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(removeParticleSheetResource);
 
-	int setCRCResource;
+	unsigned int setCRCResource;
 	editCLI
 		.add_argument("--set-crc-resource")
 		.metavar("CRC")
 		.help("Set the CRC resource.")
-		.scan<'d', int>()
+		.scan<'u', unsigned int>()
 		.store_into(setCRCResource);
 
 	bool removeCRCResource;
@@ -917,13 +917,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(removeLODResource);
 
-	int setTS0Resource;
+	unsigned int setTS0Resource;
 	editCLI
 		.add_argument("--set-ts0-resource")
 		.metavar("COMBINED_FLAGS")
 		.help("Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags"
 		      " into one integer yourself.")
-		.scan<'d', int>()
+		.scan<'u', unsigned int>()
 		.store_into(setTS0Resource);
 
 	bool removeTS0Resource;
@@ -1217,7 +1217,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 			// Modify CRC resource
 			if ((editMode && cli.is_used("--set-crc-resource")) || (!editMode && cli.is_used("--crc-resource"))) {
-				vtf.setCRCResource(static_cast<uint32_t>(editMode ? setCRCResource : crcResource));
+				vtf.setCRCResource(editMode ? setCRCResource : crcResource);
 			} else if (editMode && removeCRCResource) {
 				vtf.removeCRCResource();
 			}
@@ -1241,7 +1241,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 			// Modify TS0 resource
 			if ((editMode && cli.is_used("--set-ts0-resource")) || (!editMode && cli.is_used("--ts0-resource"))) {
-				vtf.setExtendedFlagsResource(static_cast<uint32_t>(editMode ? setTS0Resource : ts0Resource));
+				vtf.setExtendedFlagsResource(editMode ? setTS0Resource : ts0Resource);
 			} else if (editMode && removeTS0Resource) {
 				vtf.removeExtendedFlagsResource();
 			}
