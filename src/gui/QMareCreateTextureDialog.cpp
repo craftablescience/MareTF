@@ -286,7 +286,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	/* ------------------------------- Thumbnail -------------------------------- */
 
 	auto* resourcesGenerateThumbnailCheck = new QCheckBox{resourcesGroup};
-	resourcesGenerateThumbnailCheck->setChecked(Qt::Checked);
+	resourcesGenerateThumbnailCheck->setChecked(true);
 	resourcesLayout->addRow(tr("Compute Thumbnail"), resourcesGenerateThumbnailCheck);
 
 	/* ---------------------------------- SHT ----------------------------------- */
@@ -466,7 +466,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	overwriteRadioGroup->addButton(overwriteRadioNo);
 	overwriteLayout->addWidget(overwriteRadioNo);
 
-	overwriteRadioAsk->setChecked(Qt::Checked);
+	overwriteRadioAsk->setChecked(true);
 
 	filesystemLayout->addRow(tr("Overwrite"), overwriteGroup);
 
