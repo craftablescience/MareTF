@@ -24,17 +24,17 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Floating point images (EXR/HDR)
     - Standard images (PNG/JPG/TGA/WebP)
     - Esoteric images (QOI/PSD/PGM/PPM/PIC/BMP)
-  - Kaiser mipmap filtering selected by default
   - Create non-power of two textures
   - Create cubemaps from HDRIs
   - Create console VTFs
     - Original Xbox
     - Xbox 360
     - PlayStation 3
+  - Uses an improved version of Valve's NICE mipmap filtering by default
   - Supports new formats in Alien Swarm and beyond
   - Supports new Strata Source VTF version
     - New formats (BC7 / BC6H)
-    - New CPU compression (Deflate / Zstandard)
+    - New CPU compression (Deflate / Zstd)
   - Watch input file or directory for changes and recreate the VTF(s)
 - Edit Mode
   - Edit existing VTFs
@@ -100,30 +100,36 @@ maretf info input.vtf
 ```
 Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--no-recurse]
               [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
-              [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--flag FLAG]...
+              [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--size SIZE]
+              [--width WIDTH] [--height HEIGHT] [--max-size SIZE] [--max-width WIDTH]
+              [--max-height HEIGHT] [--min-size SIZE] [--min-width WIDTH]
+              [--min-height HEIGHT] [--flag FLAG]... [--flags-uint FLAGS]
               [--no-automatic-transparency-flags] [--no-mips] [--animated-frames]
-              [--no-thumbnail] [--platform PLATFORM] [--compression-method COMPRESSION_METHOD]
-              [--compression-level LEVEL] [--start-frame FRAME_INDEX]
-              [--bumpscale BUMPMAP_SCALE] [--invert-green] [--opengl] [--hdri]
-              [--hdri-no-filter] [--resize-method RESIZE_METHOD]
-              [--width-resize-method RESIZE_METHOD] [--height-resize-method RESIZE_METHOD]
-              [--console-mip-scale SCALE] [--gamma-correct] [--gamma-correct-amount GAMMA]
-              [--srgb] [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear]
-              [--aniso] [--normal] [--ssbump] [--particle-sheet-resource PATH]
-              [--crc-resource CRC] [--lod-resource U.V] [--ts0-resource COMBINED_FLAGS]
+              [--no-thumbnail] [--platform PLATFORM]
+              [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
+              [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
+              [--opengl] [--hdri] [--hdri-autodetect] [--hdri-no-filter]
+              [--resize-method RESIZE_METHOD] [--width-resize-method RESIZE_METHOD]
+              [--height-resize-method RESIZE_METHOD] [--console-mip-scale SCALE]
+              [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
+              [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
+              [--particle-sheet-resource PATH] [--crc-resource CRC]
+              [--lod-resource U.V[.U360.V360]] [--ts0-resource COMBINED_FLAGS]
               [--kvd-resource PATH] [--hotspot-data-resource PATH]
               [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
-              [--set-format IMAGE_FORMAT] [--set-width WIDTH] [--set-height HEIGHT]
-              [--edit-filter RESIZE_FILTER] [--add-flag FLAG]... [--remove-flag FLAG]...
+              [--set-format IMAGE_FORMAT] [--set-size SIZE] [--set-width WIDTH]
+              [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
+              [--add-flags-uint FLAGS] [--remove-flag FLAG]... [--remove-flags-uint FLAGS]
               [--recompute-transparency-flags] [--recompute-mips] [--remove-mips]
               [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
               [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD]
               [--set-compression-level LEVEL] [--set-start-frame FRAME_INDEX]
               [--set-bumpmap-scale SCALE] [--set-console-mip-scale SCALE]
               [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
-              [--set-crc-resource CRC] [--remove-crc-resource] [--set-lod-resource U.V]
-              [--remove-lod-resource] [--set-ts0-resource COMBINED_FLAGS]
-              [--remove-ts0-resource] [--set-kvd-resource PATH] [--remove-kvd-resource]
+              [--set-crc-resource CRC] [--remove-crc-resource]
+              [--set-lod-resource U.V[.U360.V360]] [--remove-lod-resource]
+              [--set-ts0-resource COMBINED_FLAGS] [--remove-ts0-resource]
+              [--set-kvd-resource PATH] [--remove-kvd-resource]
               [--set-hotspot-data-resource PATH] [--remove-hotspot-data-resource]
               [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
               [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
@@ -188,11 +194,34 @@ Optional arguments:
   -r, --filter                                 The resize filter used to generate mipmaps and
                                                when resizing the base texture to match a
                                                power of 2 (if necessary). [nargs=0..1]
-                                               [default: "KAISER"]
+                                               [default: "NICE"]
+  -s, --size SIZE                              Sets the width and height of the output
+                                               texture if nonzero.
+  --width WIDTH                                Sets the width of the output texture if
+                                               nonzero.
+  --height HEIGHT                              Sets the height of the output texture if
+                                               nonzero.
+  --max-size SIZE                              Sets the maximum width and height of the
+                                               output texture if nonzero.
+  --max-width WIDTH                            Sets the maximum width of the output texture
+                                               if nonzero.
+  --max-height HEIGHT                          Sets the maximum height of the output texture
+                                               if nonzero.
+  --min-size SIZE                              Sets the minimum width and height of the
+                                               output texture if nonzero.
+  --min-width WIDTH                            Sets the minimum width of the output texture
+                                               if nonzero.
+  --min-height HEIGHT                          Sets the minimum height of the output texture
+                                               if nonzero.
   --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA,
                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                automatically based on the VTF properties.
                                                [may be repeated]
+  --flags-uint FLAGS                           Extra flags to add, specified as an unsigned
+                                               integer. ENVMAP, ONE_BIT_ALPHA,
+                                               MULTI_BIT_ALPHA, and NO_MIP flags are applied
+                                               automatically based on the VTF properties.
+                                               This is for advanced users.
   --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
@@ -224,6 +253,9 @@ Optional arguments:
                                                compatibility.
   --hdri                                       Interpret the given image as an
                                                equirectangular HDRI and create a cubemap.
+  --hdri-autodetect                            Automatically detects if given image is an
+                                               equirectangular HDRI and creates a cubemap if
+                                               it is.
   --hdri-no-filter                             When creating a cubemap from an input HDRI, do
                                                not perform bilinear filtering.
   --resize-method                              How to resize the texture's width and height
@@ -268,8 +300,9 @@ Optional arguments:
   --particle-sheet-resource PATH               Set the particle sheet resource. Path should
                                                point to a valid particle sheet file.
   --crc-resource CRC                           Set the CRC resource.
-  --lod-resource U.V                           Set the LOD resource. U and V values should be
-                                               separated by a period.
+  --lod-resource U.V[.U360.V360]               Set the LOD resource. U and V values should be
+                                               separated by a period. U and V for console are
+                                               optional.
   --ts0-resource COMBINED_FLAGS                Set the TS0 (extended flags) resource. You'll
                                                have to do the math to combine the flags into
                                                one integer yourself.
@@ -293,6 +326,13 @@ Optional arguments:
                                                losing information. Recommended to pair this
                                                with the recompute transparency flags
                                                argument.
+  --set-size SIZE                              Set the largest mip's width and height.
+                                               Ignores power of two resize rule. Keep in mind
+                                               this operation will result in information
+                                               loss, especially if the texture is using a
+                                               lossy format. Recommended to pair this with
+                                               the recompute mips argument if the input
+                                               texture is using a lossless format.
   --set-width WIDTH                            Set the largest mip's width. Ignores power of
                                                two resize rule. Keep in mind this operation
                                                will result in information loss, especially if
@@ -310,11 +350,17 @@ Optional arguments:
   --edit-filter                                Use this resize filter for all resizing
                                                operations that accept a filter parameter,
                                                including mipmap generation. [nargs=0..1]
-                                               [default: "KAISER"]
+                                               [default: "NICE"]
   --add-flag FLAG                              Flags to add. ENVMAP and NO_MIP flags are
                                                ignored. [may be repeated]
+  --add-flags-uint FLAGS                       Flags to add, specified as an unsigned
+                                               integer. ENVMAP and NO_MIP flags are ignored.
+                                               This is for advanced users.
   --remove-flag FLAG                           Flags to remove. ENVMAP and NO_MIP flags are
                                                ignored. [may be repeated]
+  --remove-flags-uint FLAGS                    Flags to remove, specified as an unsigned
+                                               integer. ENVMAP and NO_MIP flags are ignored.
+                                               This is for advanced users.
   --recompute-transparency-flags               Recomputes transparency flags based on the
                                                image format.
   --recompute-mips                             Recomputes mipmaps with the specified edit
@@ -347,8 +393,9 @@ Optional arguments:
   --set-crc-resource CRC                       Set the CRC resource.
   --remove-crc-resource                        Remove the CRC resource. If set CRC resource
                                                is specified, this argument is ignored.
-  --set-lod-resource U.V                       Set the LOD resource. U and V values should be
-                                               separated by a period.
+  --set-lod-resource U.V[.U360.V360]           Set the LOD resource. U and V values should be
+                                               separated by a period. U and V for console are
+                                               optional.
   --remove-lod-resource                        Remove the LOD resource. If set LOD resource
                                                is specified, this argument is ignored.
   --set-ts0-resource COMBINED_FLAGS            Set the TS0 (extended flags) resource. You'll
@@ -422,6 +469,7 @@ IMAGE_FORMAT
  • BGR888_BLUESCREEN
  • ARGB8888
  • BGRA8888
+ • BGRA8888_HDR
  • DXT1
  • DXT3
  • DXT5
@@ -435,6 +483,7 @@ IMAGE_FORMAT
  • UVWQ8888
  • RGBA16161616F
  • RGBA16161616
+ • RGBA16161616_HDR
  • UVLX8888
  • R32F
  • RGB323232F
@@ -458,6 +507,7 @@ IMAGE_FORMAT
  • CONSOLE_BGRX5551_LINEAR
  • CONSOLE_I8_LINEAR
  • CONSOLE_RGBA16161616_LINEAR
+ • CONSOLE_RGBA16161616_HDR
  • CONSOLE_BGRX8888_LE
  • CONSOLE_BGRA8888_LE
  • TFALL2_BC6H
@@ -505,6 +555,7 @@ FLAG
  • CSGO_SKIP_INITIAL_DOWNLOAD
  • CSGO_YCOCG
  • CSGO_ASYNC_SKIP_INITIAL_LOW_RES
+ • IGNORE_PICMIP
 
 HOTSPOT_RECT_FLAGS
  • RANDOM_ROTATION
