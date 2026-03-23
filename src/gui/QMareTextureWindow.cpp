@@ -363,8 +363,10 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->detailsStartFrame = new QSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Start Frame"), this->detailsStartFrame);
 	for (auto* spinBox : {this->detailsWidth, this->detailsHeight, this->detailsDepth, this->detailsFrames, this->detailsStartFrame}) {
-		spinBox->setMinimum(0);
-		spinBox->setMaximum(std::numeric_limits<uint16_t>::max());
+		spinBox->setRange(0, std::numeric_limits<uint16_t>::max());
+	}
+	for (auto* spinBox : {this->detailsWidth, this->detailsHeight, this->detailsDepth}) {
+		spinBox->setSuffix("px");
 	}
 	this->detailsCubemap = new QCheckBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Cubemap"), this->detailsCubemap);
@@ -470,10 +472,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	resThumbnailLayout->addRow(tr("Preview"), this->resThumbnailPreview);
 
 	this->resThumbnailWidth = new QSpinBox{resWidget};
+	this->resThumbnailWidth->setSuffix("px");
 	this->resThumbnailWidth->setDisabled(true);
 	resThumbnailLayout->addRow(tr("Width"), this->resThumbnailWidth);
 
 	this->resThumbnailHeight = new QSpinBox{resWidget};
+	this->resThumbnailHeight->setSuffix("px");
 	this->resThumbnailHeight->setDisabled(true);
 	resThumbnailLayout->addRow(tr("Height"), this->resThumbnailHeight);
 
@@ -497,10 +501,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	resFallbackLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->resFallbackWidth = new QSpinBox{resWidget};
+	this->resFallbackWidth->setSuffix("px");
 	this->resFallbackWidth->setDisabled(true);
 	resFallbackLayout->addRow(tr("Width"), this->resFallbackWidth);
 
 	this->resFallbackHeight = new QSpinBox{resWidget};
+	this->resFallbackHeight->setSuffix("px");
 	this->resFallbackHeight->setDisabled(true);
 	resFallbackLayout->addRow(tr("Height"), this->resFallbackHeight);
 
