@@ -13,6 +13,7 @@
 #include <QResizeEvent>
 #include <QStyle>
 #include <QWheelEvent>
+#include <vtfpp/ImagePixel.h>
 
 #include "../common/Common.h"
 
@@ -125,7 +126,7 @@ void QMareTextureWidget::reloadCurrentTexture() {
 			for (int y = 0; y < this->textureCurrent.height(); y++) {
 				auto* scanLine = reinterpret_cast<vtfpp::ImagePixel::BGRA8888*>(this->textureCurrent.scanLine(y));
 				for (int x = 0; x < this->textureCurrent.width(); ++x) {
-					QColor pixel{scanLine[x].r, scanLine[x].g, scanLine[x].b, scanLine[x].a};
+					QColor pixel{scanLine[x].r(), scanLine[x].g(), scanLine[x].b(), scanLine[x].a()};
 					if (!this->r) {
 						pixel.setRed(0);
 					}
@@ -138,10 +139,10 @@ void QMareTextureWidget::reloadCurrentTexture() {
 					if (!this->a) {
 						pixel.setAlphaF(1.f);
 					}
-					scanLine[x].r = static_cast<uint8_t>(pixel.red());
-					scanLine[x].g = static_cast<uint8_t>(pixel.green());
-					scanLine[x].b = static_cast<uint8_t>(pixel.blue());
-					scanLine[x].a = static_cast<uint8_t>(pixel.alpha());
+					scanLine[x].setR(static_cast<uint8_t>(pixel.red()));
+					scanLine[x].setG(static_cast<uint8_t>(pixel.green()));
+					scanLine[x].setB(static_cast<uint8_t>(pixel.blue()));
+					scanLine[x].setA(static_cast<uint8_t>(pixel.alpha()));
 				}
 			}
 		}

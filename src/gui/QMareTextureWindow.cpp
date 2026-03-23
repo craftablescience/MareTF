@@ -353,7 +353,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		if (static_cast<int>(value) < 0) {
 			continue;
 		}
-		this->detailsFormat->addItem(name.starts_with("CONSOLE_") ? name.substr(8).data() : name.data(), static_cast<int>(value));
+		this->detailsFormat->addItem(name.data(), static_cast<int>(value));
 	}
 	detailsFileTypeLayout->addRow(tr("Format"), this->detailsFormat);
 
