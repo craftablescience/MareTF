@@ -39,6 +39,8 @@ jobs:
 
       - name: Install NSIS
         uses: negrutiu/nsis-install@v2
+        with:
+          arch: x64
 
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCPACK_GENERATOR=NSIS -DQT_BASEDIR="${{env.QT_ROOT_DIR}}" -DMARETF_USE_LTO=ON -DMARETF_BUILD_INSTALLER=ON
