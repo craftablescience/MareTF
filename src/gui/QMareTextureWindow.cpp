@@ -53,7 +53,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
-	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->exec();
 		}
@@ -376,7 +376,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
 	this->detailsConsoleMipScale = new QSpinBox{this->detailsDimsGroup};
 	this->detailsConsoleMipScale->setRange(0, 31);
-	detailsDimsLayout->addRow(tr("Mip Scale"), this->detailsConsoleMipScale);
+	detailsDimsLayout->addRow(tr("(Console) Mip Scale"), this->detailsConsoleMipScale);
 
 	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
 

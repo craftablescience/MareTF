@@ -41,7 +41,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
-	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create en &Masse"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->exec();
 		}

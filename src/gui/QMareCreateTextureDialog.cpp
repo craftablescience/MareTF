@@ -232,7 +232,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	/* ----------------------- Invert Green/Bumpmap Scale ----------------------- */
 
 	auto* textureInvertGreenCheck = new QCheckBox{textureGroup};
-	textureLayout->addRow(tr("Invert Green"), textureInvertGreenCheck);
+	textureLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
 
 	auto* textureBumpmapScaleSpin = new QDoubleSpinBox{textureGroup};
 	textureBumpmapScaleSpin->setValue(1.0);
