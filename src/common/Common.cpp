@@ -106,9 +106,9 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		"(VTEX) Hint DXT5",
 		"(VTEX) No Compress",
 		"Normal",
-		"No Mips",
+		"No Mipmaps",
 		"No LOD",
-		"Load Small Mips",
+		"Load Small Mipmaps",
 		"Procedural",
 		"One-bit Alpha",
 		"Multi-bit Alpha",
@@ -136,12 +136,12 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		flags[16] = "Depth Rendertarget";
 		flags[17] = "No Debug Override";
 		flags[18] = "Single Copy";
-		flags[19] = "(VTEX) One Over Mip Level in Alpha";
-		flags[20] = "(VTEX) Premultiply Color by One Over Mip Level in Alpha";
+		flags[19] = "(VTEX) One Over Mipmap Level in Alpha";
+		flags[20] = "(VTEX) Premultiply Color by One Over Mipmap Level in Alpha";
 		flags[21] = "(VTEX) Convert Normal to DUDV";
 	}
 	if (minorVersion >= 2) {
-		flags[22] = "(VTEX) Alpha Test Mip Generation";
+		flags[22] = "(VTEX) Alpha Test Mipmap Generation";
 		flags[23] = "No Depth Buffer";
 		flags[24] = "(VTEX) NICE Filtered";
 		flags[25] = "Clamp U";
@@ -152,7 +152,7 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		}
 	}
 	if (minorVersion >= 3) {
-		flags[10] = "Load All Mips";
+		flags[10] = "Load All Mipmaps";
 		flags[26] = "Vertex Texture";
 		flags[27] = "SSBump";
 		flags[28] = "Unused (1<<28)";
@@ -178,7 +178,7 @@ std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vt
 		flags[21] = "[CS:GO] Combined";
 		flags[22] = "[CS:GO] Async Download";
 		flags[24] = "[CS:GO] Skip Initial Download";
-		flags[28] = "Load Most Mips";
+		flags[28] = "Load Most Mipmaps";
 		flags[30] = "[CS:GO] YCoCg";
 		flags[31] = "[CS:GO] Async Skip Initial Low Res";
 	}
