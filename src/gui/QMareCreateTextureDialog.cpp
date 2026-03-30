@@ -5,8 +5,10 @@
 #include <format>
 #include <memory>
 
+#include <QApplication>
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QClipboard>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -20,6 +22,8 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QStandardItemModel>
+#include <QTimer>
+#include <sourcepp/parser/Text.h>
 
 #include "QMareFlagsWidget.h"
 #include "../cli/MareTF.h"
@@ -487,6 +491,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	/* ----------------------------- BUTTONS BEGIN ------------------------------ */
 
 	auto* dialogButtons = new QDialogButtonBox{this};
+
+	auto* dialogButtonsCopyCommand = dialogButtons->addButton(tr("Copy Command"), QDialogButtonBox::HelpRole);
+	dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogSaveButton)); // needs to match change on click
+
 	dialogButtons->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
 	/* ------------------------------ BUTTONS END ------------------------------- */
@@ -807,10 +815,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		}
 	});
 
-	// On "OK", create the texture
-	// On "Cancel", close the dialog
+	// Get list of arguments from the selected options
 
-	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
+	const auto getArguments = [=] {
 		std::vector<std::string> arguments{"maretf", "create", filesystemInputPath->text().toUtf8().constData()};
 
 		const auto addArg = [&arguments](auto&& arg1, auto&& arg2) {
@@ -846,32 +853,32 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		applyForEnum.operator()<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
 		addArg("--quality", std::format("{}", textureCompressionQualitySpin->value()));
 		switch (textureWidthSizeModeCombo->currentIndex()) {
-			case 0:
-				applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
-				break;
-			case 1:
-				addInt(textureWidthExactSizeSpin, "--width");
-				break;
-			case 2:
-				addInt(textureWidthMinimumSizeSpin, "--min-width");
-				addInt(textureWidthMaximumSizeSpin, "--max-width");
-				break;
-			default:
-				break;
+		case 0:
+			applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
+			break;
+		case 1:
+			addInt(textureWidthExactSizeSpin, "--width");
+			break;
+		case 2:
+			addInt(textureWidthMinimumSizeSpin, "--min-width");
+			addInt(textureWidthMaximumSizeSpin, "--max-width");
+			break;
+		default:
+			break;
 		}
 		switch (textureHeightSizeModeCombo->currentIndex()) {
-			case 0:
-				applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
-				break;
-			case 1:
-				addInt(textureHeightExactSizeSpin, "--height");
-				break;
-			case 2:
-				addInt(textureHeightMinimumSizeSpin, "--min-height");
-				addInt(textureHeightMaximumSizeSpin, "--max-height");
-				break;
-			default:
-				break;
+		case 0:
+			applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
+			break;
+		case 1:
+			addInt(textureHeightExactSizeSpin, "--height");
+			break;
+		case 2:
+			addInt(textureHeightMinimumSizeSpin, "--min-height");
+			addInt(textureHeightMaximumSizeSpin, "--max-height");
+			break;
+		default:
+			break;
 		}
 		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
@@ -916,9 +923,41 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		}
 		addFlag(overwriteRadioYes, "--yes");
 		addFlag(overwriteRadioNo, "--no");
-		addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
+		if (createFromDir) {
+			addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
+		}
 		addFlag(watchFilesCheck, "--watch");
 
+		return arguments;
+	};
+
+	// Copy the CLI command to clipboard
+
+	connect(dialogButtonsCopyCommand, &QPushButton::clicked, this, [this, dialogButtonsCopyCommand, getArguments] {
+		dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogApplyButton));
+		QTimer::singleShot(1000, this, [this, dialogButtonsCopyCommand] {
+			dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogSaveButton));
+		});
+
+		const auto arguments = getArguments();
+		QString command;
+		for (const auto& argument : arguments) {
+			if (sourcepp::parser::text::isWhitespace(argument)) {
+				command.append('\"').append(argument.c_str()).append('\"');
+			} else {
+				command.append(argument.c_str());
+			}
+			command.append(' ');
+		}
+		command.resize(command.size() - 1);
+		QApplication::clipboard()->setText(command);
+	});
+
+	// On "OK", create the texture
+	// On "Cancel", close the dialog
+
+	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemOutputPath, getArguments] {
+		const auto arguments = getArguments();
 		std::unique_ptr<const char*[]> cArgs{new const char*[arguments.size()]};
 		for (int i = 0; i < arguments.size(); i++) {
 			cArgs[i] = arguments[i].c_str();
