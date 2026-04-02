@@ -161,10 +161,10 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	this->setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-	auto* previewDock = new QDockWidget(tr("&Preview"), this);
-	previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	this->previewDock = new QDockWidget(tr("&Preview"), this);
+	this->previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	auto* previewWidget = new QWidget{previewDock};
+	auto* previewWidget = new QWidget{this->previewDock};
 	auto* previewWidgetLayout = new QVBoxLayout{previewWidget};
 
 	this->previewGeneralGroup = new QGroupBox{tr("General"), previewWidget};
@@ -334,16 +334,16 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	previewWidgetLayout->addStretch(1);
 
-	previewDock->setWidget(previewWidget);
-	this->addDockWidget(Qt::LeftDockWidgetArea, previewDock);
-	viewMenu->addAction(previewDock->toggleViewAction());
+	this->previewDock->setWidget(previewWidget);
+	this->addDockWidget(Qt::LeftDockWidgetArea, this->previewDock);
+	viewMenu->addAction(this->previewDock->toggleViewAction());
 
 	// Details dock ------------------------------------------
 
-	auto* detailsDock = new QDockWidget{tr("&Details"), this};
-	detailsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	this->detailsDock = new QDockWidget{tr("&Details"), this};
+	this->detailsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	auto* detailsScroll = new QScrollArea{detailsDock};
+	auto* detailsScroll = new QScrollArea{this->detailsDock};
 
 	auto* detailsWidget = new QWidget{detailsScroll};
 	auto* detailsWidgetLayout = new QVBoxLayout{detailsWidget};
@@ -485,16 +485,16 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsScroll->setWidgetResizable(true);
 	detailsScroll->setWidget(detailsWidget);
 
-	detailsDock->setWidget(detailsScroll);
-	this->addDockWidget(Qt::LeftDockWidgetArea, detailsDock);
-	viewMenu->addAction(detailsDock->toggleViewAction());
+	this->detailsDock->setWidget(detailsScroll);
+	this->addDockWidget(Qt::LeftDockWidgetArea, this->detailsDock);
+	viewMenu->addAction(this->detailsDock->toggleViewAction());
 
 	// Resources dock ------------------------------------------
 
-	auto* resDock = new QDockWidget{tr("&Resources"), this};
-	resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	this->resDock = new QDockWidget{tr("&Resources"), this};
+	this->resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	auto* resScroll = new QScrollArea{resDock};
+	auto* resScroll = new QScrollArea{this->resDock};
 
 	auto* resWidget = new QWidget{resScroll};
 	auto* resWidgetLayout = new QVBoxLayout{resWidget};
@@ -612,22 +612,22 @@ QMareTextureWindow::QMareTextureWindow() {
 	resScroll->setWidgetResizable(true);
 	resScroll->setWidget(resWidget);
 
-	resDock->setWidget(resScroll);
-	this->addDockWidget(Qt::RightDockWidgetArea, resDock);
-	viewMenu->addAction(resDock->toggleViewAction());
+	this->resDock->setWidget(resScroll);
+	this->addDockWidget(Qt::RightDockWidgetArea, this->resDock);
+	viewMenu->addAction(this->resDock->toggleViewAction());
 
 	// Flags dock ------------------------------------------
 
-	auto* flagsDock = new QDockWidget{tr("&Flags"), this};
-	flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	this->flagsChecks = new QMareFlagsWidget{flagsDock};
-	flagsDock->setWidget(this->flagsChecks);
-	this->addDockWidget(Qt::RightDockWidgetArea, flagsDock);
-	this->tabifyDockWidget(flagsDock, resDock);
-	flagsDock->raise();
-	viewMenu->addAction(flagsDock->toggleViewAction());
+	this->flagsDock = new QDockWidget{tr("&Flags"), this};
+	this->flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	this->flagsChecks = new QMareFlagsWidget{this->flagsDock};
+	this->flagsDock->setWidget(this->flagsChecks);
+	this->addDockWidget(Qt::RightDockWidgetArea, this->flagsDock);
+	this->tabifyDockWidget(this->flagsDock, this->resDock);
+	this->flagsDock->raise();
+	viewMenu->addAction(this->flagsDock->toggleViewAction());
 
-	// Final setup ------------------------------------------
+	// Final setup -----------------------------------------
 
 	this->regenerateDetails();
 }
@@ -915,4 +915,13 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resKeyValuesGroup->setVisible(false);
 		this->resKeyValuesData->clear();
 	}
+
+	// Delay a tick to allow everything to be laid out
+	QTimer::singleShot(0, this, [this] {
+		this->resizeDocks({
+			this->previewDock,
+		}, {
+			this->previewDock->minimumSizeHint().height(),
+		}, Qt::Vertical);
+	});
 }

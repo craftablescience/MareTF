@@ -4,6 +4,7 @@
 
 class QCheckBox;
 class QComboBox;
+class QDockWidget;
 class QDoubleSpinBox;
 class QGroupBox;
 class QLabel;
@@ -29,6 +30,8 @@ public:
 protected:
 	QTabWidget* textureTabs;
 
+	QDockWidget* previewDock;
+
 	QGroupBox* previewGeneralGroup;
 	QSpinBox* previewCurrentMip;
 	QCheckBox* previewR;
@@ -49,6 +52,8 @@ protected:
 
 	QGroupBox* previewDepthGroup;
 	QSpinBox* previewCurrentDepth;
+
+	QDockWidget* detailsDock;
 
 	QGroupBox* detailsFileTypeGroup;
 	QComboBox* detailsPlatform;
@@ -75,6 +80,8 @@ protected:
 	QGroupBox* detailsCompressionGroup;
 	QComboBox* detailsCompressionMethod;
 	QSpinBox* detailsCompressionLevel;
+
+	QDockWidget* resDock;
 
 	QGroupBox* resThumbnailGroup;
 	QLabel* resThumbnailPreview;
@@ -105,6 +112,8 @@ protected:
 
 	QGroupBox* resKeyValuesGroup;
 	QPlainTextEdit* resKeyValuesData;
+
+	QDockWidget* flagsDock;
 
 	QMareFlagsWidget* flagsChecks;
 };
