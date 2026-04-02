@@ -8,6 +8,7 @@
 
 #include "../common/Config.h"
 #include "QMareEmptyWindow.h"
+#include "QMareOptions.h"
 #include "QMareTextureWindow.h"
 
 namespace {
@@ -40,6 +41,9 @@ int main(int argc, char* argv[]) {
 #if !defined(__APPLE__) && !defined(_WIN32)
 	QGuiApplication::setDesktopFileName(PROJECT_NAME);
 #endif
+
+	const auto options = std::make_unique<QSettings>();
+	QMareOptions::setupOptions(*options);
 
 	const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
 	QLocalSocket socket;

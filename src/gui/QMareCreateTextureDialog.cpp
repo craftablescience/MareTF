@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -26,6 +27,7 @@
 #include <sourcepp/parser/Text.h>
 
 #include "QMareFlagsWidget.h"
+#include "QMareOptions.h"
 #include "../cli/MareTF.h"
 #include "../common/Common.h"
 #include "../common/EnumMappings.h"
@@ -975,17 +977,19 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 }
 
 QMareCreateTextureDialog* QMareCreateTextureDialog::fromImage(QWidget* parent) {
-	const auto inputPath = QFileDialog::getOpenFileName(parent, tr("Open Image"), QString{}, ::supportedImageFileFormatsForLoad().data());
+	const auto inputPath = QFileDialog::getOpenFileName(parent, tr("Open Image"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
 	if (inputPath.isEmpty()) {
 		return nullptr;
 	}
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
 	return new QMareCreateTextureDialog{inputPath, false, parent};
 }
 
 QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
-	const auto inputPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"));
+	const auto inputPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR));
 	if (inputPath.isEmpty()) {
 		return nullptr;
 	}
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
 	return new QMareCreateTextureDialog{inputPath, true, parent};
 }
