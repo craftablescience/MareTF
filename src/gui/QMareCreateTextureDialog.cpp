@@ -806,10 +806,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 
 	// Set output path in "Filesystem" group when "Output Search" clicked
 
-	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemOutputPath] {
+	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemInputPath, filesystemOutputPath] {
 		if (
 			const auto path = !createFromDir
-				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QString{}, "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
+				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
 				: QFileDialog::getExistingDirectory(this, tr("Save to Folder"));
 			!path.isEmpty()
 		) {
