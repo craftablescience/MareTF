@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>../logo.png</file>
+        <file>button_discord.png</file>
         <file>button_kofi.png</file>
         <file>button_load.png</file>
         <file>button_new.png</file>

@@ -29,7 +29,9 @@
 #include "../common/EnumMappings.h"
 #include "QMareCreateTextureDialog.h"
 #include "QMareCredits.h"
+#include "QMareDiscordPresence.h"
 #include "QMareFlagsWidget.h"
+#include "QMareOptions.h"
 #include "QMareTextureWidget.h"
 
 QMareTextureWindow* g_ManeWindow = nullptr;
@@ -86,6 +88,37 @@ QMareTextureWindow::QMareTextureWindow() {
 	// View menu ------------------------------------------
 
 	auto* viewMenu = this->menuBar()->addMenu(tr("&View"));
+
+	// Options menu ---------------------------------------
+
+	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
+
+	// Not translating this menu name, the translation is the same everywhere
+	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "Discord");
+	const auto setupDiscordRichPresence = [] {
+		QMareDiscordPresence::init("1384260711202422845");
+		QMareDiscordPresence::setState("v" PROJECT_VERSION_PRETTY);
+		QMareDiscordPresence::setLargeImage("icon");
+		QMareDiscordPresence::setLargeImageText(PROJECT_TITLE);
+		QMareDiscordPresence::setTopButton({"View on GitHub", PROJECT_HOMEPAGE_URL});
+	};
+	auto* discordEnableAction = discordMenu->addAction(tr("Enable Rich Presence"), [setupDiscordRichPresence] {
+		QMareOptions::invert(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE);
+		if (QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
+			setupDiscordRichPresence();
+		} else {
+			QMareDiscordPresence::shutdown();
+		}
+	});
+	discordEnableAction->setCheckable(true);
+	discordEnableAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE));
+
+	if (QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
+		setupDiscordRichPresence();
+	}
+	auto* discordUpdateTimer = new QTimer(this);
+	QObject::connect(discordUpdateTimer, &QTimer::timeout, this, &QMareDiscordPresence::update);
+	discordUpdateTimer->start(20);
 
 	// Help menu ------------------------------------------
 

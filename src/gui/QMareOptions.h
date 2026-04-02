@@ -6,10 +6,10 @@
 
 namespace QMareOptions {
 
-#define MARETF_OPTION(name) constexpr std::string_view name = #name
+#define MARETF_OPTION(name) constexpr const char* name = #name
 
 // Options
-// nothing here yet
+MARETF_OPTION(BOOL_ENABLE_DISCORD_RICH_PRESENCE);
 
 // Storage
 MARETF_OPTION(STR_DEFAULT_CREATE_DIALOG_DIR);

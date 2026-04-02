@@ -3,6 +3,10 @@
 QSettings* opts = nullptr;
 
 void QMareOptions::setupOptions(QSettings& options) {
+	if (!options.contains(BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
+		options.setValue(BOOL_ENABLE_DISCORD_RICH_PRESENCE, true);
+	}
+
 	if (!options.contains(STR_DEFAULT_CREATE_DIALOG_DIR)) {
 		options.setValue(STR_DEFAULT_CREATE_DIALOG_DIR, QString{});
 	}

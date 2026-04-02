@@ -1,6 +1,3 @@
-#include <cstdlib>
-
-#include <discord_rpc.h>
 #include <QApplication>
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -10,26 +7,6 @@
 #include "QMareEmptyWindow.h"
 #include "QMareOptions.h"
 #include "QMareTextureWindow.h"
-
-namespace {
-
-void initDiscord() {
-	DiscordEventHandlers handlers{};
-	Discord_Initialize("1384260711202422845", &handlers, true, nullptr);
-
-	static constexpr DiscordButton buttons[2] {{"View on GitHub", PROJECT_HOMEPAGE_URL}, {}};
-	static constexpr DiscordRichPresence discordPresence{
-		.state = "v" PROJECT_VERSION,
-		.largeImageKey = "icon",
-		.largeImageText = PROJECT_TITLE,
-		.buttons = buttons,
-	};
-	Discord_UpdatePresence(&discordPresence);
-
-	std::atexit(&Discord_Shutdown);
-}
-
-} // namespace
 
 int main(int argc, char* argv[]) {
 	QApplication app{argc, argv};
@@ -91,10 +68,6 @@ int main(int argc, char* argv[]) {
 	if (translatorQt.load(locale, "qt", "_", ":/i18n")) {
 		QCoreApplication::installTranslator(&translatorQt);
 	}
-
-	// Discord integration
-	// todo: make optional
-	::initDiscord();
 
 	// Show a window
 	if (argc > 1) {
