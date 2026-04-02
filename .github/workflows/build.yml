@@ -211,7 +211,7 @@ jobs:
           submodules: recursive
 
       - name: Install Necessary Packages
-        run: sudo apt update && sudo apt install -y chrpath rpm
+        run: sudo apt update && sudo apt install -y chrpath
 
       - name: Install Newer GCC
         uses: egor-tensin/setup-gcc@v2
