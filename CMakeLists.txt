@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 # set up project
 project(maretf
         DESCRIPTION "A utility to create, edit, and display every type of VTF file ever made."
-        VERSION 0.10.0
+        VERSION 0.10.1
         HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
