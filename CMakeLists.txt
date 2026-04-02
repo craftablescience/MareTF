@@ -9,8 +9,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # options
-option(MARETF_BUILD_GUI       "Build ${PROJECT_NAME_PRETTY} GUI"        ON)
-option(MARETF_BUILD_INSTALLER "Build ${PROJECT_NAME_PRETTY} installer" OFF)
+option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
+option(MARETF_BUILD_GUI               "Build ${PROJECT_NAME_PRETTY} GUI"                      ON)
+option(MARETF_BUILD_INSTALLER         "Build ${PROJECT_NAME_PRETTY} installer"               OFF)
 
 # add helpers
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
@@ -43,6 +44,9 @@ add_executable(${PROJECT_NAME}
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
 cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
 target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
+if(MARETF_BUILD_FOR_STRATA_SOURCE)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
+endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 
 # maretf_gui
@@ -74,6 +78,9 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.h")
     cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
+    if(MARETF_BUILD_FOR_STRATA_SOURCE)
+        target_compile_definitions(${PROJECT_NAME}_gui PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
+    endif()
     target_use_qt(${PROJECT_NAME}_gui)
     target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 endif()

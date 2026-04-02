@@ -281,7 +281,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(watch);
 
-	std::string version{"7.4"};
+	std::string version{
+#ifdef MARETF_BUILD_FOR_STRATA_SOURCE
+		"7.6"
+#else
+		"7.4"
+#endif
+	};
 	createCLI
 		.add_argument("-v", "--version")
 		.metavar("X.Y")

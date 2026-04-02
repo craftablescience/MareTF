@@ -53,7 +53,11 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	for (int i = 0; i <= 6; i++) {
 		versionCombo->addItem(QString{"7.%1"}.arg(i), i);
 	}
+#ifdef MARETF_BUILD_FOR_STRATA_SOURCE
+	versionCombo->setCurrentIndex(6); // 7.6
+#else
 	versionCombo->setCurrentIndex(4); // 7.4
+#endif
 	versionLayout->addRow(tr("Version"), versionCombo);
 
 	/* ------------------------------ VERSION END ------------------------------- */
