@@ -202,6 +202,7 @@ jobs:
           - Release
         cpack_generator:
           - DEB
+          - RPM
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
@@ -210,7 +211,7 @@ jobs:
           submodules: recursive
 
       - name: Install Necessary Packages
-        run: sudo apt update && sudo apt install -y chrpath
+        run: sudo apt update && sudo apt install -y chrpath rpm
 
       - name: Install Newer GCC
         uses: egor-tensin/setup-gcc@v2
@@ -251,7 +252,7 @@ jobs:
           done
 
       - name: Upload Standalone [cpack_generator:DEB]
-        if: ${{matrix.cpack_generator == 'DEB'}}
+        if: matrix.cpack_generator == 'DEB'
         uses: actions/upload-artifact@v4
         with:
           name: 'MareTF-Linux-Standalone-gcc-${{matrix.build_type}}'
@@ -280,7 +281,7 @@ jobs:
         with:
           name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-gcc-${{matrix.build_type}}'
           path: |
-            ${{env.BUILD_DIR}}/MareTF-*-Linux.deb
+            ${{env.BUILD_DIR}}/MareTF-*-Linux.*
           retention-days: 7
 
   build-linux-stratasource:
