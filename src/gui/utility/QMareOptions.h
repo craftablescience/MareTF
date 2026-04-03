@@ -9,6 +9,7 @@ namespace QMareOptions {
 #define MARETF_OPTION(name) constexpr const char* name = #name
 
 // Options
+MARETF_OPTION(STR_STYLE);
 MARETF_OPTION(BOOL_ENABLE_DISCORD_RICH_PRESENCE);
 
 // Storage

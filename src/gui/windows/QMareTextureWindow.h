@@ -27,6 +27,9 @@ public:
 
 	void regenerateDetails();
 
+signals:
+	void themeUpdated();
+
 protected:
 	QTabWidget* textureTabs;
 

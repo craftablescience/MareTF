@@ -3,6 +3,8 @@
 #include <format>
 #include <limits>
 
+#include <QActionGroup>
+#include <QApplication>
 #include <QCheckBox>
 #include <QDesktopServices>
 #include <QDockWidget>
@@ -19,6 +21,7 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QScrollArea>
+#include <QStyleFactory>
 #include <QTabWidget>
 #include <QTimer>
 
@@ -94,6 +97,22 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
 
+	auto* themeMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DesktopIcon), tr("Theme"));
+	auto* themeMenuGroup = new QActionGroup{themeMenu};
+	themeMenuGroup->setExclusive(true);
+	for (const auto& themeName : QStyleFactory::keys()) {
+		auto* action = themeMenu->addAction(themeName, [this, themeName] {
+			QApplication::setStyle(themeName);
+			QMareOptions::set(QMareOptions::STR_STYLE, themeName);
+			emit this->themeUpdated();
+		});
+		action->setCheckable(true);
+		if (themeName.toLower() == QMareOptions::get<QString>(QMareOptions::STR_STYLE).toLower()) {
+			action->setChecked(true);
+		}
+		themeMenuGroup->addAction(action);
+	}
+
 	// Not translating this menu name, the translation is the same everywhere
 	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "Discord");
 	const auto setupDiscordRichPresence = [] {
@@ -117,7 +136,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	if (QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
 		setupDiscordRichPresence();
 	}
-	auto* discordUpdateTimer = new QTimer(this);
+	auto* discordUpdateTimer = new QTimer{this};
 	QObject::connect(discordUpdateTimer, &QTimer::timeout, this, &QMareDiscordPresence::update);
 	discordUpdateTimer->start(20);
 

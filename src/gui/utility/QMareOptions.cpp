@@ -1,8 +1,17 @@
 #include "QMareOptions.h"
 
-QSettings* opts = nullptr;
+#include <QApplication>
+#include <QStyle>
+
+static QSettings* opts = nullptr;
 
 void QMareOptions::setupOptions(QSettings& options) {
+	if (!options.contains(STR_STYLE)) {
+		options.setValue(STR_STYLE, QApplication::style()->name());
+	} else {
+		QApplication::setStyle(options.value(STR_STYLE).toString());
+	}
+
 	if (!options.contains(BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
 		options.setValue(BOOL_ENABLE_DISCORD_RICH_PRESENCE, true);
 	}
