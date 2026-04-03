@@ -55,12 +55,11 @@ A utility to create, edit, and display every type of VTF file ever made.
 - Assets:
   - The kirin in the program logo (Olive Shade) was created with [pony.town](https://pony.town)'s character creator
   - The lovely GUI splash screen art is by [@pastacrylic](https://linktr.ee/pastacrylic)
-- CLI Dependencies:
+- Dependencies:
   - [argparse](https://github.com/p-ranav/argparse)
+  - [discord-rpc](https://github.com/craftablescience/discord-rpc-clean)
   - [efsw](https://github.com/SpartanJ/efsw)
   - [indicators](https://github.com/p-ranav/indicators)
-  - [sourcepp](https://github.com/craftablescience/sourcepp)
-- GUI Dependencies:
   - [sourcepp](https://github.com/craftablescience/sourcepp)
   - [Qt](https://www.qt.io)
 
