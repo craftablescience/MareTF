@@ -9,7 +9,6 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QClipboard>
-#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -21,7 +20,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QSpinBox>
 #include <QStandardItemModel>
 #include <QTimer>
 #include <sourcepp/parser/Text.h>
@@ -32,7 +30,9 @@
 #include "EnumMappings.h"
 
 #include "utility/QMareOptions.h"
+#include "widgets/QMareComboBox.h"
 #include "widgets/QMareFlagsWidget.h"
+#include "widgets/QMareSpinBox.h"
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));
@@ -45,13 +45,13 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* versionLayout = new QFormLayout{versionGroup};
 	versionLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* platformCombo = new QComboBox{versionGroup};
+	auto* platformCombo = new QMareComboBox{versionGroup};
 	for (const auto& [platform, platformName] : not_magic_enum::enum_entries<vtfpp::VTF::Platform>(true)) {
 		platformCombo->addItem(platformName.data(), static_cast<int>(platform));
 	}
 	versionLayout->addRow(tr("Platform"), platformCombo);
 
-	auto* versionCombo = new QComboBox{versionGroup};
+	auto* versionCombo = new QMareComboBox{versionGroup};
 	for (int i = 0; i <= 6; i++) {
 		versionCombo->addItem(QString{"7.%1"}.arg(i), i);
 	}
@@ -72,8 +72,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureLayout = new QFormLayout{textureGroup};
 	textureLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureOpaqueFormatCombo = new QComboBox{textureGroup};
-	//auto* textureTransparentFormatCombo = new QComboBox{textureGroup};
+	auto* textureOpaqueFormatCombo = new QMareComboBox{textureGroup};
+	//auto* textureTransparentFormatCombo = new QMareComboBox{textureGroup};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
 		textureOpaqueFormatCombo->addItem(formatName.data(), static_cast<int>(format));
 		//textureTransparentFormatCombo->addItem(formatName.data(), static_cast<int>(format));
@@ -83,7 +83,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
 	//textureLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
 
-	auto* textureCompressionQualitySpin = new QSpinBox{textureGroup};
+	auto* textureCompressionQualitySpin = new QMareSpinBox{textureGroup};
 	textureCompressionQualitySpin->setRange(0, 100);
 	textureCompressionQualitySpin->setSingleStep(10);
 	textureCompressionQualitySpin->setSuffix("%");
@@ -96,7 +96,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
 	textureWidthLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureWidthSizeModeCombo = new QComboBox{textureWidthGroup};
+	auto* textureWidthSizeModeCombo = new QMareComboBox{textureWidthGroup};
 	textureWidthSizeModeCombo->addItems({
 		tr("Resize Method"),
 		tr("Exact"),
@@ -104,7 +104,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	});
 	textureWidthLayout->addRow(tr("Set"), textureWidthSizeModeCombo);
 
-	auto* textureWidthResizeMethodCombo = new QComboBox{textureWidthGroup};
+	auto* textureWidthResizeMethodCombo = new QMareComboBox{textureWidthGroup};
 	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
 		textureWidthResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
 	}
@@ -112,14 +112,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureWidthLayout->addRow(tr("Resize Method"), textureWidthResizeMethodCombo);
 	textureWidthLayout->setRowVisible(1, true);
 
-	auto* textureWidthExactSizeSpin = new QSpinBox{textureWidthGroup};
+	auto* textureWidthExactSizeSpin = new QMareSpinBox{textureWidthGroup};
 	textureWidthExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureWidthExactSizeSpin->setValue(1024);
 	textureWidthExactSizeSpin->setSuffix("px");
 	textureWidthLayout->addRow(tr("Exact"), textureWidthExactSizeSpin);
 	textureWidthLayout->setRowVisible(2, false);
 
-	auto* textureWidthMinimumSizeSpin = new QSpinBox{textureWidthGroup};
+	auto* textureWidthMinimumSizeSpin = new QMareSpinBox{textureWidthGroup};
 	textureWidthMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureWidthMinimumSizeSpin->setValue(512);
 	textureWidthMinimumSizeSpin->setSuffix("px");
@@ -127,7 +127,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureWidthLayout->addRow(tr("Minimum"), textureWidthMinimumSizeSpin);
 	textureWidthLayout->setRowVisible(3, false);
 
-	auto* textureWidthMaximumSizeSpin = new QSpinBox{textureWidthGroup};
+	auto* textureWidthMaximumSizeSpin = new QMareSpinBox{textureWidthGroup};
 	textureWidthMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureWidthMaximumSizeSpin->setValue(2048);
 	textureWidthMaximumSizeSpin->setSuffix("px");
@@ -143,7 +143,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureHeightLayout = new QFormLayout{textureHeightGroup};
 	textureHeightLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureHeightSizeModeCombo = new QComboBox{textureHeightGroup};
+	auto* textureHeightSizeModeCombo = new QMareComboBox{textureHeightGroup};
 	textureHeightSizeModeCombo->addItems({
 		tr("Resize Method"),
 		tr("Exact"),
@@ -151,7 +151,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	});
 	textureHeightLayout->addRow(tr("Set"), textureHeightSizeModeCombo);
 
-	auto* textureHeightResizeMethodCombo = new QComboBox{textureHeightGroup};
+	auto* textureHeightResizeMethodCombo = new QMareComboBox{textureHeightGroup};
 	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
 		textureHeightResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
 	}
@@ -159,21 +159,21 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureHeightLayout->addRow(tr("Resize Method"), textureHeightResizeMethodCombo);
 	textureHeightLayout->setRowVisible(1, true);
 
-	auto* textureHeightExactSizeSpin = new QSpinBox{textureHeightGroup};
+	auto* textureHeightExactSizeSpin = new QMareSpinBox{textureHeightGroup};
 	textureHeightExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureHeightExactSizeSpin->setValue(1024);
 	textureHeightExactSizeSpin->setSuffix("px");
 	textureHeightLayout->addRow(tr("Exact"), textureHeightExactSizeSpin);
 	textureHeightLayout->setRowVisible(2, false);
 
-	auto* textureHeightMinimumSizeSpin = new QSpinBox{textureHeightGroup};
+	auto* textureHeightMinimumSizeSpin = new QMareSpinBox{textureHeightGroup};
 	textureHeightMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureHeightMinimumSizeSpin->setValue(512);
 	textureHeightMinimumSizeSpin->setSuffix("px");
 	textureHeightLayout->addRow(tr("Minimum"), textureHeightMinimumSizeSpin);
 	textureHeightLayout->setRowVisible(3, false);
 
-	auto* textureHeightMaximumSizeSpin = new QSpinBox{textureHeightGroup};
+	auto* textureHeightMaximumSizeSpin = new QMareSpinBox{textureHeightGroup};
 	textureHeightMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
 	textureHeightMaximumSizeSpin->setValue(2048);
 	textureHeightMaximumSizeSpin->setSuffix("px");
@@ -193,14 +193,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureMipmapsGenerateCheck->setCheckState(Qt::Checked);
 	textureMipmapsLayout->addRow(tr("Compute"), textureMipmapsGenerateCheck);
 
-	auto* textureMipmapsFilterCombo = new QComboBox{textureMipmapsGroup};
+	auto* textureMipmapsFilterCombo = new QMareComboBox{textureMipmapsGroup};
 	for (const auto& [filter, filterName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeFilter>(true)) {
 		textureMipmapsFilterCombo->addItem(filterName.data(), static_cast<int>(filter));
 	}
 	textureMipmapsFilterCombo->setCurrentIndex(8); // NICE
 	textureMipmapsLayout->addRow(tr("Filter"), textureMipmapsFilterCombo);
 
-	auto* textureMipmapsScaleSpin = new QSpinBox{textureMipmapsGroup};
+	auto* textureMipmapsScaleSpin = new QMareSpinBox{textureMipmapsGroup};
 	textureMipmapsScaleSpin->setMinimum(0);
 	textureMipmapsLayout->addRow(tr("Scale (Console)"), textureMipmapsScaleSpin);
 
@@ -212,7 +212,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureHDRILayout = new QFormLayout{textureHDRIGroup};
 	textureHDRILayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureHDRIConversionMethodCombo = new QComboBox{textureHDRIGroup};
+	auto* textureHDRIConversionMethodCombo = new QMareComboBox{textureHDRIGroup};
 	textureHDRIConversionMethodCombo->addItem(tr("Flat Texture"));
 	textureHDRIConversionMethodCombo->addItem(tr("Cubemap"));
 	//textureHDRIConversionMethodCombo->addItem(tr("Skybox"));
@@ -233,7 +233,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureGammaCorrectionEnableCheck = new QCheckBox{textureGammaCorrectionGroup};
 	textureGammaCorrectionLayout->addRow(tr("Enabled"), textureGammaCorrectionEnableCheck);
 
-	auto* textureGammaCorrectionAmountSpin = new QDoubleSpinBox{textureGammaCorrectionGroup};
+	auto* textureGammaCorrectionAmountSpin = new QMareDoubleSpinBox{textureGammaCorrectionGroup};
 	textureGammaCorrectionAmountSpin->setMinimum(0.0);
 	textureGammaCorrectionAmountSpin->setValue(1.0);
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
@@ -246,7 +246,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureInvertGreenCheck = new QCheckBox{textureGroup};
 	textureLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
 
-	auto* textureBumpmapScaleSpin = new QDoubleSpinBox{textureGroup};
+	auto* textureBumpmapScaleSpin = new QMareDoubleSpinBox{textureGroup};
 	textureBumpmapScaleSpin->setValue(1.0);
 	textureBumpmapScaleSpin->setSingleStep(0.05);
 	textureLayout->addRow(tr("Bumpmap Scale"), textureBumpmapScaleSpin);
@@ -257,7 +257,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* textureCompressionLayout = new QFormLayout{textureCompressionGroup};
 	textureCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* textureCompressionMethodCombo = new QComboBox{textureCompressionGroup};
+	auto* textureCompressionMethodCombo = new QMareComboBox{textureCompressionGroup};
 	textureCompressionMethodCombo->addItem(tr("None"), 0);
 	for (const auto& [compressionMethod, compressionMethodName] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>(true)) {
 		textureCompressionMethodCombo->addItem(compressionMethodName.data(), static_cast<int>(compressionMethod));
@@ -265,7 +265,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	textureCompressionMethodCombo->setCurrentIndex(2); // Zstd
 	textureCompressionLayout->addRow(tr("Method"), textureCompressionMethodCombo);
 
-	auto* textureCompressionLevelSpin = new QSpinBox{textureCompressionGroup};
+	auto* textureCompressionLevelSpin = new QMareSpinBox{textureCompressionGroup};
 	textureCompressionLevelSpin->setRange(1, 22);
 	textureCompressionLevelSpin->setValue(22);
 	textureCompressionLayout->addRow(tr("Level"), textureCompressionLevelSpin);
@@ -351,19 +351,19 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* resourcesLODEnableCheck = new QCheckBox{resourcesLODGroup};
 	resourcesLODLayout->addRow(tr("Add Resource"), resourcesLODEnableCheck);
 
-	auto* resourcesLODUSpin = new QSpinBox{resourcesLODGroup};
+	auto* resourcesLODUSpin = new QMareSpinBox{resourcesLODGroup};
 	resourcesLODUSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("U"), resourcesLODUSpin);
 
-	auto* resourcesLODVSpin = new QSpinBox{resourcesLODGroup};
+	auto* resourcesLODVSpin = new QMareSpinBox{resourcesLODGroup};
 	resourcesLODVSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("V"), resourcesLODVSpin);
 
-	auto* resourcesLODUConsoleSpin = new QSpinBox{resourcesLODGroup};
+	auto* resourcesLODUConsoleSpin = new QMareSpinBox{resourcesLODGroup};
 	resourcesLODUConsoleSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("U (Console)"), resourcesLODUConsoleSpin);
 
-	auto* resourcesLODVConsoleSpin = new QSpinBox{resourcesLODGroup};
+	auto* resourcesLODVConsoleSpin = new QMareSpinBox{resourcesLODGroup};
 	resourcesLODVConsoleSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("V (Console)"), resourcesLODVConsoleSpin);
 
@@ -513,14 +513,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 
 	// Disable "Compressed Quality" when format is uncompressed
 
-	connect(textureOpaqueFormatCombo, &QComboBox::currentIndexChanged, this, [textureOpaqueFormatCombo, textureCompressionQualitySpin](int index) {
+	connect(textureOpaqueFormatCombo, &QMareComboBox::currentIndexChanged, this, [textureOpaqueFormatCombo, textureCompressionQualitySpin](int index) {
 		const auto format = static_cast<vtfpp::ImageFormat>(textureOpaqueFormatCombo->itemData(index).toInt());
 		textureCompressionQualitySpin->setEnabled(format == vtfpp::VTF::FORMAT_UNCHANGED || format == vtfpp::VTF::FORMAT_DEFAULT || vtfpp::ImageFormatDetails::compressed(format));
 	});
 
 	// Change visibility of items in "Width" depending on mode
 
-	connect(textureWidthSizeModeCombo, &QComboBox::currentIndexChanged, this, [textureWidthLayout](int index) {
+	connect(textureWidthSizeModeCombo, &QMareComboBox::currentIndexChanged, this, [textureWidthLayout](int index) {
 		switch (index) {
 			case 0:
 				textureWidthLayout->setRowVisible(1, true);
@@ -547,7 +547,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 
 	// Change visibility of items in "Height" depending on mode
 
-	connect(textureHeightSizeModeCombo, &QComboBox::currentIndexChanged, this, [textureHeightLayout](int index) {
+	connect(textureHeightSizeModeCombo, &QMareComboBox::currentIndexChanged, this, [textureHeightLayout](int index) {
 		switch (index) {
 			case 0:
 				textureHeightLayout->setRowVisible(1, true);
@@ -590,7 +590,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 
 	// Disable "Bilinear Filter" check when HDRI mode is flat image
 
-	connect(textureHDRIConversionMethodCombo, &QComboBox::currentIndexChanged, this, [textureHDRIFilterCheck](int index) {
+	connect(textureHDRIConversionMethodCombo, &QMareComboBox::currentIndexChanged, this, [textureHDRIFilterCheck](int index) {
 		textureHDRIFilterCheck->setDisabled(index == 0);
 	});
 	textureHDRIConversionMethodCombo->currentIndexChanged(textureHDRIConversionMethodCombo->currentIndex());
@@ -618,7 +618,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	// Disable "Particle Sheet", "CRC32", "LOD", "Extended Flags", "KeyValues Data" groups if platform is PC and version is less than 3, or platform is XBOX
 	// Repopulate "Flags" group checklist
 
-	connect(platformCombo, &QComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup](int index) {
+	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(index).toInt());
 
 		versionCombo->setDisabled(currentPlatform != vtfpp::VTF::PLATFORM_PC);
@@ -681,7 +681,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	});
 	platformCombo->currentIndexChanged(platformCombo->currentIndex());
 
-	connect(versionCombo, &QComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup](int index) {
+	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		textureCompressionGroup->setDisabled(index != 6);
@@ -843,15 +843,15 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 			addFlagPredicate((!negated && checkBox->isChecked()) || (negated && !checkBox->isChecked()), std::forward<decltype(arg)>(arg));
 		};
 
-		const auto addInt = [&addArg](const QSpinBox* spinBox, auto&& arg) {
+		const auto addInt = [&addArg](const QMareSpinBox* spinBox, auto&& arg) {
 			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
 		};
 
-		const auto addFloat = [&addArg](const QDoubleSpinBox* spinBox, auto&& arg) {
+		const auto addFloat = [&addArg](const QMareDoubleSpinBox* spinBox, auto&& arg) {
 			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
 		};
 
-		const auto applyForEnum = [&addArg]<typename E>(const QComboBox* combo, std::string_view name) {
+		const auto applyForEnum = [&addArg]<typename E>(const QMareComboBox* combo, std::string_view name) {
 			const auto e = static_cast<E>(combo->itemData(combo->currentIndex()).toInt());
 			addArg(name, not_magic_enum::enum_name(e));
 		};

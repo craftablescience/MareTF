@@ -3,19 +3,19 @@
 #include <QMainWindow>
 
 class QCheckBox;
-class QComboBox;
 class QDockWidget;
-class QDoubleSpinBox;
 class QGroupBox;
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
 class QPushButton;
-class QSpinBox;
 class QTabWidget;
 class QTimer;
 
+class QMareComboBox;
+class QMareDoubleSpinBox;
 class QMareFlagsWidget;
+class QMareSpinBox;
 
 class QMareTextureWindow : public QMainWindow {
 	Q_OBJECT;
@@ -33,7 +33,7 @@ protected:
 	QDockWidget* previewDock;
 
 	QGroupBox* previewGeneralGroup;
-	QSpinBox* previewCurrentMip;
+	QMareSpinBox* previewCurrentMip;
 	QCheckBox* previewR;
 	QCheckBox* previewG;
 	QCheckBox* previewB;
@@ -41,62 +41,62 @@ protected:
 	QCheckBox* previewBackground;
 
 	QGroupBox* previewAnimationGroup;
-	QSpinBox* previewCurrentFrame;
-	QDoubleSpinBox* previewAnimationSpeed;
+	QMareSpinBox* previewCurrentFrame;
+	QMareDoubleSpinBox* previewAnimationSpeed;
 	QCheckBox* previewAnimate;
 	QTimer* previewAnimateTimer;
 
 	QGroupBox* previewCubemapGroup;
-	QComboBox* previewCubemapMode;
-	QSpinBox* previewCurrentFace;
+	QMareComboBox* previewCubemapMode;
+	QMareSpinBox* previewCurrentFace;
 
 	QGroupBox* previewDepthGroup;
-	QSpinBox* previewCurrentDepth;
+	QMareSpinBox* previewCurrentDepth;
 
 	QDockWidget* detailsDock;
 
 	QGroupBox* detailsFileTypeGroup;
-	QComboBox* detailsPlatform;
-	QComboBox* detailsVersion;
-	QComboBox* detailsFormat;
+	QMareComboBox* detailsPlatform;
+	QMareComboBox* detailsVersion;
+	QMareComboBox* detailsFormat;
 
 	QGroupBox* detailsDimsGroup;
-	QSpinBox* detailsWidth;
-	QSpinBox* detailsHeight;
-	QSpinBox* detailsDepth;
-	QSpinBox* detailsFrames;
-	QSpinBox* detailsStartFrame;
+	QMareSpinBox* detailsWidth;
+	QMareSpinBox* detailsHeight;
+	QMareSpinBox* detailsDepth;
+	QMareSpinBox* detailsFrames;
+	QMareSpinBox* detailsStartFrame;
 	QCheckBox* detailsCubemap;
 	QCheckBox* detailsMipmaps;
-	QSpinBox* detailsConsoleMipScale;
+	QMareSpinBox* detailsConsoleMipScale;
 
 	QGroupBox* detailsMiscellaneousGroup;
-	QDoubleSpinBox* detailsBumpmapScale;
+	QMareDoubleSpinBox* detailsBumpmapScale;
 	QGroupBox* detailsReflectivityGroup;
 	QLabel* detailsReflectivityR;
 	QLabel* detailsReflectivityG;
 	QLabel* detailsReflectivityB;
 
 	QGroupBox* detailsCompressionGroup;
-	QComboBox* detailsCompressionMethod;
-	QSpinBox* detailsCompressionLevel;
+	QMareComboBox* detailsCompressionMethod;
+	QMareSpinBox* detailsCompressionLevel;
 
 	QDockWidget* resDock;
 
 	QGroupBox* resThumbnailGroup;
 	QLabel* resThumbnailPreview;
-	QSpinBox* resThumbnailWidth;
-	QSpinBox* resThumbnailHeight;
+	QMareSpinBox* resThumbnailWidth;
+	QMareSpinBox* resThumbnailHeight;
 
 	QGroupBox* resPaletteGroup;
 	QLabel* resPalettePreview;
 	// todo: use the frame spinbox in the preview section
-	QSpinBox* resPaletteFrame;
+	QMareSpinBox* resPaletteFrame;
 
 	QGroupBox* resFallbackGroup;
-	QSpinBox* resFallbackWidth;
-	QSpinBox* resFallbackHeight;
-	QSpinBox* resFallbackMips;
+	QMareSpinBox* resFallbackWidth;
+	QMareSpinBox* resFallbackHeight;
+	QMareSpinBox* resFallbackMips;
 
 	QGroupBox* resCRCGroup;
 	QLineEdit* resCRCValue;
@@ -105,10 +105,10 @@ protected:
 	QLineEdit* resTS0Value;
 
 	QGroupBox* resLODGroup;
-	QSpinBox* resLODValueU;
-	QSpinBox* resLODValueV;
-	QSpinBox* resLODValueU360;
-	QSpinBox* resLODValueV360;
+	QMareSpinBox* resLODValueU;
+	QMareSpinBox* resLODValueV;
+	QMareSpinBox* resLODValueU360;
+	QMareSpinBox* resLODValueV360;
 
 	QGroupBox* resKeyValuesGroup;
 	QPlainTextEdit* resKeyValuesData;
