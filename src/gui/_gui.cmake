@@ -26,6 +26,8 @@ set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareMiddleClickTabWidget.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareSpinBox.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareSpinBox.h"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareTextEditorWidget.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareTextEditorWidget.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareTextureWidget.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareTextureWidget.h"
         "${CMAKE_CURRENT_LIST_DIR}/windows/QMareEmptyWindow.cpp"
@@ -42,7 +44,7 @@ endif()
 
 target_include_directories(${PROJECT_NAME}_gui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/gui")
 
-target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators QCodeEditor sourcepp::kvpp sourcepp::vtfpp)
 
 file(GLOB ${PROJECT_NAME}_gui_I18N_TS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/i18n/${PROJECT_NAME}_*.ts")
 qt_add_translations(${PROJECT_NAME}_gui

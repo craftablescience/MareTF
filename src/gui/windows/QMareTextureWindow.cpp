@@ -37,6 +37,7 @@
 #include "widgets/QMareFlagsWidget.h"
 #include "widgets/QMareMiddleClickTabWidget.h"
 #include "widgets/QMareSpinBox.h"
+#include "widgets/QMareTextEditorWidget.h"
 #include "widgets/QMareTextureWidget.h"
 
 QMareTextureWindow* g_ManeWindow = nullptr;
@@ -81,8 +82,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	fileMenu->addSeparator();
 
 	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
-		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
-			this->loadTexture(file);
+		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures or Materials"), {}, QString{"%1 (*.vtf *.xtf);;%2 (*.vmt);;%3 (*)"}.arg(tr("Valve Texture Format"), tr("Valve Material"), tr("All Files")))) {
+			if (file.endsWith(".vmt")) {
+				this->loadMaterial(file);
+			} else {
+				this->loadTexture(file);
+			}
 		}
 	});
 
@@ -727,6 +732,23 @@ void QMareTextureWindow::loadTexture(const QString& path) {
 		widget->deleteLater();
 		QMessageBox::critical(this, tr("Error"), tr("Failed to load texture at location: %1").arg("\n\n" + path));
 	}
+}
+
+void QMareTextureWindow::loadMaterial(const QString& path) {
+	/*
+	for (int i = 0; i < this->textureTabs->count(); i++) {
+		if (const auto* textEditorWidget = dynamic_cast<QMareTextEditorWidget*>(this->textureTabs->widget(i)); textEditorWidget && QDir{textEditorWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
+			this->textureTabs->setCurrentIndex(i);
+			return;
+		}
+	}
+	*/
+
+	auto* widget = new QMareTextEditorWidget{this->textureTabs};
+	widget->loadCode(path);
+	const int index = this->textureTabs->addTab(widget, QFileInfo{path}.fileName());
+	//this->textureTabs->setTabIcon(index, widget->getIcon());
+	this->textureTabs->setCurrentIndex(index);
 }
 
 void QMareTextureWindow::regenerateDetails() {

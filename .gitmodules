@@ -13,6 +13,9 @@
 [submodule "ext/indicators"]
 	path = ext/indicators
 	url = https://github.com/p-ranav/indicators
+[submodule "ext/qcodeeditor"]
+	path = ext/qcodeeditor
+	url = https://github.com/craftablescience/QCodeEditor
 [submodule "ext/sourcepp"]
 	path = ext/sourcepp
 	url = https://github.com/craftablescience/sourcepp

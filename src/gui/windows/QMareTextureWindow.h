@@ -25,6 +25,8 @@ public:
 
 	void loadTexture(const QString& path);
 
+	void loadMaterial(const QString& path);
+
 	void regenerateDetails();
 
 signals:
