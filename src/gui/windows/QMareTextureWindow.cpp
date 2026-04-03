@@ -4,7 +4,6 @@
 #include <limits>
 
 #include <QCheckBox>
-#include <QComboBox>
 #include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
@@ -20,7 +19,6 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QScrollArea>
-#include <QSpinBox>
 #include <QTabWidget>
 #include <QTimer>
 
@@ -32,7 +30,9 @@
 #include "dialogs/QMareCredits.h"
 #include "utility/QMareDiscordPresence.h"
 #include "utility/QMareOptions.h"
+#include "widgets/QMareComboBox.h"
 #include "widgets/QMareFlagsWidget.h"
+#include "widgets/QMareSpinBox.h"
 #include "widgets/QMareTextureWidget.h"
 
 QMareTextureWindow* g_ManeWindow = nullptr;
@@ -228,11 +228,11 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
-	this->previewCurrentMip = new QSpinBox{previewWidget};
+	this->previewCurrentMip = new QMareSpinBox{previewWidget};
 	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);
 
 	// Change the current mip
-	connect(this->previewCurrentMip, &QSpinBox::valueChanged, this, [this](int value) {
+	connect(this->previewCurrentMip, &QMareSpinBox::valueChanged, this, [this](int value) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentMip(value);
 		}
@@ -244,17 +244,17 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewAnimationLayout = new QFormLayout{this->previewAnimationGroup};
 	previewAnimationLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->previewCurrentFrame = new QSpinBox{previewWidget};
+	this->previewCurrentFrame = new QMareSpinBox{previewWidget};
 	previewAnimationLayout->addRow(tr("Current Frame"), this->previewCurrentFrame);
 
 	// Change the current frame
-	connect(this->previewCurrentFrame, &QSpinBox::valueChanged, this, [this](int value) {
+	connect(this->previewCurrentFrame, &QMareSpinBox::valueChanged, this, [this](int value) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentFrame(value);
 		}
 	});
 
-	this->previewAnimationSpeed = new QDoubleSpinBox{previewWidget};
+	this->previewAnimationSpeed = new QMareDoubleSpinBox{previewWidget};
 	this->previewAnimationSpeed->setRange(0.0, 120.0);
 	this->previewAnimationSpeed->setValue(24.0);
 	previewAnimationLayout->addRow(tr("Animation FPS"), this->previewAnimationSpeed);
@@ -267,7 +267,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->previewAnimateTimer->start(static_cast<int>(1000.0 / this->previewAnimationSpeed->value()));
 
 	// Set the timer duration
-	connect(this->previewAnimationSpeed, &QDoubleSpinBox::valueChanged, this, [this](double value) {
+	connect(this->previewAnimationSpeed, &QMareDoubleSpinBox::valueChanged, this, [this](double value) {
 		this->previewAnimateTimer->stop();
 		this->previewAnimateTimer->start(static_cast<int>(1000.0 / value));
 	});
@@ -292,24 +292,24 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewCubemapLayout = new QFormLayout{this->previewCubemapGroup};
 	previewCubemapLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->previewCubemapMode = new QComboBox{previewWidget};
+	this->previewCubemapMode = new QMareComboBox{previewWidget};
 	this->previewCubemapMode->addItems({tr("Net"), tr("Single Face")});
 	previewCubemapLayout->addRow(tr("Preview Mode"), this->previewCubemapMode);
 
 	// Change cubemap preview mode
-	connect(this->previewCubemapMode, &QComboBox::currentIndexChanged, this, [this](int index) {
+	connect(this->previewCubemapMode, &QMareComboBox::currentIndexChanged, this, [this](int index) {
 		this->previewCurrentFace->setDisabled(index != 1);
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentCubemapMode(index);
 		}
 	});
 
-	this->previewCurrentFace = new QSpinBox{previewWidget};
+	this->previewCurrentFace = new QMareSpinBox{previewWidget};
 	this->previewCurrentFace->setDisabled(true);
 	previewCubemapLayout->addRow(tr("Current Face"), this->previewCurrentFace);
 
 	// Change the current face
-	connect(this->previewCurrentFace, &QSpinBox::valueChanged, this, [this](int value) {
+	connect(this->previewCurrentFace, &QMareSpinBox::valueChanged, this, [this](int value) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentFace(value);
 		}
@@ -321,11 +321,11 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewDepthLayout = new QFormLayout{this->previewDepthGroup};
 	previewDepthLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->previewCurrentDepth = new QSpinBox{previewWidget};
+	this->previewCurrentDepth = new QMareSpinBox{previewWidget};
 	previewDepthLayout->addRow(tr("Current Depth"), this->previewCurrentDepth);
 
 	// Change the current depth
-	connect(this->previewCurrentDepth, &QSpinBox::valueChanged, this, [this](int value) {
+	connect(this->previewCurrentDepth, &QMareSpinBox::valueChanged, this, [this](int value) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentDepth(value);
 		}
@@ -353,7 +353,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* detailsFileTypeLayout = new QFormLayout{this->detailsFileTypeGroup};
 	detailsFileTypeLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->detailsPlatform = new QComboBox{this->detailsFileTypeGroup};
+	this->detailsPlatform = new QMareComboBox{this->detailsFileTypeGroup};
 	this->detailsPlatform->addItem(tr("PC"),               vtfpp::VTF::PLATFORM_PC);
 	this->detailsPlatform->addItem(tr("Xbox"),             vtfpp::VTF::PLATFORM_XBOX);
 	this->detailsPlatform->addItem(tr("Xbox 360"),         vtfpp::VTF::PLATFORM_X360);
@@ -361,18 +361,18 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->detailsPlatform->addItem(tr("PS3 (P2, CS:GO)"),  vtfpp::VTF::PLATFORM_PS3_PORTAL2);
 	detailsFileTypeLayout->addRow(tr("Platform"), this->detailsPlatform);
 
-	this->detailsVersion = new QComboBox{this->detailsFileTypeGroup};
+	this->detailsVersion = new QMareComboBox{this->detailsFileTypeGroup};
 	for (int i = 0; i <= 6; i++) {
 		this->detailsVersion->addItem(QString{"7.%1"}.arg(i), i);
 	}
 	detailsFileTypeLayout->addRow(tr("Version"), this->detailsVersion);
 
 	// Hide the Version combo when Platform != PLATFORM_PC
-	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this, [this, detailsFileTypeLayout](int index) {
+	connect(this->detailsPlatform, &QMareComboBox::currentIndexChanged, this, [this, detailsFileTypeLayout](int index) {
 		detailsFileTypeLayout->setRowVisible(1, this->detailsPlatform->itemData(index).toInt() == vtfpp::VTF::PLATFORM_PC);
 	});
 
-	this->detailsFormat = new QComboBox{this->detailsFileTypeGroup};
+	this->detailsFormat = new QMareComboBox{this->detailsFileTypeGroup};
 	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::ImageFormat>()) {
 		if (static_cast<int>(value) < 0) {
 			continue;
@@ -388,15 +388,15 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsDimsLayout->setFormAlignment(Qt::AlignHCenter);
 	detailsDimsLayout->setLabelAlignment(Qt::AlignLeft);
 
-	this->detailsWidth = new QSpinBox{this->detailsDimsGroup};
+	this->detailsWidth = new QMareSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Width"), this->detailsWidth);
-	this->detailsHeight = new QSpinBox{this->detailsDimsGroup};
+	this->detailsHeight = new QMareSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Height"), this->detailsHeight);
-	this->detailsDepth = new QSpinBox{this->detailsDimsGroup};
+	this->detailsDepth = new QMareSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Depth"), this->detailsDepth);
-	this->detailsFrames = new QSpinBox{this->detailsDimsGroup};
+	this->detailsFrames = new QMareSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Frames"), this->detailsFrames);
-	this->detailsStartFrame = new QSpinBox{this->detailsDimsGroup};
+	this->detailsStartFrame = new QMareSpinBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Start Frame"), this->detailsStartFrame);
 	for (auto* spinBox : {this->detailsWidth, this->detailsHeight, this->detailsDepth, this->detailsFrames, this->detailsStartFrame}) {
 		spinBox->setRange(0, std::numeric_limits<uint16_t>::max());
@@ -408,7 +408,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsDimsLayout->addRow(tr("Cubemap"), this->detailsCubemap);
 	this->detailsMipmaps = new QCheckBox{this->detailsDimsGroup};
 	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
-	this->detailsConsoleMipScale = new QSpinBox{this->detailsDimsGroup};
+	this->detailsConsoleMipScale = new QMareSpinBox{this->detailsDimsGroup};
 	this->detailsConsoleMipScale->setRange(0, 31);
 	detailsDimsLayout->addRow(tr("(Console) Mip Scale"), this->detailsConsoleMipScale);
 
@@ -418,7 +418,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* detailsMiscellaneousLayout = new QFormLayout{this->detailsMiscellaneousGroup};
 	detailsMiscellaneousLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->detailsBumpmapScale = new QDoubleSpinBox{this->detailsMiscellaneousGroup};
+	this->detailsBumpmapScale = new QMareDoubleSpinBox{this->detailsMiscellaneousGroup};
 	this->detailsBumpmapScale->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
 	this->detailsBumpmapScale->setSingleStep(0.1);
 	this->detailsBumpmapScale->setDecimals(3);
@@ -443,18 +443,18 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* detailsCompressionLayout = new QFormLayout{this->detailsCompressionGroup};
 	detailsCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->detailsCompressionMethod = new QComboBox{this->detailsCompressionGroup};
+	this->detailsCompressionMethod = new QMareComboBox{this->detailsCompressionGroup};
 	this->detailsCompressionMethod->addItem("None", 0);
 	for (const auto& [value, name] : not_magic_enum::enum_entries<vtfpp::CompressionMethod>(true)) {
 		this->detailsCompressionMethod->addItem(name.data(), static_cast<int>(value));
 	}
 	detailsCompressionLayout->addRow(tr("Method"), this->detailsCompressionMethod);
 
-	this->detailsCompressionLevel = new QSpinBox{this->detailsCompressionGroup};
+	this->detailsCompressionLevel = new QMareSpinBox{this->detailsCompressionGroup};
 	detailsCompressionLayout->addRow(tr("Level"), this->detailsCompressionLevel);
 
 	// Limit strength to 0-0 for None, 1-9 for Deflate/LZMA, 1-22 for Zstd
-	connect(this->detailsCompressionMethod, &QComboBox::currentIndexChanged, this, [this](int index) {
+	connect(this->detailsCompressionMethod, &QMareComboBox::currentIndexChanged, this, [this](int index) {
 		switch (this->detailsCompressionMethod->itemData(index).toInt()) {
 			case static_cast<int>(vtfpp::CompressionMethod::DEFLATE):
 			case static_cast<int>(vtfpp::CompressionMethod::CONSOLE_LZMA):
@@ -473,10 +473,10 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsWidgetLayout->addWidget(this->detailsCompressionGroup);
 
 	// Compression group is unused for PC 7.0-7.5
-	connect(this->detailsPlatform, &QComboBox::currentIndexChanged, this, [this](int index) {
+	connect(this->detailsPlatform, &QMareComboBox::currentIndexChanged, this, [this](int index) {
 		this->detailsCompressionGroup->setVisible(this->detailsPlatform->itemData(index).toInt() != vtfpp::VTF::PLATFORM_PC || this->detailsVersion->currentIndex() == 6);
 	});
-	connect(this->detailsVersion, &QComboBox::currentIndexChanged, this, [this](int index) {
+	connect(this->detailsVersion, &QMareComboBox::currentIndexChanged, this, [this](int index) {
 		this->detailsCompressionGroup->setVisible(index == 6);
 	});
 
@@ -507,12 +507,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->resThumbnailPreview = new QLabel{resWidget};
 	resThumbnailLayout->addRow(tr("Preview"), this->resThumbnailPreview);
 
-	this->resThumbnailWidth = new QSpinBox{resWidget};
+	this->resThumbnailWidth = new QMareSpinBox{resWidget};
 	this->resThumbnailWidth->setSuffix("px");
 	this->resThumbnailWidth->setDisabled(true);
 	resThumbnailLayout->addRow(tr("Width"), this->resThumbnailWidth);
 
-	this->resThumbnailHeight = new QSpinBox{resWidget};
+	this->resThumbnailHeight = new QMareSpinBox{resWidget};
 	this->resThumbnailHeight->setSuffix("px");
 	this->resThumbnailHeight->setDisabled(true);
 	resThumbnailLayout->addRow(tr("Height"), this->resThumbnailHeight);
@@ -526,7 +526,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->resPalettePreview = new QLabel{resWidget};
 	resPaletteLayout->addRow(tr("Preview"), this->resPalettePreview);
 
-	this->resPaletteFrame = new QSpinBox{resWidget};
+	this->resPaletteFrame = new QMareSpinBox{resWidget};
 	this->resPaletteFrame->setDisabled(true);
 	resPaletteLayout->addRow(tr("Frame"), this->resPaletteFrame);
 
@@ -536,17 +536,17 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* resFallbackLayout = new QFormLayout{this->resFallbackGroup};
 	resFallbackLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->resFallbackWidth = new QSpinBox{resWidget};
+	this->resFallbackWidth = new QMareSpinBox{resWidget};
 	this->resFallbackWidth->setSuffix("px");
 	this->resFallbackWidth->setDisabled(true);
 	resFallbackLayout->addRow(tr("Width"), this->resFallbackWidth);
 
-	this->resFallbackHeight = new QSpinBox{resWidget};
+	this->resFallbackHeight = new QMareSpinBox{resWidget};
 	this->resFallbackHeight->setSuffix("px");
 	this->resFallbackHeight->setDisabled(true);
 	resFallbackLayout->addRow(tr("Height"), this->resFallbackHeight);
 
-	this->resFallbackMips = new QSpinBox{resWidget};
+	this->resFallbackMips = new QMareSpinBox{resWidget};
 	this->resFallbackMips->setDisabled(true);
 	resFallbackLayout->addRow(tr("Mips"), this->resFallbackMips);
 
@@ -576,19 +576,19 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* resLODLayout = new QFormLayout{this->resLODGroup};
 	resLODLayout->setFormAlignment(Qt::AlignHCenter);
 
-	this->resLODValueU = new QSpinBox{resWidget};
+	this->resLODValueU = new QMareSpinBox{resWidget};
 	this->resLODValueU->setRange(0, std::numeric_limits<uint8_t>::max());
 	resLODLayout->addRow(tr("U"), this->resLODValueU);
 
-	this->resLODValueV = new QSpinBox{resWidget};
+	this->resLODValueV = new QMareSpinBox{resWidget};
 	this->resLODValueV->setRange(0, std::numeric_limits<uint8_t>::max());
 	resLODLayout->addRow(tr("V"), this->resLODValueV);
 
-	this->resLODValueU360 = new QSpinBox{resWidget};
+	this->resLODValueU360 = new QMareSpinBox{resWidget};
 	this->resLODValueU360->setRange(0, std::numeric_limits<uint8_t>::max());
 	resLODLayout->addRow(tr("U360"), this->resLODValueU360);
 
-	this->resLODValueV360 = new QSpinBox{resWidget};
+	this->resLODValueV360 = new QMareSpinBox{resWidget};
 	this->resLODValueV360->setRange(0, std::numeric_limits<uint8_t>::max());
 	resLODLayout->addRow(tr("V360"), this->resLODValueV360);
 
@@ -746,7 +746,7 @@ void QMareTextureWindow::regenerateDetails() {
 	const vtfpp::VTF& vtf = activeTexture->getVTF();
 	this->setWindowTitle(QString{"%1 | %2 | %3x%4%5[*]"}.arg(PROJECT_TITLE).arg(this->textureTabs->tabText(activeIndex)).arg(vtf.getWidth()).arg(vtf.getHeight()).arg(vtf.getDepth() > 1 ? QString{"x%1"}.arg(vtf.getDepth()) : QString{}));
 
-	static constexpr auto searchAndSetCombo = [](QComboBox* combo, int value, bool condition = true) {
+	static constexpr auto searchAndSetCombo = [](QMareComboBox* combo, int value, bool condition = true) {
 		combo->setCurrentIndex(0);
 		if (condition) {
 			for (int i = 0; i < combo->count(); i++) {
@@ -846,7 +846,7 @@ void QMareTextureWindow::regenerateDetails() {
 			const auto data = vtfpp::ImageConversion::convertImageDataToFormat(resource->getDataAsPalette(i), vtfpp::ImageFormat::BGRA8888, vtfpp::ImageFormat::BGR888, 16, 16);
 			paletteFramesPreviewImageData.insert(paletteFramesPreviewImageData.begin(), data.begin(), data.end());
 		}
-		connect(this->resPaletteFrame, &QSpinBox::valueChanged, this, [this, paletteFramesPreviewImageData_ = std::move(paletteFramesPreviewImageData)](int value) {
+		connect(this->resPaletteFrame, &QMareSpinBox::valueChanged, this, [this, paletteFramesPreviewImageData_ = std::move(paletteFramesPreviewImageData)](int value) {
 			this->resPalettePreview->setPixmap(QPixmap::fromImage({reinterpret_cast<const uchar*>(paletteFramesPreviewImageData_.data() + value * 256 * sizeof(vtfpp::ImagePixel::BGRA8888)), 16, 16, QImage::Format_BGR888}).scaledToWidth(64));
 		});
 
