@@ -35,6 +35,7 @@
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
 #include "widgets/QMareFlagsWidget.h"
+#include "widgets/QMareMiddleClickTabWidget.h"
 #include "widgets/QMareSpinBox.h"
 #include "widgets/QMareTextureWidget.h"
 
@@ -164,7 +165,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Texture tabs ------------------------------------------
 
-	this->textureTabs = new QTabWidget{this};
+	this->textureTabs = new QMareMiddleClickTabWidget{this};
 	this->textureTabs->setDocumentMode(true);
 	this->textureTabs->setIconSize({64, 64});
 	this->textureTabs->setMovable(true);

@@ -81,6 +81,8 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareComboBox.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareMiddleClickTabWidget.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareMiddleClickTabWidget.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareSpinBox.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareSpinBox.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareTextureWidget.cpp"

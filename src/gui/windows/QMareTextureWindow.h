@@ -9,12 +9,12 @@ class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
 class QPushButton;
-class QTabWidget;
 class QTimer;
 
 class QMareComboBox;
 class QMareDoubleSpinBox;
 class QMareFlagsWidget;
+class QMareMiddleClickTabWidget;
 class QMareSpinBox;
 
 class QMareTextureWindow : public QMainWindow {
@@ -31,7 +31,7 @@ signals:
 	void themeUpdated();
 
 protected:
-	QTabWidget* textureTabs;
+	QMareMiddleClickTabWidget* textureTabs;
 
 	QDockWidget* previewDock;
 
