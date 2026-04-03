@@ -52,6 +52,7 @@ jobs:
         run: |
           cmake --build . --config ${{matrix.build_type}} -t maretf -- -j%NUMBER_OF_PROCESSORS%
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j%NUMBER_OF_PROCESSORS%
+          cmake --build . --config ${{matrix.build_type}} -t maretf_thumbnailer -- -j%NUMBER_OF_PROCESSORS%
 
       - name: Upload Standalone
         uses: actions/upload-artifact@v4
@@ -138,6 +139,7 @@ jobs:
           path: |
             ${{env.BUILD_DIR}}/maretf.pdb
             ${{env.BUILD_DIR}}/maretf_gui.pdb
+            ${{env.BUILD_DIR}}/maretf_thumbnailer.pdb
           retention-days: 7
 
   build-windows-stratasource:
@@ -168,7 +170,7 @@ jobs:
           cache: true
 
       - name: Configure CMake
-        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{env.QT_ROOT_DIR}}" -DMARETF_USE_LTO=ON -DMARETF_BUILD_FOR_STRATA_SOURCE=ON
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{env.QT_ROOT_DIR}}" -DMARETF_USE_LTO=ON -DMARETF_BUILD_THUMBNAILER=OFF -DMARETF_BUILD_FOR_STRATA_SOURCE=ON
 
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'
@@ -236,7 +238,8 @@ jobs:
         run: |
           cmake --build . --config ${{matrix.build_type}} -t maretf -- -j$(nproc)
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j$(nproc)
-          
+          cmake --build . --config ${{matrix.build_type}} -t maretf_thumbnailer -- -j$(nproc)
+
       - name: Fixup Binaries
         run: |
           chmod +x '${{env.BUILD_DIR}}/maretf_gui'
@@ -260,6 +263,7 @@ jobs:
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/maretf
             ${{env.BUILD_DIR}}/maretf_gui
+            ${{env.BUILD_DIR}}/maretf_thumbnailer
             ${{env.BUILD_DIR}}/*.so*
             ${{env.BUILD_DIR}}/egldeviceintegrations/*.so*
             ${{env.BUILD_DIR}}/platforminputcontexts/*.so*
@@ -312,7 +316,7 @@ jobs:
           cache: true
 
       - name: Configure CMake
-        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{env.QT_ROOT_DIR}}" -DMARETF_USE_LTO=ON -DMARETF_BUILD_FOR_STRATA_SOURCE=ON
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{env.QT_ROOT_DIR}}" -DMARETF_USE_LTO=ON -DMARETF_BUILD_THUMBNAILER=OFF -DMARETF_BUILD_FOR_STRATA_SOURCE=ON
 
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'
