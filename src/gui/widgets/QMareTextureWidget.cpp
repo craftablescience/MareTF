@@ -15,7 +15,7 @@
 #include <QWheelEvent>
 #include <vtfpp/ImagePixel.h>
 
-#include "../common/Common.h"
+#include "Common.h"
 
 namespace {
 

@@ -1,6 +1,6 @@
 #include "QMareFlagsWidget.h"
 
-#include "../common/Common.h"
+#include "Common.h"
 
 QMareFlagsWidget::QMareFlagsWidget(QWidget* parent) : QListWidget{parent} {}
 

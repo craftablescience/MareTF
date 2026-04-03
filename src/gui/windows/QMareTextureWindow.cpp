@@ -24,15 +24,16 @@
 #include <QTabWidget>
 #include <QTimer>
 
-#include "../common/Common.h"
-#include "../common/Config.h"
-#include "../common/EnumMappings.h"
-#include "QMareCreateTextureDialog.h"
-#include "QMareCredits.h"
-#include "QMareDiscordPresence.h"
-#include "QMareFlagsWidget.h"
-#include "QMareOptions.h"
-#include "QMareTextureWidget.h"
+#include "Common.h"
+#include "Config.h"
+#include "EnumMappings.h"
+
+#include "dialogs/QMareCreateTextureDialog.h"
+#include "dialogs/QMareCredits.h"
+#include "utility/QMareDiscordPresence.h"
+#include "utility/QMareOptions.h"
+#include "widgets/QMareFlagsWidget.h"
+#include "widgets/QMareTextureWidget.h"
 
 QMareTextureWindow* g_ManeWindow = nullptr;
 

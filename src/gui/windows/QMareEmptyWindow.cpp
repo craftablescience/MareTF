@@ -11,9 +11,10 @@
 #include <QStyle>
 #include <QToolBar>
 
-#include "../common/Config.h"
-#include "QMareCreateTextureDialog.h"
-#include "QMareCredits.h"
+#include "Config.h"
+
+#include "dialogs/QMareCreateTextureDialog.h"
+#include "dialogs/QMareCredits.h"
 #include "QMareTextureWindow.h"
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
