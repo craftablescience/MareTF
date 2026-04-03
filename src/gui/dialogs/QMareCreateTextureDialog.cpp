@@ -26,11 +26,13 @@
 #include <QTimer>
 #include <sourcepp/parser/Text.h>
 
-#include "QMareFlagsWidget.h"
-#include "QMareOptions.h"
-#include "../cli/MareTF.h"
-#include "../common/Common.h"
-#include "../common/EnumMappings.h"
+#include "MareTF.h"
+
+#include "Common.h"
+#include "EnumMappings.h"
+
+#include "utility/QMareOptions.h"
+#include "widgets/QMareFlagsWidget.h"
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));

@@ -8,11 +8,6 @@ project(maretf
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# options
-option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
-option(MARETF_BUILD_GUI               "Build ${PROJECT_NAME_PRETTY} GUI"                      ON)
-option(MARETF_BUILD_INSTALLER         "Build ${PROJECT_NAME_PRETTY} installer"               OFF)
-
 # add helpers
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers")
 include(CS_All)
@@ -21,6 +16,11 @@ include(CS_All)
 set(PROJECT_NAME_PRETTY "MareTF" CACHE STRING "" FORCE)
 cs_version_pretty() # PROJECT_VERSION_PRETTY
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
+
+# options
+option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
+option(MARETF_BUILD_GUI               "Build ${PROJECT_NAME_PRETTY} GUI"                      ON)
+option(MARETF_BUILD_INSTALLER         "Build ${PROJECT_NAME_PRETTY} installer"               OFF)
 
 # initial VS integration
 cs_setup_vs_defaults(STARTUP_PROJECT "${PROJECT_NAME}")
@@ -47,6 +47,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
 if(MARETF_BUILD_FOR_STRATA_SOURCE)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
 endif()
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
 target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 
 # maretf_gui
@@ -60,27 +61,28 @@ if(MARETF_BUILD_GUI)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCreateTextureDialog.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCreateTextureDialog.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareCredits.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareDiscordPresence.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareDiscordPresence.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareEmptyWindow.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareFlagsWidget.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareFlagsWidget.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareOptions.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareOptions.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWidget.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/QMareTextureWindow.h")
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCreateTextureDialog.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCreateTextureDialog.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCredits.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCredits.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareDiscordPresence.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareDiscordPresence.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareOptions.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareOptions.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareTextureWidget.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareTextureWidget.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareEmptyWindow.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareEmptyWindow.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareTextureWindow.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareTextureWindow.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp")
     cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
     if(MARETF_BUILD_FOR_STRATA_SOURCE)
         target_compile_definitions(${PROJECT_NAME}_gui PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
     endif()
+    target_include_directories(${PROJECT_NAME}_gui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/gui")
     target_use_qt(${PROJECT_NAME}_gui)
     target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 endif()

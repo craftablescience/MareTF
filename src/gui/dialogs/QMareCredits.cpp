@@ -2,7 +2,7 @@
 
 #include <QMessageBox>
 
-#include "../common/Config.h"
+#include "Config.h"
 
 void QMareCredits::show(QWidget* parent) {
 	auto* box = new QMessageBox{parent};

@@ -3,10 +3,11 @@
 #include <QLocalSocket>
 #include <QTranslator>
 
-#include "../common/Config.h"
-#include "QMareEmptyWindow.h"
-#include "QMareOptions.h"
-#include "QMareTextureWindow.h"
+#include "Config.h"
+
+#include "utility/QMareOptions.h"
+#include "windows/QMareEmptyWindow.h"
+#include "windows/QMareTextureWindow.h"
 
 int main(int argc, char* argv[]) {
 	QApplication app{argc, argv};

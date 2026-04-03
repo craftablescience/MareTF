@@ -46,9 +46,9 @@
 #include <QTimer>
 #endif
 
-#include "../common/Common.h"
-#include "../common/Config.h"
-#include "../common/EnumMappings.h"
+#include "Common.h"
+#include "Config.h"
+#include "EnumMappings.h"
 
 using namespace std::literals;
 
