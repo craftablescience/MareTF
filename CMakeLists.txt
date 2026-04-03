@@ -19,6 +19,7 @@ set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 
 # options
 option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
+option(MARETF_BUILD_CLI               "Build ${PROJECT_NAME_PRETTY} CLI"                      ON)
 option(MARETF_BUILD_GUI               "Build ${PROJECT_NAME_PRETTY} GUI"                      ON)
 option(MARETF_BUILD_THUMBNAILER       "Build ${PROJECT_NAME_PRETTY} thumbnailer"              ON)
 option(MARETF_BUILD_INSTALLER         "Build ${PROJECT_NAME_PRETTY} installer"               OFF)
@@ -33,23 +34,29 @@ cs_configure_defaults(MARETF_USE_LTO)
 # external libraries
 cs_include_directory(ext)
 
-# maretf
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
-add_executable(${PROJECT_NAME}
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
-cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
-target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
-if(MARETF_BUILD_FOR_STRATA_SOURCE)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
+# common config
+if(MARETF_BUILD_CLI OR MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
-target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+
+# maretf
+if(MARETF_BUILD_CLI)
+    add_executable(${PROJECT_NAME}
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
+    cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
+    if(MARETF_BUILD_FOR_STRATA_SOURCE)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
+    endif()
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
+    target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+endif()
 
 # maretf_gui
 if(MARETF_BUILD_GUI)
