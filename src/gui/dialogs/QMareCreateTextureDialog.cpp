@@ -890,18 +890,26 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		}
 		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
 		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
-		addInt(textureMipmapsScaleSpin, "--console-mip-scale");
+		if (textureMipmapsScaleSpin->value() != 0) {
+			addInt(textureMipmapsScaleSpin, "--console-mip-scale");
+		}
 		addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
 		addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
 		addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
-		addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+		if (textureGammaCorrectionEnableCheck->isChecked()) {
+			addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+		}
 		addFlag(textureInvertGreenCheck, "--invert-green");
-		addFloat(textureBumpmapScaleSpin, "--bumpscale");
+		if (textureBumpmapScaleSpin->value() != 1.0) {
+			addFloat(textureBumpmapScaleSpin, "--bumpscale");
+		}
 		if (textureCompressionGroup->isEnabled() && textureCompressionMethodCombo->currentIndex() != 0) {
 			applyForEnum.operator()<vtfpp::CompressionMethod>(textureCompressionMethodCombo, "--compression-method");
 			addInt(textureCompressionLevelSpin, "--compression-level");
 		}
-		addArg("--flags-uint", std::format("{}", flagsChecks->getFlags()));
+		if (const auto flagsUInt =  flagsChecks->getFlags(); flagsUInt != 0) {
+			addArg("--flags-uint", std::format("{}", flagsUInt));
+		}
 		addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
 		if (resourcesSHTGroup->isEnabled() && resourcesSHTEnableCheck->isChecked()) {
 			addArg("--particle-sheet-resource", resourcesSHTPath->text().toUtf8().constData());
