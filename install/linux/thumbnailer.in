@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=${PROJECT_NAME}_thumbnailer
+Exec=${PROJECT_NAME}_thumbnailer -i %i -o %o -s %s
+MimeType=image/x-vtf;image/x-xtf;

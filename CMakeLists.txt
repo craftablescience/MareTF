@@ -20,6 +20,7 @@ set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 # options
 option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
 option(MARETF_BUILD_GUI               "Build ${PROJECT_NAME_PRETTY} GUI"                      ON)
+option(MARETF_BUILD_THUMBNAILER       "Build ${PROJECT_NAME_PRETTY} thumbnailer"              ON)
 option(MARETF_BUILD_INSTALLER         "Build ${PROJECT_NAME_PRETTY} installer"               OFF)
 
 # initial VS integration
@@ -89,6 +90,24 @@ if(MARETF_BUILD_GUI)
     target_include_directories(${PROJECT_NAME}_gui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/gui")
     target_use_qt(${PROJECT_NAME}_gui)
     target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+endif()
+
+# maretf_thumbnailer
+if(MARETF_BUILD_THUMBNAILER)
+    if(WIN32)
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.def.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def")
+        add_library(${PROJECT_NAME}_thumbnailer SHARED
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.cpp")
+        target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE Shlwapi)
+    else()
+        add_executable(${PROJECT_NAME}_thumbnailer "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/linux/MareTF.cpp")
+        target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE argparse::argparse)
+    endif()
+    cs_configure_target(${PROJECT_NAME}_thumbnailer)
+    target_include_directories(${PROJECT_NAME}_thumbnailer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
+    target_use_qt(${PROJECT_NAME}_thumbnailer)
+    target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE sourcepp::vtfpp)
 endif()
 
 # installer

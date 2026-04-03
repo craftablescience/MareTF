@@ -1,0 +1,11 @@
+LIBRARY	"${PROJECT_NAME}_thumbnailer"
+EXPORTS
+    MareTFThumbnailProvider_CreateInstance PRIVATE
+    DllMain                                PRIVATE
+    DllAddRef                              PRIVATE
+    DllRelease                             PRIVATE
+    DllCanUnloadNow                        PRIVATE
+    DllGetClassObject                      PRIVATE
+    DllNotifyShell                         PRIVATE
+    DllRegisterServer                      PRIVATE
+    DllUnregisterServer                    PRIVATE

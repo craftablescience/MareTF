@@ -7,6 +7,24 @@ if(WIN32)
     if(MARETF_BUILD_GUI)
         install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
 
+        # NSIS install commands
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/win/InstallCommands.nsh.in"
+                "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh"
+                @ONLY)
+
+        # NSIS uninstall commands
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/win/UninstallCommands.nsh.in"
+                "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh"
+                @ONLY)
+    endif()
+
+    if(MARETF_BUILD_THUMBNAILER)
+        install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION .)
+    endif()
+
+    if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         # Qt
         install(IMPORTED_RUNTIME_ARTIFACTS
                 Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
@@ -28,18 +46,6 @@ if(WIN32)
                 "${QT_BASEDIR}/plugins/tls/qcertonlybackend${QT_LIB_SUFFIX}.dll"
                 "${QT_BASEDIR}/plugins/tls/qschannelbackend${QT_LIB_SUFFIX}.dll"
                 DESTINATION tls)
-
-        # NSIS install commands
-        configure_file(
-                "${CMAKE_CURRENT_LIST_DIR}/win/InstallCommands.nsh.in"
-                "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh"
-                @ONLY)
-
-        # NSIS uninstall commands
-        configure_file(
-                "${CMAKE_CURRENT_LIST_DIR}/win/UninstallCommands.nsh.in"
-                "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh"
-                @ONLY)
     endif()
 elseif(UNIX)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
@@ -50,8 +56,6 @@ elseif(UNIX)
     if(MARETF_BUILD_GUI)
         install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION "bin")
 
-        # Use system Qt - no install rules
-
         # Desktop file
         configure_file(
                 "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"
@@ -61,6 +65,21 @@ elseif(UNIX)
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
                 DESTINATION "share/icons/hicolor/512x512/apps"
                 RENAME "${PROJECT_NAME}.png")
+    endif()
+
+    if(MARETF_BUILD_THUMBNAILER)
+        install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION "bin")
+
+        # Thumbnailer file
+        configure_file(
+                "${CMAKE_CURRENT_SOURCE_DIR}/install/linux/thumbnailer.in"
+                "${CMAKE_CURRENT_SOURCE_DIR}/install/linux/generated/${PROJECT_NAME}.thumbnailer")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/install/linux/generated/${PROJECT_NAME}.thumbnailer"
+                DESTINATION "share/thumbnailers")
+    endif()
+
+    if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
+        # Use system Qt - no install rules
 
         # MIME type info
         configure_file(
@@ -106,6 +125,10 @@ if(WIN32)
         file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/InstallCommands.nsh" CPACK_NSIS_EXTRA_INSTALL_COMMANDS)
         file(READ "${CMAKE_CURRENT_LIST_DIR}/win/generated/UninstallCommands.nsh" CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/install/win") # NSIS.template.in, NSIS.InstallOptions.ini.in
+    endif()
+    if(MARETF_BUILD_THUMBNAILER)
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait 'regsvr32 /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
+        set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "ExecWait 'regsvr32 /u /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
     endif()
 else()
     if(CPACK_GENERATOR STREQUAL "DEB")

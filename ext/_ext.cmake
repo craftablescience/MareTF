@@ -21,8 +21,8 @@ set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_VTFPP           ON CACHE INTERNAL "" FORCE)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/sourcepp")
 
-if(MARETF_BUILD_GUI)
-    # Qt
+# Qt
+if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
     if(WIN32 AND NOT DEFINED QT_BASEDIR)
         message(FATAL_ERROR "Please define your Qt install dir with -DQT_BASEDIR=\"C:/your/qt6/here\"")
     endif()
