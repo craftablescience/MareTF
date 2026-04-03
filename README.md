@@ -12,13 +12,11 @@
 
 A utility to create, edit, and display every type of VTF file ever made.
 
-###### *See also: [VTF Thumbnailer](https://github.com/craftablescience/vtf-thumbnailer) and [QVTF++](https://github.com/craftablescience/qvtfpp)*
-
 ![A preview of the application's main windows.](https://github.com/craftablescience/MareTF/blob/mane/res/brand/screenshot1.png?raw=true)
 
 ## Features
 
-- Create Mode
+- Create
   - Directly convert a wide range of input image formats
     - Animated images (APNG/GIF)
     - Floating point images (EXR/HDR)
@@ -31,25 +29,24 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Xbox 360
     - PlayStation 3
   - Uses an improved version of Valve's NICE mipmap filtering by default
-  - Supports new formats in Alien Swarm and beyond
-  - Supports new Strata Source VTF version
-    - New formats (BC7 / BC6H)
-    - New CPU compression (Deflate / Zstd)
+  - Supports new formats in Alien Swarm and beyond, Titanfall 1/2, Strata Source
+  - Supports new Strata Source VTF version with CPU compression (Deflate / Zstd)
   - Watch input file or directory for changes and recreate the VTF(s)
-- Edit Mode
+- Edit
   - Edit existing VTFs
   - Change VTF version, format, platform, etc.
   - Recompute mipmaps, thumbnail, reflectivity vector
   - Add, overwrite, or remove resources
-- Extract Mode
+- Extract
   - Save the image data contained within VTFs as image files
     - Save as PNG/JPEG/BMP/TGA/WebP/QOI/HDR/EXR
     - Defaults to PNG or EXR based on the image format
-- Info Mode
+- Info
   - Print out all VTF metadata and non-image resource data
   - Parse compiled particle sheet resource to plaintext
   - Print data as colored human-readable text or as plain KeyValues
-- More to come!
+- Thumbnail
+  - Display thumbnails for all VTF platforms and versions on Windows and Linux
 
 <img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_wink.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, winking." />
 
