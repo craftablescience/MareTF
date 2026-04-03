@@ -94,7 +94,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 	QPainter painter{this};
 
-	static const QPixmap SPLASH_IMAGE{":/splash.jpg"};
+	static const QPixmap SPLASH_IMAGE{":/splash.png"};
 	const QPixmap splashImageScaled = SPLASH_IMAGE.scaled(this->width(), this->height() - this->toolbar->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	painter.drawPixmap(0, this->toolbar->height(), splashImageScaled.width(), splashImageScaled.height(), splashImageScaled);
 }
