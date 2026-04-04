@@ -96,33 +96,42 @@ void QMareTextureWidget::reloadCurrentTexture() {
 	this->textureCurrentData.clear();
 
 	if (this->vtf) {
+		vtfpp::ImageFormat format;
+		QImage::Format formatQt;
+		if (this->a) {
+			format = vtfpp::ImageFormat::BGRA8888;
+			formatQt = vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied;
+		} else {
+			format = vtfpp::ImageFormat::RGB888;
+			formatQt = QImage::Format_RGB888;
+		}
+
 		const auto width = this->vtf.getWidth(this->currentMip);
 		const auto height = this->vtf.getHeight(this->currentMip);
 		if (this->vtf.getFaceCount() >= 6 && this->cubemapMode == 0) {
-			const auto xpData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 0, this->currentDepth);
-			const auto xnData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 1, this->currentDepth);
-			const auto ypData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 2, this->currentDepth);
-			const auto ynData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 3, this->currentDepth);
-			const auto zpData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 4, this->currentDepth);
-			const auto znData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 5, this->currentDepth);
-			const auto smData = this->vtf.getFaceCount() > 6 ? this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 6, this->currentDepth) : std::vector<std::byte>{};
+			const auto xpData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 0, this->currentDepth);
+			const auto xnData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 1, this->currentDepth);
+			const auto ypData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 2, this->currentDepth);
+			const auto ynData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 3, this->currentDepth);
+			const auto zpData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 4, this->currentDepth);
+			const auto znData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 5, this->currentDepth);
+			const auto smData = this->vtf.getFaceCount() > 6 ? this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, 6, this->currentDepth) : std::vector<std::byte>{};
 
-			const auto faceFormat = vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied;
-			const QImage xp{reinterpret_cast<const uchar*>(xpData.data()), width, height, faceFormat};
-			const QImage xn{reinterpret_cast<const uchar*>(xnData.data()), width, height, faceFormat};
-			const QImage yp{reinterpret_cast<const uchar*>(ypData.data()), width, height, faceFormat};
-			const QImage yn{reinterpret_cast<const uchar*>(ynData.data()), width, height, faceFormat};
-			const QImage zp{reinterpret_cast<const uchar*>(zpData.data()), width, height, faceFormat};
-			const QImage zn{reinterpret_cast<const uchar*>(znData.data()), width, height, faceFormat};
-			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, faceFormat} : QImage{};
+			const QImage xp{reinterpret_cast<const uchar*>(xpData.data()), width, height, formatQt};
+			const QImage xn{reinterpret_cast<const uchar*>(xnData.data()), width, height, formatQt};
+			const QImage yp{reinterpret_cast<const uchar*>(ypData.data()), width, height, formatQt};
+			const QImage yn{reinterpret_cast<const uchar*>(ynData.data()), width, height, formatQt};
+			const QImage zp{reinterpret_cast<const uchar*>(zpData.data()), width, height, formatQt};
+			const QImage zn{reinterpret_cast<const uchar*>(znData.data()), width, height, formatQt};
+			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, formatQt} : QImage{};
 
 			this->textureCurrentData = ::drawCubemapNet(this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), xp, xn, yp, yn, zp, zn, sm);
 			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width * 4, height * 3, QImage::Format_ARGB32};
 		} else {
-			this->textureCurrentData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
-			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width, height, QImage::Format_ARGB32};
+			this->textureCurrentData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
+			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width, height, formatQt};
 		}
-		if (!this->r || !this->g || !this->b || !this->a) {
+		if (!this->r || !this->g || !this->b) {
 			for (int y = 0; y < this->textureCurrent.height(); y++) {
 				auto* scanLine = reinterpret_cast<vtfpp::ImagePixel::BGRA8888*>(this->textureCurrent.scanLine(y));
 				for (int x = 0; x < this->textureCurrent.width(); ++x) {
@@ -136,13 +145,9 @@ void QMareTextureWidget::reloadCurrentTexture() {
 					if (!this->b) {
 						pixel.setBlue(0);
 					}
-					if (!this->a) {
-						pixel.setAlphaF(1.f);
-					}
 					scanLine[x].setR(static_cast<uint8_t>(pixel.red()));
 					scanLine[x].setG(static_cast<uint8_t>(pixel.green()));
 					scanLine[x].setB(static_cast<uint8_t>(pixel.blue()));
-					scanLine[x].setA(static_cast<uint8_t>(pixel.alpha()));
 				}
 			}
 		}
