@@ -107,14 +107,19 @@ if(MARETF_BUILD_THUMBNAILER)
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.def.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def")
         add_library(${PROJECT_NAME}_thumbnailer SHARED
                 "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.cpp")
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.cpp"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.cpp"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.h")
         target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE Shlwapi)
     else()
-        add_executable(${PROJECT_NAME}_thumbnailer "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/linux/MareTF.cpp")
+        add_executable(${PROJECT_NAME}_thumbnailer
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/linux/MareTF.cpp"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.cpp"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.h")
         target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE argparse::argparse)
     endif()
     cs_configure_target(${PROJECT_NAME}_thumbnailer)
-    target_include_directories(${PROJECT_NAME}_thumbnailer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
+    target_include_directories(${PROJECT_NAME}_thumbnailer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer")
     target_use_qt(${PROJECT_NAME}_thumbnailer)
     target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE sourcepp::vtfpp)
 endif()

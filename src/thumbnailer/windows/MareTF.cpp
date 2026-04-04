@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <vector>
 
-#include <vtfpp/vtfpp.h>
+#include "CommonThumbnailer.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -93,21 +93,33 @@ public:
 				return E_UNEXPECTED;
 			}
 
-			int width = vtf.getWidth();
-			int height = vtf.getHeight();
+			int targetWidth = vtf.getWidth();
+			int outWidth = targetWidth;
+			int targetHeight = vtf.getHeight();
+			int outHeight = targetHeight;
+			if (cx > outWidth || cx > outHeight) {
+				const double scalingFactor = min(static_cast<double>(cx) / outWidth, static_cast<double>(cx) / outHeight);
+				outWidth = targetWidth = std::floor(targetWidth * scalingFactor);
+				outHeight = targetHeight = std::floor(targetHeight * scalingFactor);
+			}
 
-			data = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888);
-			if (cx > vtf.getWidth() || cx > vtf.getHeight()) {
-				const double scalingFactor = min(static_cast<double>(cx) / vtf.getWidth(), static_cast<double>(cx) / vtf.getHeight());
-				width = std::floor(vtf.getWidth() * scalingFactor);
-				height = std::floor(vtf.getHeight() * scalingFactor);
-				data = vtfpp::ImageConversion::resizeImageData(data, vtfpp::ImageFormat::BGRA8888, vtf.getWidth(), width, vtf.getHeight(), height, vtf.isSRGB(), vtfpp::ImageConversion::ResizeFilter::BILINEAR);
+			auto [data, format] = ::createThumbnail(vtf, outWidth, outHeight);
+			if (data.empty() || format == vtfpp::ImageFormat::EMPTY) {
+				return E_UNEXPECTED;
+			}
+
+			if (format != vtfpp::ImageFormat::BGRA8888) {
+				data = vtfpp::ImageConversion::convertImageDataToFormat(data, format, vtfpp::ImageFormat::BGRA8888, outWidth, outHeight);
+				format = vtfpp::ImageFormat::BGRA8888;
+			}
+			if (targetWidth != outWidth || targetHeight != outHeight) {
+				data = vtfpp::ImageConversion::resizeImageData(data, format, outWidth, targetWidth, outHeight, targetHeight, !vtfpp::ImageFormatDetails::large(format), vtfpp::ImageConversion::ResizeFilter::BILINEAR);
 			}
 
 			BITMAPINFO bmi = {};
 			bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-			bmi.bmiHeader.biWidth = static_cast<LONG>(width);
-			bmi.bmiHeader.biHeight = -static_cast<LONG>(height);
+			bmi.bmiHeader.biWidth = static_cast<LONG>(targetWidth);
+			bmi.bmiHeader.biHeight = -static_cast<LONG>(targetHeight);
 			bmi.bmiHeader.biPlanes = 1;
 			bmi.bmiHeader.biBitCount = 32;
 			bmi.bmiHeader.biCompression = BI_RGB;
