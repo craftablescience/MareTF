@@ -1,55 +1,25 @@
 #include <argparse/argparse.hpp>
-#include <sourcepp/FS.h>
-#include <vtfpp/VTF.h>
 
 #include "Config.h"
 
-namespace {
-
-std::vector<std::byte> createThumbnail(const std::string& in, int& targetWidth, int& targetHeight) {
-	try {
-		const vtfpp::VTF vtf{in};
-		if (!vtf) {
-			return {};
-		}
-		auto data = vtf.getImageDataAsRGBA8888();
-		if ((targetWidth > 0 && vtf.getWidth() != targetWidth) || (targetHeight > 0 && vtf.getHeight() != targetHeight)) {
-			if (targetWidth <= 0) {
-				targetWidth = vtf.getWidth();
-			}
-			if (targetHeight <= 0) {
-				targetHeight = vtf.getHeight();
-			}
-			return vtfpp::ImageConversion::resizeImageData(data, vtfpp::ImageFormat::RGBA8888, vtf.getWidth(), targetWidth, vtf.getHeight(), targetHeight, vtf.isSRGB(), vtfpp::ImageConversion::ResizeFilter::BILINEAR);
-		}
-		targetWidth = vtf.getWidth();
-		targetHeight = vtf.getHeight();
-		return data;
-	} catch (const std::overflow_error&) {
-		return {};
-	} catch (const std::runtime_error&) {
-		return {};
-	}
-}
+#include "CommonThumbnailer.h"
 
 int createThumbnail(const std::string& in, const std::string& out, int targetWidth, int targetHeight) {
-	auto data = ::createThumbnail(in, targetWidth, targetHeight);
-	if (data.empty()) {
+	const auto [data, format] = ::createThumbnail(in, targetWidth, targetHeight);
+	if (data.empty() || format == vtfpp::ImageFormat::EMPTY) {
 		return 2;
 	}
 	if (out.ends_with(".jpg") || out.ends_with(".jpeg")) {
-		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, vtfpp::ImageFormat::RGBA8888, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::JPG));
+		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, format, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::JPG));
 	}
 	if (out.ends_with(".png")) {
-		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, vtfpp::ImageFormat::RGBA8888, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::PNG));
+		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, format, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::PNG));
 	}
 	if (out.ends_with(".tga")) {
-		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, vtfpp::ImageFormat::RGBA8888, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::TGA));
+		return !sourcepp::fs::writeFileBuffer(out, vtfpp::ImageConversion::convertImageDataToFile(data, format, targetWidth, targetHeight, vtfpp::ImageConversion::FileFormat::TGA));
 	}
 	return 3;
 }
-
-} // namespace
 
 int main(int argc, const char* argv[]) {
 	argparse::ArgumentParser cli{PROJECT_NAME_PRETTY " Thumbnailer", PROJECT_VERSION_PRETTY, argparse::default_arguments::help};
