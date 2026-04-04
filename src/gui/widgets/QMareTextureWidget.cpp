@@ -98,7 +98,7 @@ void QMareTextureWidget::reloadCurrentTexture() {
 	if (this->vtf) {
 		const auto width = this->vtf.getWidth(this->currentMip);
 		const auto height = this->vtf.getHeight(this->currentMip);
-		if (this->vtf.getFaceCount() > 1 && this->cubemapMode == 0) {
+		if (this->vtf.getFaceCount() >= 6 && this->cubemapMode == 0) {
 			const auto xpData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 0, this->currentDepth);
 			const auto xnData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 1, this->currentDepth);
 			const auto ypData = this->vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, this->currentMip, this->currentFrame, 2, this->currentDepth);
