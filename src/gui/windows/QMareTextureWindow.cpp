@@ -172,8 +172,8 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->textureTabs->setTabsClosable(true);
 	this->setCentralWidget(this->textureTabs);
 
-	connect(this->textureTabs, &QTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);
-	connect(this->textureTabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
+	connect(this->textureTabs, &QMareMiddleClickTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);
+	connect(this->textureTabs, &QMareMiddleClickTabWidget::tabCloseRequested, this, [this](int index) {
 		// todo: save confirmation
 		this->textureTabs->removeTab(index);
 	});
@@ -182,7 +182,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	this->setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
-	this->previewDock = new QDockWidget(tr("&Preview"), this);
+	this->previewDock = new QDockWidget{tr("Preview"), this};
 	this->previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
 	auto* previewWidget = new QWidget{this->previewDock};
@@ -361,7 +361,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Details dock ------------------------------------------
 
-	this->detailsDock = new QDockWidget{tr("&Details"), this};
+	this->detailsDock = new QDockWidget{tr("Details"), this};
 	this->detailsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
 	auto* detailsScroll = new QScrollArea{this->detailsDock};
@@ -512,7 +512,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Resources dock ------------------------------------------
 
-	this->resDock = new QDockWidget{tr("&Resources"), this};
+	this->resDock = new QDockWidget{tr("Resources"), this};
 	this->resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
 	auto* resScroll = new QScrollArea{this->resDock};
@@ -639,7 +639,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Flags dock ------------------------------------------
 
-	this->flagsDock = new QDockWidget{tr("&Flags"), this};
+	this->flagsDock = new QDockWidget{tr("Flags"), this};
 	this->flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	this->flagsChecks = new QMareFlagsWidget{this->flagsDock};
 	this->flagsDock->setWidget(this->flagsChecks);
