@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>${PROJECT_APPLICATION_ID}</id>
+    <name>${PROJECT_NAME_PRETTY}</name>
+    <summary>A utility to create, edit, and display every type of VTF file ever made</summary>
+    <developer id="info.craftablescience">
+        <name translate="no">Laura Lewis</name>
+        <url>https://craftablescience.info</url>
+    </developer>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>MIT</project_license>
+    <description>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magnam aliquam quaerat voluptatem.</p>
+    </description>
+    <screenshots>
+        <screenshot>
+            <caption>Lorem ipsum dolor sit amet</caption>
+            <image>https://raw.githubusercontent.com/craftablescience/MareTF/refs/heads/mane/res/brand/screenshot1.png</image>
+        </screenshot>
+    </screenshots>
+    <url type="homepage">${PROJECT_HOMEPAGE_URL}</url>
+    <url type="vcs-browser">${PROJECT_HOMEPAGE_URL}</url>
+    <url type="bugtracker">${PROJECT_HOMEPAGE_URL}/issues</url>
+    <url type="donation">https://ko-fi.com/craftablescience</url>
+    <branding>
+        <color type="primary" scheme_preference="light">#ffffff</color>
+        <color type="primary" scheme_preference="dark">#000000</color>
+    </branding>
+    <releases>
+        <release version="0.10.2" date="2026-04-04">
+            <url type="details">https://github.com/craftablescience/MareTF/releases/tag/v0.10.2</url>
+        </release>
+        <release version="0.10.1" date="2026-04-02">
+            <url type="details">https://github.com/craftablescience/MareTF/releases/tag/v0.10.1</url>
+        </release>
+    </releases>
+    <content_rating type="oars-1.1"/>
+    <launchable type="desktop-id">${PROJECT_APPLICATION_ID}.desktop</launchable>
+    <provides>
+        <binary>${PROJECT_NAME}_gui</binary>
+        <binary>${PROJECT_NAME}</binary>
+    </provides>
+</component>

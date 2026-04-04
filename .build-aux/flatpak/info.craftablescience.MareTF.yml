@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/flatpak/flatpak-builder/refs/heads/main/data/flatpak-manifest.schema.json
+id: info.craftablescience.MareTF
+runtime: org.kde.Platform
+runtime-version: "6.10"
+sdk: org.kde.Sdk
+command: maretf-wrapper
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Discord RPC support
+  - --filesystem=xdg-run/app/com.discordapp.Discord:create
+
+modules:
+  - name: maretf
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DMARETF_BUILD_THUMBNAILER=OFF
+      - -DMARETF_BUILD_INSTALLER=ON
+      - -DMARETF_USE_LTO=ON
+      - -DFLATPAK=ON
+
+      - -DFETCHCONTENT_SOURCE_DIR_BUFFERSTREAM=../_deps/bufferstream
+      - -DFETCHCONTENT_SOURCE_DIR_CMP_COMPRESSONATOR=../_deps/cmp_compressonator
+      - -DFETCHCONTENT_SOURCE_DIR_CRYPTOPP-CMAKE=../_deps/cryptopp-cmake
+      - -DFETCHCONTENT_SOURCE_DIR_MINIZ=../_deps/miniz
+      - -DFETCHCONTENT_SOURCE_DIR_MINIZIP-NG=../_deps/minizip-ng
+      - -DFETCHCONTENT_SOURCE_DIR_ZLIB=../_deps/zlib
+      - -DFETCHCONTENT_SOURCE_DIR_BZIP2=../_deps/bzip2
+      - -DFETCHCONTENT_SOURCE_DIR_LIBLZMA=../_deps/liblzma
+      - -DFETCHCONTENT_SOURCE_DIR_PPMD=../_deps/ppmd
+      - -DFETCHCONTENT_SOURCE_DIR_ZSTD=../_deps/zstd
+      - -DFETCHCONTENT_SOURCE_DIR_QOI=../_deps/qoi
+      - -DFETCHCONTENT_SOURCE_DIR_TINYEXR=../_deps/tinyexr
+      - -DFETCHCONTENT_SOURCE_DIR_WEBP=../_deps/webp
+      - -DCRYPTOPP_SOURCES=../_deps/cryptopp
+    sources:
+      - fetchcontent-sources.json
+      - type: dir
+        path: ../../
+
+  - name: wrapper
+    buildsystem: simple
+    build-commands:
+      - install -Dm0755 maretf-wrapper "${FLATPAK_DEST}/bin"
+    sources:
+      - type: inline
+        dest-filename: maretf-wrapper
+        contents: |
+          #!/usr/bin/env bash
+          for i in {0..9}; do
+              test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
+          done
+
+          exec maretf_gui "$@"

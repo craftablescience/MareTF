@@ -1,0 +1,87 @@
+[
+    {
+        "type": "git",
+        "url": "https://github.com/craftablescience/BufferStream",
+        "dest": "_deps/bufferstream",
+        "commit": "2a7c9e8b786fa50a3ae1961f1ee5bca6c4a5a6c5"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/craftablescience/compressonator",
+        "dest": "_deps/cmp_compressonator",
+        "commit": "f9c8c58fe753108c260b33ec32301805c33c08b7"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/abdes/cryptopp-cmake",
+        "dest": "_deps/cryptopp-cmake",
+        "commit": "866aceb8b13b6427a3c4541288ff412ad54f11ea"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/richgel999/miniz",
+        "dest": "_deps/miniz",
+        "commit": "4b9fcf1df525114484be49f3216169b061c07ac6"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/craftablescience/minizip-ng",
+        "dest": "_deps/minizip-ng",
+        "commit": "2f0041b6f7c2193a06d18ca47ccd81fc7070ee8f"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/zlib-ng/zlib-ng",
+        "dest": "_deps/zlib",
+        "commit": "12731092979c6d07f42da27da673a9f6c7b13586"
+    },
+    {
+        "type": "git",
+        "url": "https://sourceware.org/git/bzip2.git",
+        "dest": "_deps/bzip2",
+        "commit": "af79253677ad98d6dfe11ea315ee9947d86586d3"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/tukaani-project/xz",
+        "dest": "_deps/liblzma",
+        "commit": "ebb0e6789cefe3be71756881aa8f2009fda9938c"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/ip7z/7zip",
+        "dest": "_deps/ppmd",
+        "commit": "5e96a8279489832924056b1fa82f29d5837c9469",
+        "tag": "25.01"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/facebook/zstd",
+        "dest": "_deps/zstd",
+        "commit": "f8745da6ff1ad1e7bab384bd1f9d742439278e99"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/phoboslab/qoi",
+        "dest": "_deps/qoi",
+        "commit": "6fff9b70dd79b12f808b0acc5cb44fde9998725e"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/syoyo/tinyexr",
+        "dest": "_deps/tinyexr",
+        "commit": "3ffe5f9d5e673e6e8c378d59b306b2824993e705"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/webmproject/libwebp",
+        "dest": "_deps/webp",
+        "commit": "f342dfc1756785df8803d25478bf664c0de629de"
+    },
+    {
+        "type": "git",
+        "url": "https://github.com/weidai11/cryptopp",
+        "dest": "_deps/cryptopp",
+        "commit": "b5242667a24e3db8e4600e77b2e502ef204e5280"
+    }
+]

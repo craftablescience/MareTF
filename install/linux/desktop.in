@@ -1,9 +1,9 @@
 [Desktop Entry]
 Name=${PROJECT_NAME_PRETTY}
 Comment=${PROJECT_DESCRIPTION}
-Exec=sh -c 'if [ -n "$__NV_PRIME_RENDER_OFFLOAD" ]; then export QT_QPA_PLATFORM=xcb; fi; exec ${PROJECT_NAME}_gui "$@"' _ %f
-Icon=${PROJECT_NAME}
+Exec=${PROJECT_NAME}_gui %F
+Icon=${PROJECT_APPLICATION_ID}
 Terminal=false
 Type=Application
-Categories=Qt;Development;Utility;
+Categories=Graphics;Utility;2DGraphics;RasterGraphics;
 MimeType=image/x-vtf;image/x-xtf;
