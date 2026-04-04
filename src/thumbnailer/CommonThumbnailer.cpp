@@ -1,7 +1,6 @@
 #include "CommonThumbnailer.h"
 
 #include <QPainter>
-#include <sourcepp/FS.h>
 
 namespace {
 
@@ -42,21 +41,22 @@ std::pair<std::vector<std::byte>, vtfpp::ImageFormat> createThumbnail(const vtfp
 
 		if (vtf.getFaceCount() >= 6) {
 			// Cubemap
-			const auto xpData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 0);
-			const auto xnData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 1);
-			const auto ypData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 2);
-			const auto ynData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 3);
-			const auto zpData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 4);
-			const auto znData = vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 5);
-			const auto smData = vtf.getFaceCount() > 6 ? vtf.getImageDataAs(vtfpp::ImageFormat::BGRA8888, 0, 0, 6) : std::vector<std::byte>{};
+			// Ignore alpha because it's unused uninitialized memory
+			const auto xpData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 0);
+			const auto xnData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 1);
+			const auto ypData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 2);
+			const auto ynData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 3);
+			const auto zpData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 4);
+			const auto znData = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 5);
+			const auto smData = vtf.getFaceCount() > 6 ? vtf.getImageDataAs(vtfpp::ImageFormat::RGB888, 0, 0, 6) : std::vector<std::byte>{};
 
-			const QImage xp{reinterpret_cast<const uchar*>(xpData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const QImage xn{reinterpret_cast<const uchar*>(xnData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const QImage yp{reinterpret_cast<const uchar*>(ypData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const QImage yn{reinterpret_cast<const uchar*>(ynData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const QImage zp{reinterpret_cast<const uchar*>(zpData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const QImage zn{reinterpret_cast<const uchar*>(znData.data()), width, height, QImage::Format_ARGB32_Premultiplied};
-			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, QImage::Format_ARGB32_Premultiplied} : QImage{};
+			const QImage xp{reinterpret_cast<const uchar*>(xpData.data()), width, height, QImage::Format_RGB888};
+			const QImage xn{reinterpret_cast<const uchar*>(xnData.data()), width, height, QImage::Format_RGB888};
+			const QImage yp{reinterpret_cast<const uchar*>(ypData.data()), width, height, QImage::Format_RGB888};
+			const QImage yn{reinterpret_cast<const uchar*>(ynData.data()), width, height, QImage::Format_RGB888};
+			const QImage zp{reinterpret_cast<const uchar*>(zpData.data()), width, height, QImage::Format_RGB888};
+			const QImage zn{reinterpret_cast<const uchar*>(znData.data()), width, height, QImage::Format_RGB888};
+			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, QImage::Format_RGB888} : QImage{};
 
 			data = ::drawCubemapNetCentered(width, height, xp, xn, yp, yn, zp, zn, sm);
 			format = vtfpp::ImageFormat::BGRA8888;
