@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/flatpak/flatpak-builder/refs/heads/main/data/flatpak-manifest.schema.json
-id: info.craftablescience.MareTF
+id: science.craftable.MareTF
 runtime: org.kde.Platform
 runtime-version: "6.10"
 sdk: org.kde.Sdk

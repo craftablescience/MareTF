@@ -3,9 +3,9 @@
     <id>${PROJECT_APPLICATION_ID}</id>
     <name>${PROJECT_NAME_PRETTY}</name>
     <summary>A utility to create, edit, and display every type of VTF file ever made</summary>
-    <developer id="info.craftablescience">
+    <developer id="science.craftable">
         <name translate="no">Laura Lewis</name>
-        <url>https://craftablescience.info</url>
+        <url>https://craftable.science</url>
     </developer>
     <metadata_license>CC0-1.0</metadata_license>
     <project_license>MIT</project_license>
