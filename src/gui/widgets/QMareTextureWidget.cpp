@@ -133,21 +133,24 @@ void QMareTextureWidget::reloadCurrentTexture() {
 		}
 		if (!this->r || !this->g || !this->b) {
 			for (int y = 0; y < this->textureCurrent.height(); y++) {
-				auto* scanLine = reinterpret_cast<vtfpp::ImagePixel::BGRA8888*>(this->textureCurrent.scanLine(y));
-				for (int x = 0; x < this->textureCurrent.width(); ++x) {
-					QColor pixel{scanLine[x].r(), scanLine[x].g(), scanLine[x].b(), scanLine[x].a()};
-					if (!this->r) {
-						pixel.setRed(0);
+				const auto processScanLine = [this, scanLineRaw = this->textureCurrent.scanLine(y)]<vtfpp::ImagePixel::PixelType P> {
+					auto* scanLine = reinterpret_cast<P*>(scanLineRaw);
+					for (int x = 0; x < this->textureCurrent.width(); x++) {
+						if (!this->r) {
+							scanLine[x].setR(0);
+						}
+						if (!this->g) {
+							scanLine[x].setG(0);
+						}
+						if (!this->b) {
+							scanLine[x].setB(0);
+						}
 					}
-					if (!this->g) {
-						pixel.setGreen(0);
-					}
-					if (!this->b) {
-						pixel.setBlue(0);
-					}
-					scanLine[x].setR(static_cast<uint8_t>(pixel.red()));
-					scanLine[x].setG(static_cast<uint8_t>(pixel.green()));
-					scanLine[x].setB(static_cast<uint8_t>(pixel.blue()));
+				};
+				if (this->a) {
+					processScanLine.operator()<vtfpp::ImagePixel::BGRA8888>();
+				} else {
+					processScanLine.operator()<vtfpp::ImagePixel::RGB888>();
 				}
 			}
 		}
