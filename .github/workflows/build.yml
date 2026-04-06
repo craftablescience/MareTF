@@ -347,15 +347,15 @@ jobs:
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6.6
         with:
-          bundle: info.craftablescience.MareTF.flatpak
-          manifest-path: .build-aux/flatpak/info.craftablescience.MareTF.yml
+          bundle: science.craftable.MareTF.flatpak
+          manifest-path: .build-aux/flatpak/science.craftable.MareTF.yml
           upload-artifact: false
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@v4
         with:
           name: 'MareTF-Linux-Flatpak-Installer-gcc-Release'
-          path: info.craftablescience.MareTF.flatpak
+          path: science.craftable.MareTF.flatpak
           retention-days: 7
 
   deploy:
