@@ -1398,11 +1398,22 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				// Set default flags or animation state based on input filename
 				int frameNumberStart = 0;
 				int frameNumberCount = 0;
-				if (auto inputStem = std::filesystem::path{currentInputPath}.stem().string(); inputStem.ends_with("_color") || inputStem.ends_with("-color") || inputStem.ends_with("_colour") || inputStem.ends_with("-colour") || inputStem.ends_with("_albedo") || inputStem.ends_with("-albedo") || inputStem.ends_with("_diffuse") || inputStem.ends_with("-diffuse")) {
+				if (
+					auto inputStem = std::filesystem::path{currentInputPath}.stem().string(), inputStemLower = sourcepp::string::toLower(std::string_view{inputStem});
+					inputStemLower.ends_with("_color") || inputStemLower.ends_with("-color") ||
+					inputStemLower.ends_with("_colour") || inputStemLower.ends_with("-colour") ||
+					inputStemLower.ends_with("_albedo") || inputStemLower.ends_with("-albedo") ||
+					inputStemLower.ends_with("_diffuse") || inputStemLower.ends_with("-diffuse")
+				) {
 					addSRGBFlag(options);
-				} else if (inputStem.ends_with("_normal") || inputStem.ends_with("-normal") || inputStem.ends_with("_norm") || inputStem.ends_with("-norm")) {
+				} else if (
+					inputStemLower.ends_with("_normal") || inputStemLower.ends_with("-normal") ||
+					inputStemLower.ends_with("_norm") || inputStemLower.ends_with("-norm")
+				) {
 					options.flags |= vtfpp::VTF::FLAG_V0_NORMAL;
-				} else if (inputStem.ends_with("_ssbump") || inputStem.ends_with("-ssbump")) {
+				} else if (
+					inputStemLower.ends_with("_ssbump") || inputStemLower.ends_with("-ssbump")
+				) {
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 					}
