@@ -30,7 +30,7 @@
 #include "EnumMappings.h"
 
 #include "dialogs/QMareCreateTextureDialog.h"
-#include "dialogs/QMareCredits.h"
+#include "dialogs/QMareCreditsDialog.h"
 #include "utility/QMareDiscordPresence.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
@@ -42,10 +42,20 @@
 QMareTextureWindow* g_ManeWindow = nullptr;
 
 QMareTextureWindow::QMareTextureWindow() {
-	// Window setup ------------------------------------------
+	// Window setup ---------------------------------------
 
 	this->setWindowIcon(QIcon(":/logo.png"));
 	this->resize(this->screen()->availableGeometry().size() * 0.7);
+
+	// Settings helper ------------------------------------
+
+	const auto showRestartWarning = [this] {
+		static bool shownRestartMessage = false;
+		if (!shownRestartMessage) {
+			QMessageBox::warning(this, tr("Restart Required"), tr("The application must be restarted for these settings to take effect."));
+			shownRestartMessage = true;
+		}
+	};
 
 	// File menu ------------------------------------------
 
@@ -98,6 +108,33 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
 
+	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Language"));
+	auto* languageMenuGroup = new QActionGroup{languageMenu};
+	languageMenuGroup->setExclusive(true);
+	const QVector<QPair<QString, QString>> languageToLocaleMapping{
+		{tr("System Language"), ""},
+		{"", ""}, // Separator
+		{u8"English", "en"},
+		{u8"日本語",   "ja"},
+		{u8"Русский", "ru_RU"},
+		{u8"Español", "es"},
+	};
+	for (const auto& [language, locale] : languageToLocaleMapping) {
+		if (language.isEmpty() && locale.isEmpty()) {
+			languageMenu->addSeparator();
+			continue;
+		}
+		auto* action = languageMenu->addAction(language, [showRestartWarning, locale_=locale] {
+			showRestartWarning();
+			QMareOptions::set(QMareOptions::STR_LANGUAGE_OVERRIDE, locale_);
+		});
+		action->setCheckable(true);
+		if (locale == QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE)) {
+			action->setChecked(true);
+		}
+		languageMenuGroup->addAction(action);
+	}
+
 	auto* themeMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DesktopIcon), tr("Theme"));
 	auto* themeMenuGroup = new QActionGroup{themeMenu};
 	themeMenuGroup->setExclusive(true);
@@ -146,7 +183,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
-		QMareCredits::show(this);
+		QMareCreditsDialog::showCredits(this);
 	});
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {
@@ -163,7 +200,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
 	});
 
-	// Texture tabs ------------------------------------------
+	// Texture tabs ---------------------------------------
 
 	this->textureTabs = new QMareMiddleClickTabWidget{this};
 	this->textureTabs->setDocumentMode(true);
@@ -178,7 +215,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		this->textureTabs->removeTab(index);
 	});
 
-	// Preview dock ------------------------------------------
+	// Preview dock ---------------------------------------
 
 	this->setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
@@ -449,11 +486,11 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsReflectivityLayout->setFormAlignment(Qt::AlignHCenter);
 
 	this->detailsReflectivityR = new QLabel{this->detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("R:"), this->detailsReflectivityR);
+	detailsReflectivityLayout->addRow(QString{"%1  "}.arg(tr("R")), this->detailsReflectivityR);
 	this->detailsReflectivityG = new QLabel{this->detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("G:"), this->detailsReflectivityG);
+	detailsReflectivityLayout->addRow(QString{"%1  "}.arg(tr("G")), this->detailsReflectivityG);
 	this->detailsReflectivityB = new QLabel{this->detailsReflectivityGroup};
-	detailsReflectivityLayout->addRow(tr("B:"), this->detailsReflectivityB);
+	detailsReflectivityLayout->addRow(QString{"%1  "}.arg(tr("B")), this->detailsReflectivityB);
 
 	detailsMiscellaneousLayout->addRow(tr("Reflectivity"), this->detailsReflectivityGroup);
 
@@ -510,7 +547,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->addDockWidget(Qt::LeftDockWidgetArea, this->detailsDock);
 	viewMenu->addAction(this->detailsDock->toggleViewAction());
 
-	// Resources dock ------------------------------------------
+	// Resources dock -------------------------------------
 
 	this->resDock = new QDockWidget{tr("Resources"), this};
 	this->resDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -606,11 +643,11 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	this->resLODValueU360 = new QMareSpinBox{resWidget};
 	this->resLODValueU360->setRange(0, std::numeric_limits<uint8_t>::max());
-	resLODLayout->addRow(tr("U360"), this->resLODValueU360);
+	resLODLayout->addRow(tr("U (Console)"), this->resLODValueU360);
 
 	this->resLODValueV360 = new QMareSpinBox{resWidget};
 	this->resLODValueV360->setRange(0, std::numeric_limits<uint8_t>::max());
-	resLODLayout->addRow(tr("V360"), this->resLODValueV360);
+	resLODLayout->addRow(tr("V (Console)"), this->resLODValueV360);
 
 	resWidgetLayout->addWidget(this->resLODGroup);
 
@@ -637,7 +674,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->addDockWidget(Qt::RightDockWidgetArea, this->resDock);
 	viewMenu->addAction(this->resDock->toggleViewAction());
 
-	// Flags dock ------------------------------------------
+	// Flags dock -----------------------------------------
 
 	this->flagsDock = new QDockWidget{tr("Flags"), this};
 	this->flagsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -648,7 +685,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->flagsDock->raise();
 	viewMenu->addAction(this->flagsDock->toggleViewAction());
 
-	// Final setup -----------------------------------------
+	// Final setup ----------------------------------------
 
 	this->regenerateDetails();
 }

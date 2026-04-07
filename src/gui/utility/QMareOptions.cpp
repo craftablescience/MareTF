@@ -12,6 +12,10 @@ void QMareOptions::setupOptions(QSettings& options) {
 		QApplication::setStyle(options.value(STR_STYLE).toString());
 	}
 
+	if (!options.contains(STR_LANGUAGE_OVERRIDE)) {
+		options.setValue(STR_LANGUAGE_OVERRIDE, QString{});
+	}
+
 	if (!options.contains(BOOL_ENABLE_DISCORD_RICH_PRESENCE)) {
 		options.setValue(BOOL_ENABLE_DISCORD_RICH_PRESENCE, true);
 	}

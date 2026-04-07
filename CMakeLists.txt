@@ -34,103 +34,32 @@ cs_configure_defaults(MARETF_USE_LTO)
 # external libraries
 cs_include_directory(ext)
 
-# common config
+# common documents and config
 if(MARETF_BUILD_CLI OR MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/CREDITS" "${CMAKE_BINARY_DIR}/CREDITS" COPYONLY)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE" COPYONLY)
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h")
 endif()
 
 # maretf
 if(MARETF_BUILD_CLI)
-    add_executable(${PROJECT_NAME}
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h")
-    cs_configure_target(${PROJECT_NAME} LOGO MANIFEST)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_CLI)
-    if(MARETF_BUILD_FOR_STRATA_SOURCE)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
-    endif()
-    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common")
-    target_link_libraries(${PROJECT_NAME} PRIVATE argparse::argparse efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+    cs_include_directory(src/cli)
 endif()
 
 # maretf_gui
 if(MARETF_BUILD_GUI)
-    add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE
-            "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Config.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/common/EnumMappings.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCreateTextureDialog.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCreateTextureDialog.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCredits.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/dialogs/QMareCredits.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareDiscordPresence.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareDiscordPresence.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareOptions.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/utility/QMareOptions.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareComboBox.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareComboBox.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareFlagsWidget.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareMiddleClickTabWidget.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareMiddleClickTabWidget.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareSpinBox.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareSpinBox.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareTextureWidget.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/widgets/QMareTextureWidget.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareEmptyWindow.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareEmptyWindow.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareTextureWindow.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/windows/QMareTextureWindow.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/MareTF.cpp")
-    cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
-    if(MARETF_BUILD_FOR_STRATA_SOURCE)
-        target_compile_definitions(${PROJECT_NAME}_gui PUBLIC MARETF_BUILD_FOR_STRATA_SOURCE)
-    endif()
-    target_include_directories(${PROJECT_NAME}_gui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/gui")
-    target_use_qt(${PROJECT_NAME}_gui)
-    target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
+    cs_include_directory(src/gui)
 endif()
 
 # maretf_thumbnailer
 if(MARETF_BUILD_THUMBNAILER)
-    if(WIN32)
-        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.def.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def")
-        add_library(${PROJECT_NAME}_thumbnailer SHARED
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/generated/MareTF.def"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/windows/MareTF.cpp"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.cpp"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.h")
-        target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE Shlwapi)
-    else()
-        add_executable(${PROJECT_NAME}_thumbnailer
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/linux/MareTF.cpp"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.cpp"
-                "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer/CommonThumbnailer.h")
-        target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE argparse::argparse)
-    endif()
-    cs_configure_target(${PROJECT_NAME}_thumbnailer)
-    target_include_directories(${PROJECT_NAME}_thumbnailer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/thumbnailer")
-    target_use_qt(${PROJECT_NAME}_thumbnailer)
-    target_link_libraries(${PROJECT_NAME}_thumbnailer PRIVATE sourcepp::vtfpp)
+    cs_include_directory(src/thumbnailer)
 endif()
 
 # installer
 if(MARETF_BUILD_INSTALLER)
     cs_include_directory(install)
 endif()
-
-# copy the license
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE" COPYONLY)
 
 # VS setup
 if(WIN32 AND MARETF_BUILD_GUI)

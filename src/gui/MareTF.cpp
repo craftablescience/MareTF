@@ -56,7 +56,8 @@ int main(int argc, char* argv[]) {
 	});
 	server.listen(serverName);
 
-	const QLocale locale;
+	const auto languageOverride = QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE);
+	const auto locale = languageOverride.isEmpty() ? QLocale{} : QLocale{languageOverride};
 	QTranslator translatorQtBase;
 	if (translatorQtBase.load(locale, "qtbase", "_", ":/i18n")) {
 		QCoreApplication::installTranslator(&translatorQtBase);
@@ -68,6 +69,10 @@ int main(int argc, char* argv[]) {
 	QTranslator translatorQt;
 	if (translatorQt.load(locale, "qt", "_", ":/i18n")) {
 		QCoreApplication::installTranslator(&translatorQt);
+	}
+	QTranslator translator;
+	if (translator.load(locale, PROJECT_NAME, "_", ":/i18n")) {
+		QCoreApplication::installTranslator(&translator);
 	}
 
 	// Show a window

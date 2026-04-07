@@ -1,0 +1,37 @@
+## Contributors
+- BethesdaCakeDelivery - Additional CLI creation messages
+- koerismo - Initial NICE filtering algorithm implementation
+- HurricanePootis - AUR maintainer
+- lunairekitty - Additional CLI creation messages
+- partyvan - Initial big-endian support
+
+## Artists
+- [pastacrylic](https://linktr.ee/pastacrylic)
+- [pony.town contributors](https://pony.town/about)
+
+## Translators
+- 日本語: Annie Miyajima, craftablescience, poropopo
+- Русский: Michael Soyka
+- Español: Samuel, craftablescience
+
+## Playtesters
+- Al_November
+- awesomerly
+- billieblueberry
+- Gocnak
+- goodusername12345
+- Igrium
+- iiboharz
+- jayrickaby
+- sheepy676
+- Soders
+- SpringierTrain
+- StefanH
+
+## Libraries
+- [argparse](https://github.com/p-ranav/argparse)
+- [Discord RPC](https://github.com/craftablescience/discord-rpc-clean)
+- [Entropia File System Watcher](https://github.com/SpartanJ/efsw)
+- [indicators](https://github.com/p-ranav/indicators)
+- [Qt](https://www.qt.io)
+- [SourcePP](https://github.com/craftablescience/sourcepp)

@@ -14,7 +14,7 @@
 #include "Config.h"
 
 #include "dialogs/QMareCreateTextureDialog.h"
-#include "dialogs/QMareCredits.h"
+#include "dialogs/QMareCreditsDialog.h"
 #include "QMareTextureWindow.h"
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
@@ -68,7 +68,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	});
 
 	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
-		QMareCredits::show(this);
+		QMareCreditsDialog::showCredits(this);
 	});
 
 	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {

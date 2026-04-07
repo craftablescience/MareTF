@@ -1,6 +1,9 @@
 # Configuration stuff
 if(WIN32)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION .)
+    install(FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/CREDITS"
+            "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+            DESTINATION .)
 
     if(MARETF_BUILD_CLI)
         install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
@@ -50,7 +53,9 @@ if(WIN32)
                 DESTINATION tls)
     endif()
 elseif(UNIX)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+    install(FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/CREDITS"
+            "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
             DESTINATION "share/licenses/${PROJECT_NAME}")
 
     if(MARETF_BUILD_CLI)

@@ -59,6 +59,7 @@ jobs:
         with:
           name: 'MareTF-Windows-Standalone-msvc-${{matrix.build_type}}'
           path: |
+            ${{env.BUILD_DIR}}/CREDITS
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/maretf.exe
             ${{env.BUILD_DIR}}/maretf_gui.exe
@@ -109,6 +110,7 @@ jobs:
         with:
           name: 'MareTF-Windows-Standalone-Compatibility-msvc-${{matrix.build_type}}'
           path: |
+            ${{env.BUILD_DIR}}/CREDITS
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/maretf.exe
             ${{env.BUILD_DIR}}/maretf_gui.exe
@@ -260,6 +262,7 @@ jobs:
         with:
           name: 'MareTF-Linux-Standalone-gcc-${{matrix.build_type}}'
           path: |
+            ${{env.BUILD_DIR}}/CREDITS
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/maretf
             ${{env.BUILD_DIR}}/maretf_gui
