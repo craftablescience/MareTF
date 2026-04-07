@@ -44,7 +44,7 @@ namespace {
 	}
 	for (auto& str : ::readCreditsFile("LICENSE_SOURCEPP_THIRDPARTY").split('\n')) {
 		if (str.startsWith("----------")) {
-			licenseTextSplit.append({str.remove(QChar{'-'}).trimmed(), {}});
+			licenseTextSplit.append({str.remove(QRegularExpression{"[\\-]{2,}"}).trimmed(), {}});
 		} else if (!licenseTextSplit.empty()) {
 			licenseTextSplit.back().second += str + '\n';
 		}
@@ -129,6 +129,8 @@ QMareCreditsDialog::QMareCreditsDialog(QWidget* parent) : QDialog{parent} {
 	auto* buttons = new QDialogButtonBox{QDialogButtonBox::Ok, this};
 	QObject::connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	layout->addWidget(buttons);
+
+	this->resize(600, 600);
 }
 
 void QMareCreditsDialog::showCredits(QWidget* parent) {

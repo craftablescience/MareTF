@@ -359,6 +359,14 @@
     </message>
 </context>
 <context>
+    <name>QMareCreditsDialog</name>
+    <message>
+        <location filename="../../src/gui/dialogs/QMareCreditsDialog.cpp" line="82"/>
+        <source>Credits</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QMareEmptyWindow</name>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="33"/>
@@ -913,19 +921,8 @@ Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/dialogs/QMareCredits.cpp" line="9"/>
         <source>About</source>
-        <translation>О программе</translation>
-    </message>
-    <message>
-        <location filename="../../src/gui/dialogs/QMareCredits.cpp" line="13"/>
-        <source>## %1
-Created by %2. This project lives [on GitHub here](%3).
-
-The kirin in the program logo (Olive Shade) was created with %4&apos;s character creator.
-
-The lovely splash screen art is by %5.</source>
-        <translation type="unfinished"></translation>
+        <translation type="vanished">О программе</translation>
     </message>
 </context>
 </TS>
