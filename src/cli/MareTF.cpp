@@ -65,47 +65,68 @@ namespace {
 	return check;
 }
 
-[[nodiscard]] std::string_view randomDeviantArtTFTrope() {
-	static constexpr std::array DEVIANTART_TF_TROPES{
-		"Splicing DNA",
-		"Drinking a potion stolen from a wizard neighbor",
-		"Tampering with a sacred equine relic",
-		"Downloading a mysterious app",
-		"Irritating a magic-wielding farmhand",
-		"Getting isekai'd into Ponyville",
-		"Falling into the contraption",
-		"Entering the light of the full moon on Nightmare Night",
-		"Wearing a saddle on a dare",
-		"Drawing a pony with a magic marker",
-		"Injecting pony HRT",
-		// The following are from @BethesdaCakeDelivery, thanks!
-		"Abandoning humanity",
-		"Initiating headbonk",
-		"Turning hands into hooves",
-		"Beginning pastelization",
-		"Rearranging bone structure",
-		"De-evolving into a four-legged creature",
-		"Turning unguligrade",
-		"Handing out hooves",
-		"Hooving out hands",
-		"Trotting through green fields and apple trees",
-		"Buying an orbitouch",
-		"Ponifying splines",
-		// The following are from @LunaKitty, thanks!
-		"Becoming the antonymph of the internet",
-		"Entering the quickscope era",
-		"Turning girls into wizards",
-		"Crunkmaxxing in the locus",
-		"Crashing a Mercedes into McDonalds",
-		"I'm Creekflow", 
-		"Getting a flair for the dramatic",
-		"Partying at the worst rave ever",
-		"Walking beside a dragonfly",
+[[nodiscard]] std::string_view randomTFMessage() {
+	static constexpr std::array TF_MESSAGES{
+		//region From me
+
+			// Generic
+			"Injecting pony HRT",
+			"Splicing DNA",
+			"Drinking a potion stolen from a wizard neighbor",
+			"Tampering with a sacred equine relic",
+			"Downloading a mysterious app",
+			"Irritating a magic-wielding farmhand",
+			"Getting isekai'd into Ponyville",
+			"Falling into the contraption",
+			"Entering the light of the full moon on Nightmare Night",
+			"Wearing a saddle on a dare",
+			"Drawing a pony with a magic marker",
+			"Activating a buried hypnotic trigger",
+
+			// Pandemic (ASGeek2012)
+			"Infecting morphic resonance",
+			"Contracting Equine Transformation Syndrome",
+			"Acquiring herd instincts",
+
+		//endregion
+
+		//region The following are from @BethesdaCakeDelivery, thanks!
+
+			// Generic
+			"Abandoning humanity",
+			"Initiating headbonk",
+			"Turning hands into hooves",
+			"Beginning pastelization",
+			"Rearranging bone structure",
+			"De-evolving into a four-legged creature",
+			"Turning unguligrade",
+			"Handing out hooves",
+			"Hooving out hands",
+			"Trotting through green fields and apple trees",
+			"Buying an orbitouch",
+			"Ponifying splines",
+
+		//endregion
+
+		//region The following are from @LunaKitty, thanks!
+
+			// Vylet Pony
+			"Becoming the antonymph of the internet",
+			"Entering the quickscope era",
+			"Turning girls into wizards",
+			"Crunkmaxxing in the locus",
+			"Crashing a Mercedes into McDonalds",
+			"I'm Creekflow",
+			"Getting a flair for the dramatic",
+			"Partying at the worst rave ever",
+			"Walking beside a dragonfly",
+
+		//endregion
 	};
 	static std::random_device device;
 	static std::mt19937 generator(device());
-	std::uniform_int_distribution<> dist{0, DEVIANTART_TF_TROPES.size() - 1};
-	return DEVIANTART_TF_TROPES.at(dist(generator));
+	std::uniform_int_distribution<> dist{0, TF_MESSAGES.size() - 1};
+	return TF_MESSAGES.at(dist(generator));
 }
 
 template<not_magic_enum::SupportedEnum E>
@@ -1746,7 +1767,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 			int out = EXIT_SUCCESS;
 			if (std::filesystem::is_regular_file(inputPath)) {
-				tfout << BOLD << randomDeviantArtTFTrope() << "..." << END << tfendl;
+				tfout << BOLD << randomTFMessage() << "..." << END << tfendl;
 				out = create(inputPath);
 			} else if (std::filesystem::is_directory(inputPath)) {
 				if (noRecurse) {
