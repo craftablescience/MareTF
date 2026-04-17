@@ -94,12 +94,12 @@ maretf info input.vtf
 ## Full CLI Help Text
 
 ```
-Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--no-recurse]
-              [--no-pretty-formatting] [--watch] [--version X.Y] [--format IMAGE_FORMAT]
-              [--quality COMPRESSION_QUALITY] [--filter RESIZE_FILTER] [--size SIZE]
-              [--width WIDTH] [--height HEIGHT] [--max-size SIZE] [--max-width WIDTH]
-              [--max-height HEIGHT] [--min-size SIZE] [--min-width WIDTH]
-              [--min-height HEIGHT] [--flag FLAG]... [--flags-uint FLAGS]
+Usage: maretf [--help] [--input PATH...] [--output PATH] [--yes] [--no] [--quiet] [--verbose]
+              [--no-recurse] [--no-pretty-formatting] [--watch] [--version X.Y]
+              [--format IMAGE_FORMAT] [--quality COMPRESSION_QUALITY]
+              [--filter RESIZE_FILTER] [--size SIZE] [--width WIDTH] [--height HEIGHT]
+              [--max-size SIZE] [--max-width WIDTH] [--max-height HEIGHT] [--min-size SIZE]
+              [--min-width WIDTH] [--min-height HEIGHT] [--flag FLAG]... [--flags-uint FLAGS]
               [--no-automatic-transparency-flags] [--no-mips] [--animated-frames]
               [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
@@ -111,7 +111,7 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--n
               [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
               [--particle-sheet-resource PATH] [--crc-resource CRC]
               [--lod-resource U.V[.U360.V360]] [--ts0-resource COMBINED_FLAGS]
-              [--kvd-resource PATH] [--hotspot-data-resource PATH]
+              [--kvd-resource PATH] [--ath-resource INFO] [--hotspot-data-resource PATH]
               [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
               [--set-format IMAGE_FORMAT] [--set-size SIZE] [--set-width WIDTH]
               [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
@@ -125,8 +125,9 @@ Usage: maretf [--help] [--output PATH] [--yes] [--no] [--quiet] [--verbose] [--n
               [--set-crc-resource CRC] [--remove-crc-resource]
               [--set-lod-resource U.V[.U360.V360]] [--remove-lod-resource]
               [--set-ts0-resource COMBINED_FLAGS] [--remove-ts0-resource]
-              [--set-kvd-resource PATH] [--remove-kvd-resource]
-              [--set-hotspot-data-resource PATH] [--remove-hotspot-data-resource]
+              [--set-kvd-resource PATH] [--remove-kvd-resource] [--set-ath-resource INFO]
+              [--remove-ath-resource] [--set-hotspot-data-resource PATH]
+              [--remove-hotspot-data-resource]
               [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
               [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
               [--extract-mip MIP] [--extract-all-mips] [--extract-frame FRAME]
@@ -141,13 +142,17 @@ Positional arguments:
                                                an alias of "create" for vtex2 compatibility.
                                                [required]
   PATH                                         The path to the input file or directory.
-                                               [required]
+                                               [nargs=0..1] [default: ""]
 
 Optional arguments:
   -h, --help                                   shows help message and exits
+  -i, --input                                  The paths to the input files or directories.
+                                               [nargs: 1 or more]
   -o, --output PATH                            The path to the output file (if the current
-                                               mode outputs a file). Ignored if the input
-                                               path is a directory.
+                                               mode outputs a file), or the parent directory
+                                               of the outputfiles if multiple input paths are
+                                               specified. Ignored if the input path is a
+                                               directory.
   -y, --yes                                    Automatically say yes to any prompts. Enabled
                                                by default if no TTY is detected.
   --no                                         Automatically say no to any prompts. Overrides
@@ -304,6 +309,7 @@ Optional arguments:
                                                one integer yourself.
   --kvd-resource PATH                          Set the nonstandard KVD (KeyValues Data)
                                                resource. Path should point to a text file.
+  --ath-resource INFO                          Set the nonstandard ATH (Author Info) resource.
   --hotspot-data-resource PATH                 Set the hotspot data resource. Path should
                                                point to a valid HOT file.
   --hotspot-rect                               Adds a rect to the hotspot data resource. The
@@ -405,6 +411,8 @@ Optional arguments:
   --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
                                                resource. If set KVD resource is specified,
                                                this argument is ignored.
+  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info) resource.
+  --remove-ath-resource                        Remove the nonstandard ATH (Author Info) resource. If set ATH resource is specified, this argument is ignored.
   --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should
                                                point to a valid HOT file.
   --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT
@@ -506,8 +514,8 @@ IMAGE_FORMAT
  • CONSOLE_RGBA16161616_HDR
  • CONSOLE_BGRX8888_LE
  • CONSOLE_BGRA8888_LE
- • TFALL2_BC6H
- • TFALL2_BC7
+ • TITANFALL_BC6H
+ • TITANFALL_BC7
  • R8
  • BC7
  • BC6H

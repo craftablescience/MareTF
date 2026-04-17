@@ -231,7 +231,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	std::vector<std::string> inputPaths;
 	cli
 		.add_argument("-i", "--input")
-		.metavar("PATH...")
+		.metavar("PATH")
 		.help("The paths to the input files or directories.")
 		.nargs(argparse::nargs_pattern::at_least_one)
 		.store_into(inputPaths);
