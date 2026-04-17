@@ -86,6 +86,9 @@ void QMareTextureWidget::loadTexture(const QString& path_) {
 		if (auto loadVTF = vtfpp::VTF{path_.toUtf8().constData()}) {
 			this->path = path_;
 			this->vtf = std::move(loadVTF);
+			if (this->vtf.getFaceCount() >= 6) {
+				this->a = false;
+			}
 			this->reloadCurrentTexture();
 		}
 	} catch (const std::overflow_error&) {}
