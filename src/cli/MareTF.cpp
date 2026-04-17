@@ -702,6 +702,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.help("Set the nonstandard KVD (KeyValues Data) resource. Path should point to a text file.")
 		.store_into(kvdResource);
 
+	std::string athResource;
+	createCLI
+		.add_argument("--ath-resource")
+		.metavar("INFO")
+		.help("Set the nonstandard ATH (Author Info) resource.")
+		.store_into(athResource);
+
 	std::string hotspotDataResource;
 	createCLI
 		.add_argument("--hotspot-data-resource")
@@ -983,6 +990,21 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		      " this argument is ignored.")
 		.flag()
 		.store_into(removeKVDResource);
+
+	std::string setATHResource;
+	editCLI
+		.add_argument("--set-ath-resource")
+		.metavar("INFO")
+		.help("Set the nonstandard ATH (Author Info) resource.")
+		.store_into(setATHResource);
+
+	bool removeATHResource;
+	editCLI
+		.add_argument("--remove-ath-resource")
+		.help("Remove the nonstandard ATH (Author Info) resource. If set ATH resource is specified,"
+			  " this argument is ignored.")
+		.flag()
+		.store_into(removeATHResource);
 
 	std::string setHotspotDataResource;
 	editCLI
@@ -1302,6 +1324,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				}
 			} else if (editMode && removeKVDResource) {
 				vtf.removeKeyValuesDataResource();
+			}
+
+			// Modify ATH resource
+			if ((editMode && cli.is_used("--set-ath-resource")) || (!editMode && cli.is_used("--ath-resource"))) {
+				vtf.setAuthorInfoResource(editMode ? setATHResource : athResource);
+			} else if (editMode && removeATHResource) {
+				vtf.removeAuthorInfoResource();
 			}
 
 			// Modify HOT resource
@@ -2474,6 +2503,16 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					}
 					tfout << END << tfendl;
 
+					tfout << BOLD << "Author Info: ";
+					const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO);
+					if (athResourcePtr) {
+						const auto authorInfo = athResourcePtr->getDataAsAuthorInfo();
+						tfout << GREEN << "Exists" << END << " — " << CYAN << authorInfo.size() << " chars";
+					} else {
+						tfout << RED << "Doesn't exist";
+					}
+					tfout << END << tfendl;
+
 					// Bail here if requested
 					if (infoSkipResources) {
 						return EXIT_SUCCESS;
@@ -2558,6 +2597,11 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					if (kvdResourcePtr) {
 						tfout << '\n' << GREEN << BOLD << " ――― KEYVALUES DATA RESOURCE ―――" << END << tfendl;
 						tfout << kvdResourcePtr->getDataAsKeyValuesData() << END << tfendl;
+					}
+
+					if (athResourcePtr) {
+						tfout << '\n' << GREEN << BOLD << " ――― AUTHOR INFO RESOURCE ―――" << END << tfendl;
+						tfout << athResourcePtr->getDataAsAuthorInfo() << END << tfendl;
 					}
 				} else if (infoOutputMode == "kv1") {
 					kvpp::KV1Writer kv;
@@ -2673,6 +2717,9 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					}
 					if (const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)) {
 						kv["resources"]["kvd"] = kvdResourcePtr->getDataAsKeyValuesData();
+					}
+					if (const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)) {
+						kv["resources"]["ath"] = athResourcePtr->getDataAsAuthorInfo();
 					}
 
 					// ...and print it all out
