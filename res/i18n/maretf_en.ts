@@ -906,17 +906,17 @@ Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="1905"/>
+        <location filename="../../src/cli/MareTF.cpp" line="1916"/>
         <source>Watching for any changes...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="1905"/>
+        <location filename="../../src/cli/MareTF.cpp" line="1916"/>
         <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="1906"/>
+        <location filename="../../src/cli/MareTF.cpp" line="1917"/>
         <source>Watch</source>
         <translation type="unfinished"></translation>
     </message>
