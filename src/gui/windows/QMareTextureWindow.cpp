@@ -650,13 +650,22 @@ QMareTextureWindow::QMareTextureWindow() {
 	resWidgetLayout->addWidget(this->resLODGroup);
 
 	this->resKeyValuesGroup = new QGroupBox{tr("KeyValues"), resWidget};
-	auto* resKeyValuesLayout = new QFormLayout{this->resKeyValuesGroup};
-	resKeyValuesLayout->setFormAlignment(Qt::AlignHCenter);
+	auto* resKeyValuesLayout = new QVBoxLayout{this->resKeyValuesGroup};
+	resKeyValuesLayout->setAlignment(Qt::AlignHCenter);
 
 	this->resKeyValuesData = new QPlainTextEdit{resWidget};
-	resKeyValuesLayout->addRow(tr("Data"), this->resKeyValuesData);
+	resKeyValuesLayout->addWidget(this->resKeyValuesData);
 
 	resWidgetLayout->addWidget(this->resKeyValuesGroup);
+
+	this->resAuthorInfoGroup = new QGroupBox{tr("Author Info"), resWidget};
+	auto* resAuthorInfoLayout = new QVBoxLayout{this->resAuthorInfoGroup};
+	resAuthorInfoLayout->setAlignment(Qt::AlignHCenter);
+
+	this->resAuthorInfoData = new QLineEdit{resWidget};
+	resAuthorInfoLayout->addWidget(this->resAuthorInfoData);
+
+	resWidgetLayout->addWidget(this->resAuthorInfoGroup);
 
 	// todo: particle sheet
 
@@ -794,6 +803,9 @@ void QMareTextureWindow::regenerateDetails() {
 
 		this->resKeyValuesGroup->setVisible(false);
 		this->resKeyValuesData->clear();
+
+		this->resAuthorInfoGroup->setVisible(false);
+		this->resAuthorInfoData->clear();
 
 		return;
 	}
@@ -970,6 +982,14 @@ void QMareTextureWindow::regenerateDetails() {
 	} else {
 		this->resKeyValuesGroup->setVisible(false);
 		this->resKeyValuesData->clear();
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)) {
+		this->resAuthorInfoGroup->setVisible(true);
+		this->resAuthorInfoData->setText(resource->getDataAsAuthorInfo().c_str());
+	} else {
+		this->resAuthorInfoGroup->setVisible(false);
+		this->resAuthorInfoData->clear();
 	}
 
 	// Delay a tick to allow everything to be laid out

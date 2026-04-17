@@ -413,6 +413,21 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	resourcesLayout->addRow(tr("KeyValues Data"), resourcesKVDGroup);
 
+	/* ---------------------------------- ATH ----------------------------------- */
+
+	auto* resourcesATHGroup = new QGroupBox{resourcesGroup};
+	auto* resourcesATHLayout = new QFormLayout{resourcesATHGroup};
+	resourcesATHLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* resourcesATHEnableCheck = new QCheckBox{resourcesATHGroup};
+	resourcesATHLayout->addRow(tr("Add Resource"), resourcesATHEnableCheck);
+
+	auto* resourcesATHInfo = new QLineEdit{resourcesATHGroup};
+	resourcesATHInfo->setMinimumWidth(200);
+	resourcesATHLayout->addRow(tr("Author"), resourcesATHInfo);
+
+	resourcesLayout->addRow(tr("Author Info"), resourcesATHGroup);
+
 	/* ----------------------------- RESOURCES END ------------------------------ */
 
 	layout->addWidget(resourcesGroup, 0, 2, 6, 1);
@@ -623,7 +638,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Particle Sheet", "CRC32", "LOD", "Extended Flags", "KeyValues Data" groups if platform is PC and version is less than 3, or platform is XBOX
 	// Repopulate "Flags" group checklist
 
-	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup](int index) {
+	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup, resourcesATHGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(index).toInt());
 
 		versionCombo->setDisabled(currentPlatform != vtfpp::VTF::PLATFORM_PC);
@@ -681,12 +696,13 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesATHGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, versionCombo->currentIndex());
 	});
 	platformCombo->currentIndexChanged(platformCombo->currentIndex());
 
-	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup](int index) {
+	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup, resourcesATHGroup](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		textureCompressionGroup->setDisabled(index != 6);
@@ -696,6 +712,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		resourcesATHGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, index);
 	});
@@ -925,6 +942,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		}
 		if (resourcesKVDGroup->isEnabled() && resourcesKVDEnableCheck->isChecked()) {
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
+		}
+		if (resourcesATHGroup->isEnabled() && resourcesATHEnableCheck->isChecked()) {
+			cli->addArgPair("--ath-resource", resourcesATHInfo->text());
 		}
 		if (!filesystemOutputPath->text().isEmpty()) {
 			cli->addArgPair("--output", filesystemOutputPath->text());

@@ -116,6 +116,9 @@ protected:
 	QGroupBox* resKeyValuesGroup;
 	QPlainTextEdit* resKeyValuesData;
 
+	QGroupBox* resAuthorInfoGroup;
+	QLineEdit* resAuthorInfoData;
+
 	QDockWidget* flagsDock;
 
 	QMareFlagsWidget* flagsChecks;
