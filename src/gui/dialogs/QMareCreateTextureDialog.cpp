@@ -1,5 +1,3 @@
-// ReSharper disable CppUseFamiliarTemplateSyntaxForGenericLambdas
-
 #include "QMareCreateTextureDialog.h"
 
 #include <format>
@@ -30,12 +28,6 @@
 #include "widgets/QMareComboBox.h"
 #include "widgets/QMareFlagsWidget.h"
 #include "widgets/QMareSpinBox.h"
-
-#ifdef _WIN32
-	#define MARETF_PATH_SEPARATOR ';'
-#else
-	#define MARETF_PATH_SEPARATOR ':'
-#endif
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle((createFromDir || inputPaths.size() > 1) ? tr("Create Textures") : tr("Create Texture"));
@@ -446,7 +438,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	filesystemInputPathLayout->setContentsMargins(0, 0, 0, 0);
 
 	auto* filesystemInputPath = new QLineEdit{filesystemGroup};
-	filesystemInputPath->setText(inputPaths.join(MARETF_PATH_SEPARATOR));
+	filesystemInputPath->setText(QMareCLIWrapper::joinPaths(inputPaths));
 	filesystemInputPath->setMinimumWidth(200);
 	filesystemInputPath->setReadOnly(true);
 	filesystemInputPathLayout->addWidget(filesystemInputPath);
@@ -828,7 +820,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				: QStringList{QFileDialog::getExistingDirectory(this, tr("Open Folder"))};
 			!paths.isEmpty() && !paths[0].isEmpty()
 		) {
-			filesystemInputPath->setText(paths.join(MARETF_PATH_SEPARATOR));
+			filesystemInputPath->setText(QMareCLIWrapper::joinPaths(paths));
 		}
 	});
 
@@ -852,7 +844,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		// Input paths
 		if (
-			const auto filesystemInputPathSplit = filesystemInputPath->text().split(MARETF_PATH_SEPARATOR);
+			const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(filesystemInputPath->text());
 			filesystemInputPathSplit.size() == 1
 		) {
 			cli->addArg(filesystemInputPathSplit[0]);
@@ -984,7 +976,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (!createFromDir) {
 			QStringList outputPaths;
-			for (const auto& inputPath : filesystemInputPath->text().split(MARETF_PATH_SEPARATOR)) {
+			for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemInputPath->text())) {
 				outputPaths.push_back(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(inputPath.toUtf8().constData(), static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt())).c_str() : filesystemOutputPath->text());
 			}
 			emit this->createdTextures(outputPaths);

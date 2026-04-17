@@ -2,6 +2,16 @@
 
 #include "MareTF.h"
 
+namespace {
+
+#ifdef _WIN32
+constexpr auto MARETF_PATH_SEPARATOR = ';';
+#else
+constexpr auto MARETF_PATH_SEPARATOR = ':';
+#endif
+
+} // namespace
+
 QMareCLIWrapper::QMareCLIWrapper(const QString& mode, QObject* parent, const QString& program) : QObject{parent} {
 	this->arguments.push_back(program);
 	this->arguments.push_back(mode);
@@ -24,7 +34,7 @@ QString QMareCLIWrapper::getCommand() const {
 int QMareCLIWrapper::exec() const {
 	std::vector<std::string> argumentStrs;
 	for (const auto& arg : this->arguments) {
-		argumentStrs.push_back(arg.toUtf8().constData());
+		argumentStrs.emplace_back(arg.toUtf8().constData());
 	}
 
 	std::unique_ptr<const char*[]> cArgs{new const char*[argumentStrs.size()]};
@@ -33,4 +43,12 @@ int QMareCLIWrapper::exec() const {
 	}
 
 	return maretf_cli(static_cast<int>(argumentStrs.size()), cArgs.get());
+}
+
+QString QMareCLIWrapper::joinPaths(const QStringList& paths) {
+	return paths.join(MARETF_PATH_SEPARATOR);
+}
+
+QStringList QMareCLIWrapper::splitPaths(const QString& paths) {
+	return paths.split(MARETF_PATH_SEPARATOR);
 }

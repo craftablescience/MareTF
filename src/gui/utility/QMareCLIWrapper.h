@@ -53,6 +53,10 @@ public:
 
 	int exec() const; // NOLINT(*-use-nodiscard)
 
+	[[nodiscard]] static QString joinPaths(const QStringList& paths);
+
+	[[nodiscard]] static QStringList splitPaths(const QString& paths);
+
 protected:
 	QStringList arguments;
 };
