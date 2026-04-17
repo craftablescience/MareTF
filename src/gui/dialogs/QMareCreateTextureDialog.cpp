@@ -3,7 +3,6 @@
 #include "QMareCreateTextureDialog.h"
 
 #include <format>
-#include <memory>
 
 #include <QApplication>
 #include <QButtonGroup>
@@ -22,13 +21,11 @@
 #include <QRadioButton>
 #include <QStandardItemModel>
 #include <QTimer>
-#include <sourcepp/parser/Text.h>
-
-#include "MareTF.h"
 
 #include "Common.h"
 #include "EnumMappings.h"
 
+#include "utility/QMareCLIWrapper.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
 #include "widgets/QMareFlagsWidget.h"
@@ -833,177 +830,138 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Get list of arguments from the selected options
 
-	const auto getArguments = [=] {
-		std::vector<std::string> arguments{"maretf", "create"};
+	const auto getCLI = [=, this] {
+		auto* cli = new QMareCLIWrapper{"create", this};
 
 		// Input paths
 		if (
 			const auto filesystemInputPathSplit = filesystemInputPath->text().split(MARETF_PATH_SEPARATOR);
 			filesystemInputPathSplit.size() == 1
 		) {
-			arguments.emplace_back(filesystemInputPathSplit[0].toUtf8().constData());
+			cli->addArg(filesystemInputPathSplit[0]);
 		} else {
-			arguments.emplace_back("--input");
+			cli->addArg("--input");
 			for (const auto& path : filesystemInputPathSplit) {
-				arguments.emplace_back(path.toUtf8().constData());
+				cli->addArg(path);
 			}
 		}
-
-		const auto addArg = [&arguments](auto&& arg1, auto&& arg2) {
-			arguments.emplace_back(std::forward<decltype(arg1)>(arg1));
-			arguments.emplace_back(std::forward<decltype(arg2)>(arg2));
-		};
-
-		const auto addFlagPredicate = [&arguments](bool p, auto&& arg) {
-			if (p) {
-				arguments.emplace_back(std::forward<decltype(arg)>(arg));
-			}
-		};
-
-		const auto addFlag = [&addFlagPredicate](const QAbstractButton* checkBox, auto&& arg, bool negated = false) {
-			addFlagPredicate((!negated && checkBox->isChecked()) || (negated && !checkBox->isChecked()), std::forward<decltype(arg)>(arg));
-		};
-
-		const auto addInt = [&addArg](const QMareSpinBox* spinBox, auto&& arg) {
-			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
-		};
-
-		const auto addFloat = [&addArg](const QMareDoubleSpinBox* spinBox, auto&& arg) {
-			addArg(std::forward<decltype(arg)>(arg), std::format("{}", spinBox->value()));
-		};
-
-		const auto applyForEnum = [&addArg]<typename E>(const QMareComboBox* combo, std::string_view name) {
-			const auto e = static_cast<E>(combo->currentData().toInt());
-			addArg(name, not_magic_enum::enum_name(e));
-		};
 
 		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC) {
-			applyForEnum.operator()<vtfpp::VTF::Platform>(platformCombo, "--platform");
+			cli->addEnum<vtfpp::VTF::Platform>(platformCombo, "--platform");
 		}
-		addArg("--version", std::format("7.{}", versionCombo->currentData().toInt()));
-		applyForEnum.operator()<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
-		addArg("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f));
+		cli->addArgPair("--version", std::format("7.{}", versionCombo->currentData().toInt()).data());
+		cli->addEnum<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
+		cli->addArgPair("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f).data());
 		switch (textureWidthSizeModeCombo->currentIndex()) {
 		case 0:
-			applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
+			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
 			break;
 		case 1:
-			addInt(textureWidthExactSizeSpin, "--width");
+			cli->addInt(textureWidthExactSizeSpin, "--width");
 			break;
 		case 2:
-			addInt(textureWidthMinimumSizeSpin, "--min-width");
-			addInt(textureWidthMaximumSizeSpin, "--max-width");
+			cli->addInt(textureWidthMinimumSizeSpin, "--min-width");
+			cli->addInt(textureWidthMaximumSizeSpin, "--max-width");
 			break;
 		default:
 			break;
 		}
 		switch (textureHeightSizeModeCombo->currentIndex()) {
 		case 0:
-			applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
+			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
 			break;
 		case 1:
-			addInt(textureHeightExactSizeSpin, "--height");
+			cli->addInt(textureHeightExactSizeSpin, "--height");
 			break;
 		case 2:
-			addInt(textureHeightMinimumSizeSpin, "--min-height");
-			addInt(textureHeightMaximumSizeSpin, "--max-height");
+			cli->addInt(textureHeightMinimumSizeSpin, "--min-height");
+			cli->addInt(textureHeightMaximumSizeSpin, "--max-height");
 			break;
 		default:
 			break;
 		}
-		addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
-		applyForEnum.operator()<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
+		cli->addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
+		cli->addEnum<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
 		if (textureMipmapsScaleSpin->value() != 0) {
-			addInt(textureMipmapsScaleSpin, "--console-mip-scale");
+			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 		}
-		addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
-		addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
-		addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
+		cli->addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
+		cli->addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
+		cli->addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
 		if (textureGammaCorrectionEnableCheck->isChecked()) {
-			addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+			cli->addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
 		}
-		addFlag(textureInvertGreenCheck, "--invert-green");
+		cli->addFlag(textureInvertGreenCheck, "--invert-green");
 		if (textureBumpmapScaleSpin->value() != 1.0) {
-			addFloat(textureBumpmapScaleSpin, "--bumpscale");
+			cli->addFloat(textureBumpmapScaleSpin, "--bumpscale");
 		}
 		if (textureCompressionGroup->isEnabled() && textureCompressionMethodCombo->currentIndex() != 0) {
-			applyForEnum.operator()<vtfpp::CompressionMethod>(textureCompressionMethodCombo, "--compression-method");
-			addInt(textureCompressionLevelSpin, "--compression-level");
+			cli->addEnum<vtfpp::CompressionMethod>(textureCompressionMethodCombo, "--compression-method");
+			cli->addInt(textureCompressionLevelSpin, "--compression-level");
 		}
 		if (const auto flagsUInt =  flagsChecks->getFlags(); flagsUInt != 0) {
-			addArg("--flags-uint", std::format("{}", flagsUInt));
+			cli->addArgPair("--flags-uint", std::format("{}", flagsUInt).data());
 		}
-		addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
+		cli->addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
 		if (resourcesSHTGroup->isEnabled() && resourcesSHTEnableCheck->isChecked()) {
-			addArg("--particle-sheet-resource", resourcesSHTPath->text().toUtf8().constData());
+			cli->addArgPair("--particle-sheet-resource", resourcesSHTPath->text());
 		}
 		if (resourcesCRCGroup->isEnabled() && resourcesCRCEnableCheck->isChecked()) {
 			uint32_t crc;
 			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
-			addArg("--crc-resource", std::format("{}", crc));
+			cli->addArgPair("--crc-resource", std::format("{}", crc).data());
 		}
 		if (resourcesLODGroup->isEnabled() && resourcesLODEnableCheck->isChecked()) {
 			if (resourcesLODUConsoleSpin->isEnabled() || resourcesLODVConsoleSpin->isEnabled()) {
-				addArg("--lod-resource", std::format("{}.{}.{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value(), resourcesLODUConsoleSpin->value(), resourcesLODVConsoleSpin->value()));
+				cli->addArgPair("--lod-resource", std::format("{}.{}.{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value(), resourcesLODUConsoleSpin->value(), resourcesLODVConsoleSpin->value()).data());
 			} else {
-				addArg("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()));
+				cli->addArgPair("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()).data());
 			}
 		}
 		if (resourcesTS0Group->isEnabled() && resourcesTS0EnableCheck->isChecked()) {
 			uint32_t ts0;
 			sourcepp::string::toInt(resourcesTS0Value->text().toUtf8().constData(), ts0, 16);
-			addArg("--ts0-resource", std::format("{}", ts0));
+			cli->addArgPair("--ts0-resource", std::format("{}", ts0).data());
 		}
 		if (resourcesKVDGroup->isEnabled() && resourcesKVDEnableCheck->isChecked()) {
-			addArg("--kvd-resource", resourcesKVDPath->text().toUtf8().constData());
+			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
 		}
 		if (!filesystemOutputPath->text().isEmpty()) {
-			addArg("--output", filesystemOutputPath->text().toUtf8().constData());
+			cli->addArgPair("--output", filesystemOutputPath->text());
 		}
-		addFlag(overwriteRadioYes, "--yes");
-		addFlag(overwriteRadioNo, "--no");
+		cli->addFlag(overwriteRadioYes, "--yes");
+		cli->addFlag(overwriteRadioNo, "--no");
 		if (createFromDir) {
-			addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
+			cli->addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
 		}
-		addFlag(watchFilesCheck, "--watch");
+		cli->addFlag(watchFilesCheck, "--watch");
 
-		return arguments;
+		return cli;
 	};
 
 	// Copy the CLI command to clipboard
 
-	connect(dialogButtonsCopyCommand, &QPushButton::clicked, this, [this, dialogButtonsCopyCommand, getArguments] {
+	connect(dialogButtonsCopyCommand, &QPushButton::clicked, this, [this, dialogButtonsCopyCommand, getCLI] {
 		dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogApplyButton));
 		QTimer::singleShot(1000, this, [this, dialogButtonsCopyCommand] {
 			dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogSaveButton));
 		});
 
-		const auto arguments = getArguments();
-		QString command;
-		for (const auto& argument : arguments) {
-			if (sourcepp::parser::text::isWhitespace(argument)) {
-				command.append('\"').append(argument.c_str()).append('\"');
-			} else {
-				command.append(argument.c_str());
-			}
-			command.append(' ');
-		}
-		command.resize(command.size() - 1);
-		QApplication::clipboard()->setText(command);
+		auto* cli = getCLI();
+		QApplication::clipboard()->setText(cli->getCommand());
+		cli->deleteLater();
 	});
 
 	// On "OK", create the texture
 	// On "Cancel", close the dialog
 
-	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemInputPath, filesystemOutputPath, getArguments] {
-		const auto arguments = getArguments();
-		std::unique_ptr<const char*[]> cArgs{new const char*[arguments.size()]};
-		for (int i = 0; i < arguments.size(); i++) {
-			cArgs[i] = arguments[i].c_str();
-		}
-		if (maretf_cli(static_cast<int>(arguments.size()), cArgs.get())) {
+	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemInputPath, filesystemOutputPath, getCLI] {
+		auto* cli = getCLI();
+		if (cli->exec()) {
 			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
 		}
+		cli->deleteLater();
+
 		if (!createFromDir) {
 			QStringList outputPaths;
 			for (const auto& inputPath : filesystemInputPath->text().split(MARETF_PATH_SEPARATOR)) {
@@ -1017,7 +975,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTextureDialog::reject);
 }
 
-QMareCreateTextureDialog* QMareCreateTextureDialog::fromImage(QWidget* parent) {
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromImages(QWidget* parent) {
 	const auto inputPaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
 	if (inputPaths.isEmpty()) {
 		return nullptr;

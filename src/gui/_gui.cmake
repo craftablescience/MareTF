@@ -12,6 +12,8 @@ set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/dialogs/QMareCreateTextureDialog.h"
         "${CMAKE_CURRENT_LIST_DIR}/dialogs/QMareCreditsDialog.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/dialogs/QMareCreditsDialog.h"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/QMareCLIWrapper.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/QMareCLIWrapper.h"
         "${CMAKE_CURRENT_LIST_DIR}/utility/QMareDiscordPresence.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/utility/QMareDiscordPresence.h"
         "${CMAKE_CURRENT_LIST_DIR}/utility/QMareOptions.cpp"

@@ -31,7 +31,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->toolbar->addWidget(toolbarExpanderBegin);
 
 	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
-		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this)) {
 			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
 				if (!g_ManeWindow) {
 					g_ManeWindow = new QMareTextureWindow;
