@@ -228,19 +228,28 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.required()
 		.store_into(mode);
 
-	std::string inputPath;
+	std::vector<std::string> inputPaths;
+	cli
+		.add_argument("-i", "--input")
+		.metavar("PATH...")
+		.help("The paths to the input files or directories.")
+		.nargs(argparse::nargs_pattern::at_least_one)
+		.store_into(inputPaths);
+
+	std::string specificInputPath;
 	cli
 		.add_argument("path")
 		.metavar("PATH")
 		.help("The path to the input file or directory.")
-		.required()
-		.store_into(inputPath);
+		.nargs(argparse::nargs_pattern::optional)
+		.default_value(specificInputPath).store_into(specificInputPath);
 
 	std::string outputPath;
 	cli
 		.add_argument("-o", "--output")
 		.metavar("PATH")
-		.help("The path to the output file (if the current mode outputs a file). Ignored if the input path is a directory.")
+		.help("The path to the output file (if the current mode outputs a file), or the parent directory of the output"
+		      "files if multiple input paths are specified. Ignored if the input path is a directory.")
 		.store_into(outputPath);
 
 	bool overwrite;
@@ -1185,6 +1194,17 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 #endif
 		}
 
+		// Fix up input/output paths
+		if (!specificInputPath.empty()) {
+			inputPaths.push_back(specificInputPath);
+		}
+		if (inputPaths.empty()) {
+			throw std::invalid_argument{"No input path(s) provided!"};
+		}
+		if (inputPaths.size() > 1 && !outputPath.empty() && !std::filesystem::is_directory(outputPath)) {
+			throw std::invalid_argument{"Output path must be a directory when manually specified and given multiple inputs!"};
+		}
+
 		static constexpr auto DIR_OPTIONS = std::filesystem::directory_options::follow_directory_symlink | std::filesystem::directory_options::skip_permission_denied;
 
 		const auto checkFileDoesntExist = [&](const std::string& currentOutputPath, bool& shouldRet) -> int {
@@ -1339,6 +1359,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				// Check output path
 				if (outputPath.empty()) {
 					outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
+				} else if (inputPaths.size() > 1) {
+					outputPath = (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string();
 				}
 				{
 					bool checkFileShouldRet;
@@ -1755,40 +1777,44 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				return bake(vtf, "image");
 			};
 
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
-				throw std::invalid_argument{"Input path does not exist!"};
-			}
-
-			// Watch mode overrides this
-			if (watch) {
-				noOverwrite = true;
-			}
-
 			int out = EXIT_SUCCESS;
-			if (std::filesystem::is_regular_file(inputPath)) {
-				tfout << BOLD << randomTFMessage() << "..." << END << tfendl;
-				out = create(inputPath);
-			} else if (std::filesystem::is_directory(inputPath)) {
-				if (noRecurse) {
-					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
-							outputPath = "";
-							out = out || create(dirEntry.path().string());
+			const auto savedOutputPath = outputPath;
+			for (const auto& inputPath : inputPaths) {
+				// Check input path
+				if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+					throw std::invalid_argument{"Input path does not exist!"};
+				}
+
+				// Watch mode overrides this
+				if (watch) {
+					noOverwrite = true;
+				}
+
+				if (std::filesystem::is_regular_file(inputPath)) {
+					tfout << BOLD << randomTFMessage() << "..." << END << tfendl;
+					out = out || create(inputPath);
+				} else if (std::filesystem::is_directory(inputPath)) {
+					if (noRecurse) {
+						for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
+								outputPath = "";
+								out = out || create(dirEntry.path().string());
+							}
+						}
+					} else {
+						for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
+								outputPath = "";
+								out = out || create(dirEntry.path().string());
+							}
 						}
 					}
 				} else {
-					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (::fileIsASupportedImageFileFormat(dirEntry.path().extension().string())) {
-							outputPath = "";
-							out = out || create(dirEntry.path().string());
-						}
-					}
+					throw std::invalid_argument{"Input path is not a file or directory!"};
 				}
-			} else {
-				throw std::invalid_argument{"Input path is not a file or directory!"};
-			}
 
+				outputPath = savedOutputPath;
+			}
 			if (out != EXIT_SUCCESS) {
 				return out;
 			}
@@ -1797,7 +1823,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				overwrite = true;
 				noOverwrite = false;
 
-				const bool watchingSingleFile = std::filesystem::is_regular_file(inputPath);
+				const bool watchingSingleFile = inputPaths.size() == 1 && std::filesystem::is_regular_file(inputPaths[0]);
 
 				efsw::FileWatcher fileWatcher;
 				std::unordered_map<std::string, std::pair<::ElapsedTime<>, efsw::Action>> fileActions;
@@ -1805,7 +1831,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				::MareTFFileWatchListener fileUpdateListener{
 					[&](efsw::WatchID, const std::string& dir, const std::string& filename, efsw::Action action, const std::string& oldFilename) {
 						const auto path = dir + filename;
-						if (watchingSingleFile && std::filesystem::absolute(path) != std::filesystem::absolute(inputPath)) {
+						if (watchingSingleFile && std::filesystem::absolute(path) != std::filesystem::absolute(inputPaths[0])) {
 							return;
 						}
 
@@ -1871,9 +1897,12 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						}
 					}
 				};
-				const auto watchID = fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse);
 
-				tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
+				std::vector<efsw::WatchID> watchIDs;
+				for (const auto& inputPath : inputPaths) {
+					watchIDs.push_back(fileWatcher.addWatch(watchingSingleFile ? std::filesystem::path{inputPath}.parent_path().string() : inputPath, &fileUpdateListener, !noRecurse));
+					tfout << "Watching " << BOLD << inputPath << END << " for any changes..." << tfendl;
+				}
 				fileWatcher.watch();
 
 				const auto processEvents = [&platform, BOLD, END, &create, &outputPath, watchingSingleFile, &fileActions, &fileActionsMutex] {
@@ -1955,7 +1984,9 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				guiEventLoop->exec();
 #endif
 
-				fileWatcher.removeWatch(watchID);
+				for (const auto& watchID : watchIDs) {
+					fileWatcher.removeWatch(watchID);
+				}
 			}
 
 			return EXIT_SUCCESS;
@@ -1968,6 +1999,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					if (cli.is_used("--set-platform")) {
 						outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
 					}
+				} else if (inputPaths.size() > 1) {
+					outputPath = (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string();
 				}
 				{
 					bool checkFileShouldRet;
@@ -2122,37 +2155,42 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				return EXIT_SUCCESS;
 			};
 
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
-				throw std::invalid_argument{"Input path does not exist!"};
-			}
-
-			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
-					throw std::invalid_argument{"Input file must be a VTF!"};
+			int out = EXIT_SUCCESS;
+			const auto savedOutputPath = outputPath;
+			for (const auto& inputPath : inputPaths) {
+				// Check input path
+				if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+					throw std::invalid_argument{"Input path does not exist!"};
 				}
-				return edit(inputPath);
-			}
-			if (std::filesystem::is_directory(inputPath)) {
-				int out = EXIT_SUCCESS;
-				if (noRecurse) {
-					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							out = out || edit(dirEntry.path().string());
+
+				if (std::filesystem::is_regular_file(inputPath)) {
+					if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
+						throw std::invalid_argument{"Input file must be a VTF!"};
+					}
+					out = out || edit(inputPath);
+				} else if (std::filesystem::is_directory(inputPath)) {
+					if (noRecurse) {
+						for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								out = out || edit(dirEntry.path().string());
+							}
+						}
+					} else {
+						for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								out = out || edit(dirEntry.path().string());
+							}
 						}
 					}
 				} else {
-					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							out = out || edit(dirEntry.path().string());
-						}
-					}
+					throw std::invalid_argument{"Input path is not a file or directory!"};
 				}
-				return out;
+
+				outputPath = savedOutputPath;
 			}
-			throw std::invalid_argument{"Input path is not a file or directory!"};
+			return out;
 		}
 		if (mode == "extract") {
 			const auto extract = [&](const std::string& currentInputPath) {
@@ -2175,7 +2213,11 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				if (outputPath.empty()) {
 					const std::filesystem::path inputPathPath{currentInputPath};
 					outputPath = (inputPathPath.parent_path() / inputPathPath.stem()).string();
-					outputPath.append(supportedImageFileFormatExtension(fileFormat));
+					outputPath.append(::supportedImageFileFormatExtension(fileFormat));
+				} else if (inputPaths.size() > 1) {
+					const std::filesystem::path inputPathPath{currentInputPath};
+					outputPath = (std::filesystem::path{outputPath} / inputPathPath.stem()).string();
+					outputPath.append(::supportedImageFileFormatExtension(fileFormat));
 				}
 
 				// Extract all VTF image data
@@ -2227,37 +2269,42 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				return EXIT_SUCCESS;
 			};
 
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
-				throw std::invalid_argument{"Input path does not exist!"};
-			}
-
-			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
-					throw std::invalid_argument{"Input file must be a VTF!"};
+			int out = EXIT_SUCCESS;
+			const auto savedOutputPath = outputPath;
+			for (const auto& inputPath : inputPaths) {
+				// Check input path
+				if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+					throw std::invalid_argument{"Input path does not exist!"};
 				}
-				return extract(inputPath);
-			}
-			if (std::filesystem::is_directory(inputPath)) {
-				int out = EXIT_SUCCESS;
-				if (noRecurse) {
-					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							out = out || extract(dirEntry.path().string());
+
+				if (std::filesystem::is_regular_file(inputPath)) {
+					if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
+						throw std::invalid_argument{"Input file must be a VTF!"};
+					}
+					out = out || extract(inputPath);
+				} else if (std::filesystem::is_directory(inputPath)) {
+					if (noRecurse) {
+						for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								out = out || extract(dirEntry.path().string());
+							}
+						}
+					} else {
+						for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								out = out || extract(dirEntry.path().string());
+							}
 						}
 					}
 				} else {
-					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							out = out || extract(dirEntry.path().string());
-						}
-					}
+					throw std::invalid_argument{"Input path is not a file or directory!"};
 				}
-				return out;
+
+				outputPath = savedOutputPath;
 			}
-			throw std::invalid_argument{"Input path is not a file or directory!"};
+			return out;
 		}
 		if (mode == "info") {
 			const auto info = [&](const std::string& currentInputPath) {
@@ -2636,54 +2683,58 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				return EXIT_SUCCESS;
 			};
 
-			// Check input path
-			if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
-				// Hack: if the input path is "version", show program version and exit
-				// This is for Stefan and other tool devs
-				if (inputPath == "version") {
-					std::cout << PROJECT_VERSION << std::endl;
-					return EXIT_SUCCESS;
-				}
-
-				throw std::invalid_argument{"Input path does not exist!"};
+			// Hack: if the input path is "version", show program version and exit
+			// This is for Stefan and other tool devs
+			if (inputPaths.size() == 1 && inputPaths[0] == "version") {
+				std::cout << PROJECT_VERSION << std::endl;
+				return EXIT_SUCCESS;
 			}
 
-			if (std::filesystem::is_regular_file(inputPath)) {
-				if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
-					throw std::invalid_argument{"Input file must be a VTF!"};
+			int out = EXIT_SUCCESS;
+			const auto savedOutputPath = outputPath;
+			for (const auto& inputPath : inputPaths) {
+				// Check input path
+				if (inputPath.empty() || !std::filesystem::exists(inputPath)) {
+					throw std::invalid_argument{"Input path does not exist!"};
 				}
-				const auto out = info(inputPath);
-				tfout << tfendl;
-				return out;
-			}
-			if (std::filesystem::is_directory(inputPath)) {
-				int out = EXIT_SUCCESS;
-				if (noRecurse) {
-					for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							out = out || info(dirEntry.path().string());
+
+				if (std::filesystem::is_regular_file(inputPath)) {
+					if (!inputPath.ends_with(".vtf") && !inputPath.ends_with(".xtf")) {
+						throw std::invalid_argument{"Input file must be a VTF!"};
+					}
+					out = out || info(inputPath);
+					tfout << tfendl;
+				} else if (std::filesystem::is_directory(inputPath)) {
+					if (noRecurse) {
+						for (const auto& dirEntry : std::filesystem::directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								out = out || info(dirEntry.path().string());
+							}
+						}
+					} else {
+						for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
+							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
+								outputPath = "";
+								if (infoOutputMode == "kv1") {
+									tfout << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;
+								}
+								out = out || info(dirEntry.path().string());
+								if (infoOutputMode == "human") {
+									tfout << tfendl;
+								} else if (infoOutputMode == "kv1") {
+									tfout << '}' << tfendl;
+								}
+							}
 						}
 					}
 				} else {
-					for (const auto& dirEntry : std::filesystem::recursive_directory_iterator{inputPath, DIR_OPTIONS}) {
-						if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
-							outputPath = "";
-							if (infoOutputMode == "kv1") {
-								tfout << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;
-							}
-							out = out || info(dirEntry.path().string());
-							if (infoOutputMode == "human") {
-								tfout << tfendl;
-							} else if (infoOutputMode == "kv1") {
-								tfout << '}' << tfendl;
-							}
-						}
-					}
+					throw std::invalid_argument{"Input path is not a file or directory!"};
 				}
-				return out;
+
+				outputPath = savedOutputPath;
 			}
-			throw std::invalid_argument{"Input path is not a file or directory!"};
+			return out;
 		}
 	} catch (const std::exception& e) {
 		if (argc > 1) {
