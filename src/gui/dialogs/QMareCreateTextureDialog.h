@@ -9,7 +9,7 @@ class QMareCreateTextureDialog : public QDialog {
 	Q_OBJECT;
 
 protected:
-	explicit QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent = nullptr);
+	explicit QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent = nullptr);
 
 public:
 	[[nodiscard]] static QMareCreateTextureDialog* fromImage(QWidget* parent = nullptr);
@@ -17,5 +17,5 @@ public:
 	[[nodiscard]] static QMareCreateTextureDialog* fromDir(QWidget* parent = nullptr);
 
 signals:
-	void createdTexture(const QString& path);
+	void createdTextures(const QStringList& paths);
 };

@@ -63,8 +63,10 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	fileMenu->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
-			connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
-				this->loadTexture(path);
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
+				for (const auto& path : paths) {
+					this->loadTexture(path);
+				}
 			});
 			createTextureDialog->exec();
 		}

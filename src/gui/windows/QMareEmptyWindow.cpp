@@ -32,9 +32,13 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImage(this)) {
-			connect(createTextureDialog, &QMareCreateTextureDialog::createdTexture, this, [this](const QString& path) {
-				g_ManeWindow = new QMareTextureWindow;
-				g_ManeWindow->loadTexture(path);
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
+				if (!g_ManeWindow) {
+					g_ManeWindow = new QMareTextureWindow;
+				}
+				for (const auto& path : paths) {
+					g_ManeWindow->loadTexture(path);
+				}
 				g_ManeWindow->show();
 				this->close();
 			});
@@ -52,7 +56,9 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
 		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
-			g_ManeWindow = new QMareTextureWindow;
+			if (!g_ManeWindow) {
+				g_ManeWindow = new QMareTextureWindow;
+			}
 			for (const auto& file : files) {
 				g_ManeWindow->loadTexture(file);
 			}

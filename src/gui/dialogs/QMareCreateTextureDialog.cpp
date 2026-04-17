@@ -34,8 +34,14 @@
 #include "widgets/QMareFlagsWidget.h"
 #include "widgets/QMareSpinBox.h"
 
-QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, bool createFromDir, QWidget* parent) : QDialog{parent} {
-	this->setWindowTitle(createFromDir ? tr("Create Textures") : tr("Create Texture"));
+#ifdef _WIN32
+	#define MARETF_PATH_SEPARATOR ';'
+#else
+	#define MARETF_PATH_SEPARATOR ':'
+#endif
+
+QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent) : QDialog{parent} {
+	this->setWindowTitle((createFromDir || inputPaths.size() > 1) ? tr("Create Textures") : tr("Create Texture"));
 
 	auto* layout = new QGridLayout{this};
 
@@ -428,8 +434,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	filesystemInputPathLayout->setContentsMargins(0, 0, 0, 0);
 
 	auto* filesystemInputPath = new QLineEdit{filesystemGroup};
-	filesystemInputPath->setText(inputPath);
+	filesystemInputPath->setText(inputPaths.join(MARETF_PATH_SEPARATOR));
 	filesystemInputPath->setMinimumWidth(200);
+	filesystemInputPath->setReadOnly(true);
 	filesystemInputPathLayout->addWidget(filesystemInputPath);
 
 	auto* filesystemInputPathSearch = new QPushButton{filesystemGroup};
@@ -448,6 +455,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	auto* filesystemOutputPath = new QLineEdit{filesystemGroup};
 	filesystemOutputPath->setPlaceholderText(tr("Leave empty for default"));
 	filesystemOutputPath->setMinimumWidth(200);
+	filesystemOutputPath->setReadOnly(true);
 	filesystemOutputPathLayout->addWidget(filesystemOutputPath);
 
 	auto* filesystemOutputPathSearch = new QPushButton{filesystemGroup};
@@ -801,20 +809,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 
 	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemInputPath] {
 		if (
-			const auto path = !createFromDir
-				? QFileDialog::getOpenFileName(this, tr("Open Image"), QString{}, ::supportedImageFileFormatsForLoad().data())
-				: QFileDialog::getExistingDirectory(this, tr("Open Folder"));
-			!path.isEmpty()
+			const auto paths = !createFromDir
+				? QFileDialog::getOpenFileNames(this, tr("Open Images"), QString{}, ::supportedImageFileFormatsForLoad().data())
+				: QStringList{QFileDialog::getExistingDirectory(this, tr("Open Folder"))};
+			!paths.isEmpty() && !paths[0].isEmpty()
 		) {
-			filesystemInputPath->setText(path);
+			filesystemInputPath->setText(paths.join(MARETF_PATH_SEPARATOR));
 		}
 	});
 
 	// Set output path in "Filesystem" group when "Output Search" clicked
 
-	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemInputPath, filesystemOutputPath] {
+	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, &inputPaths, createFromDir, filesystemInputPath, filesystemOutputPath] {
 		if (
-			const auto path = !createFromDir
+			const auto path = !createFromDir || inputPaths.size() > 1
 				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
 				: QFileDialog::getExistingDirectory(this, tr("Save to Folder"));
 			!path.isEmpty()
@@ -826,7 +834,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	// Get list of arguments from the selected options
 
 	const auto getArguments = [=] {
-		std::vector<std::string> arguments{"maretf", "create", filesystemInputPath->text().toUtf8().constData()};
+		std::vector<std::string> arguments{"maretf", "create"};
+
+		// Input paths
+		if (
+			const auto filesystemInputPathSplit = filesystemInputPath->text().split(MARETF_PATH_SEPARATOR);
+			filesystemInputPathSplit.size() == 1
+		) {
+			arguments.emplace_back(filesystemInputPathSplit[0].toUtf8().constData());
+		} else {
+			arguments.emplace_back("--input");
+			for (const auto& path : filesystemInputPathSplit) {
+				arguments.emplace_back(path.toUtf8().constData());
+			}
+		}
 
 		const auto addArg = [&arguments](auto&& arg1, auto&& arg2) {
 			arguments.emplace_back(std::forward<decltype(arg1)>(arg1));
@@ -852,14 +873,16 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 		};
 
 		const auto applyForEnum = [&addArg]<typename E>(const QMareComboBox* combo, std::string_view name) {
-			const auto e = static_cast<E>(combo->itemData(combo->currentIndex()).toInt());
+			const auto e = static_cast<E>(combo->currentData().toInt());
 			addArg(name, not_magic_enum::enum_name(e));
 		};
 
-		applyForEnum.operator()<vtfpp::VTF::Platform>(platformCombo, "--platform");
-		addArg("--version", std::format("7.{}", versionCombo->itemData(versionCombo->currentIndex()).toInt()));
+		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC) {
+			applyForEnum.operator()<vtfpp::VTF::Platform>(platformCombo, "--platform");
+		}
+		addArg("--version", std::format("7.{}", versionCombo->currentData().toInt()));
 		applyForEnum.operator()<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
-		addArg("--quality", std::format("{}", textureCompressionQualitySpin->value()));
+		addArg("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f));
 		switch (textureWidthSizeModeCombo->currentIndex()) {
 		case 0:
 			applyForEnum.operator()<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
@@ -972,7 +995,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 	// On "OK", create the texture
 	// On "Cancel", close the dialog
 
-	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemOutputPath, getArguments] {
+	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemInputPath, filesystemOutputPath, getArguments] {
 		const auto arguments = getArguments();
 		std::unique_ptr<const char*[]> cArgs{new const char*[arguments.size()]};
 		for (int i = 0; i < arguments.size(); i++) {
@@ -982,7 +1005,11 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
 		}
 		if (!createFromDir) {
-			emit this->createdTexture(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(arguments[2], static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt())).c_str() : filesystemOutputPath->text());
+			QStringList outputPaths;
+			for (const auto& inputPath : filesystemInputPath->text().split(MARETF_PATH_SEPARATOR)) {
+				outputPaths.push_back(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(inputPath.toUtf8().constData(), static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt())).c_str() : filesystemOutputPath->text());
+			}
+			emit this->createdTextures(outputPaths);
 		}
 		emit this->accept();
 	});
@@ -991,12 +1018,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QString& inputPath, boo
 }
 
 QMareCreateTextureDialog* QMareCreateTextureDialog::fromImage(QWidget* parent) {
-	const auto inputPath = QFileDialog::getOpenFileName(parent, tr("Open Image"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
-	if (inputPath.isEmpty()) {
+	const auto inputPaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
+	if (inputPaths.isEmpty()) {
 		return nullptr;
 	}
-	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
-	return new QMareCreateTextureDialog{inputPath, false, parent};
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPaths.last()}.canonicalPath());
+	return new QMareCreateTextureDialog{inputPaths, false, parent};
 }
 
 QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
@@ -1005,5 +1032,5 @@ QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
 		return nullptr;
 	}
 	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
-	return new QMareCreateTextureDialog{inputPath, true, parent};
+	return new QMareCreateTextureDialog{{inputPath}, true, parent};
 }
