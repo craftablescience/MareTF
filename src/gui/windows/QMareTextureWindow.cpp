@@ -188,10 +188,6 @@ QMareTextureWindow::QMareTextureWindow() {
 		QMareCreditsDialog::showCredits(this);
 	});
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {
-		QMessageBox::aboutQt(this);
-	});
-
 	helpMenu->addSeparator();
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [] {

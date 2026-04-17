@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QTabWidget>
 #include <QVBoxLayout>
@@ -127,6 +128,13 @@ QMareCreditsDialog::QMareCreditsDialog(QWidget* parent) : QDialog{parent} {
 	layout->addWidget(tabs);
 
 	auto* buttons = new QDialogButtonBox{QDialogButtonBox::Ok, this};
+
+	auto* buttonAboutQt = buttons->addButton(tr("About Qt"), QDialogButtonBox::NoRole);
+	buttonAboutQt->setIcon(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton));
+	QObject::connect(buttonAboutQt, &QPushButton::clicked, this, [this] {
+		QMessageBox::aboutQt(this);
+	});
+
 	QObject::connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	layout->addWidget(buttons);
 

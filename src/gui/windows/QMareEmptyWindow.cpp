@@ -77,10 +77,6 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		QMareCreditsDialog::showCredits(this);
 	});
 
-	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_TitleBarMenuButton), tr("&About Qt"), [this] {
-		QMessageBox::aboutQt(this);
-	});
-
 	auto* toolbarExpanderEnd = new QWidget{this};
 	toolbarExpanderEnd->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	this->toolbar->addWidget(toolbarExpanderEnd);
