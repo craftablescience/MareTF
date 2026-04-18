@@ -60,7 +60,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - [discord-rpc](https://github.com/craftablescience/discord-rpc-clean)
   - [efsw](https://github.com/SpartanJ/efsw)
   - [indicators](https://github.com/p-ranav/indicators)
-  - [sourcepp](https://github.com/craftablescience/sourcepp)
+  - [SourcePP](https://sourcepp.org)
   - [Qt](https://www.qt.io)
 
 ## Example CLI Usage

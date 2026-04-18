@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" type="text/css" href="assets/css/maretf.css">
+  <link rel="alternate" type="application/rss+xml" title="MareTF Releases" href="https://github.com/craftablescience/MareTF/releases.atom">
+
+  <title>MareTF</title>
+  <meta property="og:title" content="MareTF">
+  <meta name="description" content="A utility to create, edit, and display every type of VTF file ever made.">
+  <meta name="og:description" content="A utility to create, edit, and display every type of VTF file ever made.">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://maretf.me/">
+  <meta property="og:url" content="https://maretf.me/">
+  <meta property="og:locale" content="en">
+  <meta property="og:image" content="https://maretf.me/assets/img/logo.png">
+  <meta property="og:image:alt" content="MareTF Logo">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+
+  <!-- edit CSS colors when editing this -->
+  <meta name="theme-color" content="#0a4619">
+  <meta name="color-scheme" content="dark">
+</head>
+<body>
+<main>
+  <section id="header">
+    <img
+      id="header-logo"
+      width="128"
+      height="128"
+      src="assets/img/logo.png"
+      alt=""
+    />
+    <div id="header-text">
+      <h1>MareTF</h1>
+      <p>A utility to create, edit, and display every type of VTF file ever made.</p>
+    </div>
+    <div class="flex-break"></div>
+    <nav>
+      <a href="https://github.com/craftablescience/MareTF" target="_blank" rel="noreferrer">Download from GitHub</a>
+      <a href="https://discord.gg/ASgHFkX" target="_blank" rel="noreferrer">Join the Discord</a>
+      <a href="https://ko-fi.com/craftablescience" target="_blank" rel="noreferrer">Donate on Ko-fi</a>
+    </nav>
+    <p>Created by <a href="https://craftable.science" target="_blank" rel="noreferrer">craftablescience</a>, with contributions from <a href="#special-thanks">many lovely people</a>.</p>
+  </section>
+
+  <section id="carousel">
+    <img src="https://github.com/craftablescience/MareTF/raw/mane/res/brand/screenshot1.png?raw=true" alt="A preview of the application's main windows." />
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+
+    <h3>Create</h3>
+    <ul>
+      <li>
+        Directly convert a wide range of input image formats
+        <ul>
+          <li>Animated images (APNG/GIF)</li>
+          <li>Floating point images (EXR/HDR)</li>
+          <li>Standard images (PNG/JPG/TGA/WebP)</li>
+          <li>Esoteric images (QOI/PSD/PGM/PPM/PIC/BMP)</li>
+        </ul>
+      </li>
+      <li>Create non-power of two textures</li>
+      <li>Create cubemaps from HDRIs</li>
+      <li>
+        Create console VTFs
+        <ul>
+          <li>Original Xbox</li>
+          <li>Xbox 360</li>
+          <li>PlayStation 3</li>
+        </ul>
+      </li>
+      <li>Uses an improved version of Valve's NICE mipmap filtering by default</li>
+      <li>Supports new formats in Alien Swarm and beyond, Titanfall 1/2, Strata Source</li>
+      <li>Supports new Strata Source VTF version with CPU compression (Deflate / Zstd)</li>
+      <li>Watch input file or directory for changes and recreate the VTF(s)</li>
+    </ul>
+
+    <h3>Edit</h3>
+    <ul>
+      <li>Edit existing VTFs</li>
+      <li>Change VTF version, format, platform, etc.</li>
+      <li>Recompute mipmaps, thumbnail, reflectivity vector</li>
+      <li>Add, overwrite, or remove resources</li>
+    </ul>
+
+    <h3>Extract</h3>
+    <ul>
+      Save the image data contained within VTFs as image files
+      Save as PNG/JPEG/BMP/TGA/WebP/QOI/HDR/EXR
+      Defaults to PNG or EXR based on the image format
+    </ul>
+
+    <h3>Info</h3>
+    <ul>
+      <li>Print out all VTF metadata and non-image resource data</li>
+      <li>Parse compiled particle sheet resource to plaintext</li>
+      <li>Print data as colored human-readable text or as plain KeyValues</li>
+    </ul>
+
+    <h3>Thumbnail</h3>
+    <ul>
+      <li>Display thumbnails for all VTF platforms and versions on Windows and Linux in your file explorer of choice</li>
+    </ul>
+  </section>
+
+  <section class="section-center-items">
+    <img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_wink.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, winking." />
+  </section>
+
+  <section id="special-thanks">
+    <h2>Special Thanks</h2>
+
+    <h3>Assets</h3>
+    <ul>
+      <li>The kirin in the program logo (Olive Shade) was created with <a href="https://pony.town" target="_blank" rel="noreferrer">pony.town</a>'s character creator</li>
+      <li>The lovely GUI splash screen art is by <a href="https://linktr.ee/pastacrylic" target="_blank" rel="noreferrer">@pastacrylic</a></li>
+    </ul>
+
+    <h3>Dependencies</h3>
+    <ul>
+      <li><a href="https://github.com/p-ranav/argparse" target="_blank" rel="noreferrer">argparse</a></li>
+      <li><a href="https://github.com/craftablescience/discord-rpc-clean" target="_blank" rel="noreferrer">discord-rpc</a></li>
+      <li><a href="https://github.com/SpartanJ/efsw" target="_blank" rel="noreferrer">efsw</a></li>
+      <li><a href="https://github.com/p-ranav/indicators" target="_blank" rel="noreferrer">indicators</a></li>
+      <li><a href="https://sourcepp.org" target="_blank" rel="noreferrer">SourcePP</a></li>
+      <li><a href="https://www.qt.io" target="_blank" rel="noreferrer">Qt</a></li>
+    </ul>
+  </section>
+
+  <section class="section-center-items">
+    <img src="https://github.com/craftablescience/MareTF/blob/mane/res/olive_shade_sleep.png?raw=true" alt="The same olive-skinned and red-haired kirin as from the MareTF logo, sleeping." />
+  </section>
+
+  <footer>
+    Written with <span class="flag-trans">♥️</span> and published under <a href="https://opensource.org/license/MIT" target="_blank" rel="noreferrer">The MIT License</a>.
+  </footer>
+</main>
+</body>
+</html>
