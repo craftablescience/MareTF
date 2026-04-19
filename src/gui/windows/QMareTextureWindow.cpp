@@ -144,9 +144,7 @@ QMareTextureWindow::QMareTextureWindow() {
 			QMareOptions::set(QMareOptions::STR_LANGUAGE_OVERRIDE, locale_);
 		});
 		action->setCheckable(true);
-		if (locale == QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE)) {
-			action->setChecked(true);
-		}
+		action->setChecked(locale == QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE));
 		languageMenuGroup->addAction(action);
 	}
 
