@@ -110,7 +110,20 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
 
-	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Language"));
+	auto* generalMenu = optionsMenu->addMenu(QIcon{":/logo.png"}, tr("&General"));
+
+	auto* optionRaiseToTopOpeningFileAction = generalMenu->addAction(tr("Raise When Opening New File"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
+	optionRaiseToTopOpeningFileAction->setCheckable(true);
+	optionRaiseToTopOpeningFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
+
+	auto* optionShowTabBarForSingleFileAction = generalMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
+		QMareOptions::invert(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE);
+		this->textureTabs->setTabBarAutoHide(!QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
+	});
+	optionShowTabBarForSingleFileAction->setCheckable(true);
+	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
+
+	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Language"));
 	auto* languageMenuGroup = new QActionGroup{languageMenu};
 	languageMenuGroup->setExclusive(true);
 	const QVector<QPair<QString, QString>> languageToLocaleMapping{
@@ -137,7 +150,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		languageMenuGroup->addAction(action);
 	}
 
-	auto* themeMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DesktopIcon), tr("Theme"));
+	auto* themeMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DesktopIcon), tr("&Theme"));
 	auto* themeMenuGroup = new QActionGroup{themeMenu};
 	themeMenuGroup->setExclusive(true);
 	for (const auto& themeName : QStyleFactory::keys()) {
@@ -154,7 +167,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	}
 
 	// Not translating this menu name, the translation is the same everywhere
-	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "Discord");
+	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "&Discord");
 	const auto setupDiscordRichPresence = [] {
 		QMareDiscordPresence::init("1384260711202422845");
 		QMareDiscordPresence::setState("v" PROJECT_VERSION_PRETTY);
@@ -205,6 +218,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->textureTabs->setIconSize({64, 64});
 	this->textureTabs->setMovable(true);
 	this->textureTabs->setTabsClosable(true);
+	this->textureTabs->setTabBarAutoHide(!QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
 	this->setCentralWidget(this->textureTabs);
 
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);

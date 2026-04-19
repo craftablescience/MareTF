@@ -6,6 +6,14 @@
 static QSettings* opts = nullptr;
 
 void QMareOptions::setupOptions(QSettings& options) {
+	if (!options.contains(BOOL_RAISE_TO_TOP_OPENING_FILE)) {
+		options.setValue(BOOL_RAISE_TO_TOP_OPENING_FILE, true);
+	}
+
+	if (!options.contains(BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE)) {
+		options.setValue(BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE, true);
+	}
+
 	if (!options.contains(STR_STYLE)) {
 		options.setValue(STR_STYLE, QApplication::style()->name());
 	} else {
