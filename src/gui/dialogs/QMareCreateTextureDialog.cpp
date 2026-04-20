@@ -67,6 +67,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 #endif
 	textureTabLayout->addRow(tr("Version"), versionCombo);
 
+	// Format
 	auto* textureOpaqueFormatCombo = new QMareComboBox{textureTab};
 	//auto* textureTransparentFormatCombo = new QMareComboBox{generalTab};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
@@ -78,12 +79,23 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureTabLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
 	//generalTabLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
 
-	auto* textureCompressionQualitySpin = new QMareSpinBox{textureTab};
+	// Compression quality
+	auto* textureCompressionQualityGroup = new QGroupBox{textureTab};
+	auto* textureCompressionQualityLayout = new QFormLayout{textureCompressionQualityGroup};
+	textureCompressionQualityLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* textureCompressionQualityEnableCheck = new QCheckBox{textureCompressionQualityGroup};
+	textureCompressionQualityLayout->addRow(tr("Override Default"), textureCompressionQualityEnableCheck);
+
+	auto* textureCompressionQualitySpin = new QMareSpinBox{textureCompressionQualityGroup};
 	textureCompressionQualitySpin->setRange(0, 100);
 	textureCompressionQualitySpin->setSingleStep(10);
 	textureCompressionQualitySpin->setSuffix("%");
 	textureCompressionQualitySpin->setValue(100);
-	textureTabLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
+	textureCompressionQualitySpin->setDisabled(true);
+	textureCompressionQualityLayout->addRow(tr("Quality"), textureCompressionQualitySpin);
+
+	textureTabLayout->addRow(tr("Compression Quality"), textureCompressionQualityGroup);
 
 	// Width
 	auto* textureWidthGroup = new QGroupBox{textureTab};
@@ -458,6 +470,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		textureCompressionQualitySpin->setEnabled(format == vtfpp::VTF::FORMAT_UNCHANGED || format == vtfpp::VTF::FORMAT_DEFAULT || vtfpp::ImageFormatDetails::compressed(format));
 	});
 
+	// Disable "Amount" spin when Compression Quality is disabled
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(textureCompressionQualityEnableCheck, &QCheckBox::checkStateChanged, this, [textureCompressionQualitySpin](Qt::CheckState state) {
+		textureCompressionQualitySpin->setDisabled(state != Qt::Checked);
+	});
+	textureCompressionQualityEnableCheck->checkStateChanged(textureCompressionQualityEnableCheck->checkState());
+#else
+	connect(textureCompressionQualityEnableCheck, &QCheckBox::stateChanged, this, [textureCompressionQualitySpin](bool state) {
+		textureCompressionQualitySpin->setDisabled(!state);
+	});
+	textureCompressionQualityEnableCheck->stateChanged(textureCompressionQualityEnableCheck->isChecked());
+#endif
+
 	// Change visibility of items in "Width" depending on mode
 
 	connect(textureWidthClampModeCombo, &QMareComboBox::currentIndexChanged, this, [textureWidthLayout](int index) {
@@ -724,7 +750,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		}
 		cli->addArgPair("--version", std::format("7.{}", versionCombo->currentData().toInt()).data());
 		cli->addEnum<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
-		cli->addArgPair("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f).data());
+		if (textureCompressionQualityEnableCheck->isChecked()) {
+			cli->addArgPair("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f).data());
+		}
 		if (textureWidthResizeMethodCombo->currentIndex() == textureHeightResizeMethodCombo->currentIndex()) {
 			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--resize-method");
 		} else {
