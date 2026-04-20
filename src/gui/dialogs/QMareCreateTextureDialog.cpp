@@ -40,23 +40,23 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	layout->addWidget(tabs);
 
 	// General texture settings tab
-	auto* generalTabScroll = new QScrollArea{tabs};
-	auto* generalTab = new QWidget{generalTabScroll};
-	generalTabScroll->setWidgetResizable(true);
-	generalTabScroll->setWidget(generalTab);
-	auto* generalTabLayout = new QFormLayout{generalTab};
-	generalTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(generalTabScroll, tr("General"));
+	auto* textureTabScroll = new QScrollArea{tabs};
+	auto* textureTab = new QWidget{textureTabScroll};
+	textureTabScroll->setWidgetResizable(true);
+	textureTabScroll->setWidget(textureTab);
+	auto* textureTabLayout = new QFormLayout{textureTab};
+	textureTabLayout->setFormAlignment(Qt::AlignHCenter);
+	tabs->addTab(textureTabScroll, tr("Texture"));
 
 	// Platform
-	auto* platformCombo = new QMareComboBox{generalTab};
+	auto* platformCombo = new QMareComboBox{textureTab};
 	for (const auto& [platform, platformName] : not_magic_enum::enum_entries<vtfpp::VTF::Platform>(true)) {
 		platformCombo->addItem(platformName.data(), static_cast<int>(platform));
 	}
-	generalTabLayout->addRow(tr("Platform"), platformCombo);
+	textureTabLayout->addRow(tr("Platform"), platformCombo);
 
 	// Version
-	auto* versionCombo = new QMareComboBox{generalTab};
+	auto* versionCombo = new QMareComboBox{textureTab};
 	for (int i = 0; i <= 6; i++) {
 		versionCombo->addItem(QString{"7.%1"}.arg(i), i);
 	}
@@ -65,9 +65,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 #else
 	versionCombo->setCurrentIndex(4); // 7.4
 #endif
-	generalTabLayout->addRow(tr("Version"), versionCombo);
+	textureTabLayout->addRow(tr("Version"), versionCombo);
 
-	auto* textureOpaqueFormatCombo = new QMareComboBox{generalTab};
+	auto* textureOpaqueFormatCombo = new QMareComboBox{textureTab};
 	//auto* textureTransparentFormatCombo = new QMareComboBox{generalTab};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
 		textureOpaqueFormatCombo->addItem(formatName.data(), static_cast<int>(format));
@@ -75,18 +75,18 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	}
 	textureOpaqueFormatCombo->setCurrentIndex(1); // DEFAULT
 	//textureTransparentFormatCombo->setCurrentIndex(1); // DEFAULT
-	generalTabLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
+	textureTabLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
 	//generalTabLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
 
-	auto* textureCompressionQualitySpin = new QMareSpinBox{generalTab};
+	auto* textureCompressionQualitySpin = new QMareSpinBox{textureTab};
 	textureCompressionQualitySpin->setRange(0, 100);
 	textureCompressionQualitySpin->setSingleStep(10);
 	textureCompressionQualitySpin->setSuffix("%");
 	textureCompressionQualitySpin->setValue(100);
-	generalTabLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
+	textureTabLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
 
 	// Width
-	auto* textureWidthGroup = new QGroupBox{generalTab};
+	auto* textureWidthGroup = new QGroupBox{textureTab};
 	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
 	textureWidthLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -129,10 +129,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeSpin);
 	textureWidthLayout->setRowVisible(4, false);
 
-	generalTabLayout->addRow(tr("Width"), textureWidthGroup);
+	textureTabLayout->addRow(tr("Width"), textureWidthGroup);
 
 	// Height
-	auto* textureHeightGroup = new QGroupBox{generalTab};
+	auto* textureHeightGroup = new QGroupBox{textureTab};
 	auto* textureHeightLayout = new QFormLayout{textureHeightGroup};
 	textureHeightLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -174,10 +174,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeSpin);
 	textureHeightLayout->setRowVisible(4, false);
 
-	generalTabLayout->addRow(tr("Height"), textureHeightGroup);
+	textureTabLayout->addRow(tr("Height"), textureHeightGroup);
 
 	// Mipmaps
-	auto* textureMipmapsGroup = new QGroupBox{generalTab};
+	auto* textureMipmapsGroup = new QGroupBox{textureTab};
 	auto* textureMipmapsLayout = new QFormLayout{textureMipmapsGroup};
 	textureMipmapsLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -196,10 +196,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureMipmapsScaleSpin->setMinimum(0);
 	textureMipmapsLayout->addRow(tr("Scale (Console)"), textureMipmapsScaleSpin);
 
-	generalTabLayout->addRow(tr("Mipmaps"), textureMipmapsGroup);
+	textureTabLayout->addRow(tr("Mipmaps"), textureMipmapsGroup);
 
 	// HDRI
-	auto* textureHDRIGroup = new QGroupBox{generalTab};
+	auto* textureHDRIGroup = new QGroupBox{textureTab};
 	auto* textureHDRILayout = new QFormLayout{textureHDRIGroup};
 	textureHDRILayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -213,10 +213,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHDRIFilterCheck->setCheckState(Qt::Checked);
 	textureHDRILayout->addRow(tr("Bilinear Filter"), textureHDRIFilterCheck);
 
-	generalTabLayout->addRow(tr("HDRI"), textureHDRIGroup);
+	textureTabLayout->addRow(tr("HDRI"), textureHDRIGroup);
 
 	// Gamma correction
-	auto* textureGammaCorrectionGroup = new QGroupBox{generalTab};
+	auto* textureGammaCorrectionGroup = new QGroupBox{textureTab};
 	auto* textureGammaCorrectionLayout = new QFormLayout{textureGammaCorrectionGroup};
 	textureGammaCorrectionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -229,20 +229,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
 	textureGammaCorrectionLayout->addRow(tr("Amount"), textureGammaCorrectionAmountSpin);
 
-	generalTabLayout->addRow(tr("Gamma Correction"), textureGammaCorrectionGroup);
+	textureTabLayout->addRow(tr("Gamma Correction"), textureGammaCorrectionGroup);
 
 	// Invert green channel
-	auto* textureInvertGreenCheck = new QCheckBox{generalTab};
-	generalTabLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
+	auto* textureInvertGreenCheck = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
 
 	// Bumpmap scale
-	auto* textureBumpmapScaleSpin = new QMareDoubleSpinBox{generalTab};
+	auto* textureBumpmapScaleSpin = new QMareDoubleSpinBox{textureTab};
 	textureBumpmapScaleSpin->setValue(1.0);
 	textureBumpmapScaleSpin->setSingleStep(0.05);
-	generalTabLayout->addRow(tr("Bumpmap Scale"), textureBumpmapScaleSpin);
+	textureTabLayout->addRow(tr("Bumpmap Scale"), textureBumpmapScaleSpin);
 
 	// CPU compression
-	auto* textureCompressionGroup = new QGroupBox{generalTab};
+	auto* textureCompressionGroup = new QGroupBox{textureTab};
 	auto* textureCompressionLayout = new QFormLayout{textureCompressionGroup};
 	textureCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -259,7 +259,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionLevelSpin->setValue(22);
 	textureCompressionLayout->addRow(tr("Level"), textureCompressionLevelSpin);
 
-	generalTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
+	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
 
 	// Flags tab
 	auto* flagsChecks = new QMareFlagsWidget{tabs};
@@ -428,8 +428,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	auto* recurseIntoSubdirsCheck = new QCheckBox{filesystemGroup};
 	recurseIntoSubdirsCheck->setChecked(createFromDir);
-	recurseIntoSubdirsCheck->setVisible(!createFromDir);
 	filesystemLayout->addRow(tr("Enter Subfolders"), recurseIntoSubdirsCheck);
+	filesystemLayout->setRowVisible(recurseIntoSubdirsCheck, createFromDir);
 
 	auto* watchFilesCheck = new QCheckBox{filesystemGroup};
 	filesystemLayout->addRow(tr("Watch For Changes"), watchFilesCheck);
