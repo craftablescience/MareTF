@@ -17,6 +17,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QScrollArea>
 #include <QStandardItemModel>
 #include <QTimer>
 
@@ -30,23 +31,32 @@
 #include "widgets/QMareSpinBox.h"
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent) : QDialog{parent} {
-	this->setWindowTitle((createFromDir || inputPaths.size() > 1) ? tr("Create Textures") : tr("Create Texture"));
+	this->setWindowTitle(createFromDir || inputPaths.size() > 1 ? tr("Create Textures") : tr("Create Texture"));
+	this->setMinimumWidth(500);
 
-	auto* layout = new QGridLayout{this};
+	auto* layout = new QVBoxLayout{this};
 
-	/* ----------------------------- VERSION BEGIN ------------------------------ */
+	auto* tabs = new QTabWidget{this};
+	layout->addWidget(tabs);
 
-	auto* versionGroup = new QGroupBox{tr("Version"), this};
-	auto* versionLayout = new QFormLayout{versionGroup};
-	versionLayout->setFormAlignment(Qt::AlignHCenter);
+	// General texture settings tab
+	auto* generalTabScroll = new QScrollArea{tabs};
+	auto* generalTab = new QWidget{generalTabScroll};
+	generalTabScroll->setWidgetResizable(true);
+	generalTabScroll->setWidget(generalTab);
+	auto* generalTabLayout = new QFormLayout{generalTab};
+	generalTabLayout->setFormAlignment(Qt::AlignHCenter);
+	tabs->addTab(generalTabScroll, tr("General"));
 
-	auto* platformCombo = new QMareComboBox{versionGroup};
+	// Platform
+	auto* platformCombo = new QMareComboBox{generalTab};
 	for (const auto& [platform, platformName] : not_magic_enum::enum_entries<vtfpp::VTF::Platform>(true)) {
 		platformCombo->addItem(platformName.data(), static_cast<int>(platform));
 	}
-	versionLayout->addRow(tr("Platform"), platformCombo);
+	generalTabLayout->addRow(tr("Platform"), platformCombo);
 
-	auto* versionCombo = new QMareComboBox{versionGroup};
+	// Version
+	auto* versionCombo = new QMareComboBox{generalTab};
 	for (int i = 0; i <= 6; i++) {
 		versionCombo->addItem(QString{"7.%1"}.arg(i), i);
 	}
@@ -55,39 +65,28 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 #else
 	versionCombo->setCurrentIndex(4); // 7.4
 #endif
-	versionLayout->addRow(tr("Version"), versionCombo);
+	generalTabLayout->addRow(tr("Version"), versionCombo);
 
-	/* ------------------------------ VERSION END ------------------------------- */
-
-	layout->addWidget(versionGroup, 0, 0);
-
-	/* ----------------------------- TEXTURES BEGIN ----------------------------- */
-
-	auto* textureGroup = new QGroupBox{tr("Texture"), this};
-	auto* textureLayout = new QFormLayout{textureGroup};
-	textureLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* textureOpaqueFormatCombo = new QMareComboBox{textureGroup};
-	//auto* textureTransparentFormatCombo = new QMareComboBox{textureGroup};
+	auto* textureOpaqueFormatCombo = new QMareComboBox{generalTab};
+	//auto* textureTransparentFormatCombo = new QMareComboBox{generalTab};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
 		textureOpaqueFormatCombo->addItem(formatName.data(), static_cast<int>(format));
 		//textureTransparentFormatCombo->addItem(formatName.data(), static_cast<int>(format));
 	}
 	textureOpaqueFormatCombo->setCurrentIndex(1); // DEFAULT
 	//textureTransparentFormatCombo->setCurrentIndex(1); // DEFAULT
-	textureLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
-	//textureLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
+	generalTabLayout->addRow(tr(/*"Opaque "*/ "Format"), textureOpaqueFormatCombo);
+	//generalTabLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
 
-	auto* textureCompressionQualitySpin = new QMareSpinBox{textureGroup};
+	auto* textureCompressionQualitySpin = new QMareSpinBox{generalTab};
 	textureCompressionQualitySpin->setRange(0, 100);
 	textureCompressionQualitySpin->setSingleStep(10);
 	textureCompressionQualitySpin->setSuffix("%");
 	textureCompressionQualitySpin->setValue(100);
-	textureLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
+	generalTabLayout->addRow(tr("Compression Quality"), textureCompressionQualitySpin);
 
-	/* --------------------------------- Width ---------------------------------- */
-
-	auto* textureWidthGroup = new QGroupBox{textureGroup};
+	// Width
+	auto* textureWidthGroup = new QGroupBox{generalTab};
 	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
 	textureWidthLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -130,11 +129,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeSpin);
 	textureWidthLayout->setRowVisible(4, false);
 
-	textureLayout->addRow(tr("Width"), textureWidthGroup);
+	generalTabLayout->addRow(tr("Width"), textureWidthGroup);
 
-	/* --------------------------------- Height --------------------------------- */
-
-	auto* textureHeightGroup = new QGroupBox{textureGroup};
+	// Height
+	auto* textureHeightGroup = new QGroupBox{generalTab};
 	auto* textureHeightLayout = new QFormLayout{textureHeightGroup};
 	textureHeightLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -176,11 +174,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeSpin);
 	textureHeightLayout->setRowVisible(4, false);
 
-	textureLayout->addRow(tr("Height"), textureHeightGroup);
+	generalTabLayout->addRow(tr("Height"), textureHeightGroup);
 
-	/* -------------------------------- Mipmaps --------------------------------- */
-
-	auto* textureMipmapsGroup = new QGroupBox{textureGroup};
+	// Mipmaps
+	auto* textureMipmapsGroup = new QGroupBox{generalTab};
 	auto* textureMipmapsLayout = new QFormLayout{textureMipmapsGroup};
 	textureMipmapsLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -199,11 +196,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureMipmapsScaleSpin->setMinimum(0);
 	textureMipmapsLayout->addRow(tr("Scale (Console)"), textureMipmapsScaleSpin);
 
-	textureLayout->addRow(tr("Mipmaps"), textureMipmapsGroup);
+	generalTabLayout->addRow(tr("Mipmaps"), textureMipmapsGroup);
 
-	/* ---------------------------------- HDRI ---------------------------------- */
-
-	auto* textureHDRIGroup = new QGroupBox{textureGroup};
+	// HDRI
+	auto* textureHDRIGroup = new QGroupBox{generalTab};
 	auto* textureHDRILayout = new QFormLayout{textureHDRIGroup};
 	textureHDRILayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -217,11 +213,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHDRIFilterCheck->setCheckState(Qt::Checked);
 	textureHDRILayout->addRow(tr("Bilinear Filter"), textureHDRIFilterCheck);
 
-	textureLayout->addRow(tr("HDRI"), textureHDRIGroup);
+	generalTabLayout->addRow(tr("HDRI"), textureHDRIGroup);
 
-	/* ---------------------------- Gamme Correction ---------------------------- */
-
-	auto* textureGammaCorrectionGroup = new QGroupBox{textureGroup};
+	// Gamma correction
+	auto* textureGammaCorrectionGroup = new QGroupBox{generalTab};
 	auto* textureGammaCorrectionLayout = new QFormLayout{textureGammaCorrectionGroup};
 	textureGammaCorrectionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -234,21 +229,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
 	textureGammaCorrectionLayout->addRow(tr("Amount"), textureGammaCorrectionAmountSpin);
 
-	textureLayout->addRow(tr("Gamma Correction"), textureGammaCorrectionGroup);
+	generalTabLayout->addRow(tr("Gamma Correction"), textureGammaCorrectionGroup);
 
-	/* ----------------------- Invert Green/Bumpmap Scale ----------------------- */
+	// Invert green channel
+	auto* textureInvertGreenCheck = new QCheckBox{generalTab};
+	generalTabLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
 
-	auto* textureInvertGreenCheck = new QCheckBox{textureGroup};
-	textureLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
-
-	auto* textureBumpmapScaleSpin = new QMareDoubleSpinBox{textureGroup};
+	// Bumpmap scale
+	auto* textureBumpmapScaleSpin = new QMareDoubleSpinBox{generalTab};
 	textureBumpmapScaleSpin->setValue(1.0);
 	textureBumpmapScaleSpin->setSingleStep(0.05);
-	textureLayout->addRow(tr("Bumpmap Scale"), textureBumpmapScaleSpin);
+	generalTabLayout->addRow(tr("Bumpmap Scale"), textureBumpmapScaleSpin);
 
-	/* ---------------------------- CPU Compression ----------------------------- */
-
-	auto* textureCompressionGroup = new QGroupBox{textureGroup};
+	// CPU compression
+	auto* textureCompressionGroup = new QGroupBox{generalTab};
 	auto* textureCompressionLayout = new QFormLayout{textureCompressionGroup};
 	textureCompressionLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -265,81 +259,35 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionLevelSpin->setValue(22);
 	textureCompressionLayout->addRow(tr("Level"), textureCompressionLevelSpin);
 
-	textureLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
+	generalTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
 
-	/* ------------------------------ TEXTURES END ------------------------------ */
+	// Flags tab
+	auto* flagsChecks = new QMareFlagsWidget{tabs};
+	tabs->addTab(flagsChecks, tr("Flags"));
 
-	layout->addWidget(textureGroup, 1, 0, 7, 1);
+	// Resources tab
+	auto* resourcesTabScroll = new QScrollArea{tabs};
+	auto* resourcesTab = new QWidget{resourcesTabScroll};
+	resourcesTabScroll->setWidgetResizable(true);
+	resourcesTabScroll->setWidget(resourcesTab);
+	auto* resourcesTabLayout = new QFormLayout{resourcesTab};
+	resourcesTabLayout->setFormAlignment(Qt::AlignHCenter);
+	tabs->addTab(resourcesTabScroll, tr("Resources"));
 
-	/* ------------------------------ FLAGS BEGIN ------------------------------- */
-
-	auto* flagsGroup = new QGroupBox{tr("Flags"), this};
-	auto* flagsLayout = new QVBoxLayout{flagsGroup};
-
-	auto* flagsChecks = new QMareFlagsWidget{flagsGroup};
-	flagsLayout->addWidget(flagsChecks);
-
-
-	/* ------------------------------- FLAGS END -------------------------------- */
-
-	layout->addWidget(flagsGroup, 0, 1, 8, 1);
-
-	/* ---------------------------- RESOURCES BEGIN ----------------------------- */
-
-	auto* resourcesGroup = new QGroupBox{tr("Resources"), this};
-	auto* resourcesLayout = new QFormLayout{resourcesGroup};
-	resourcesLayout->setFormAlignment(Qt::AlignHCenter);
-
-	/* ------------------------------- Thumbnail -------------------------------- */
-
-	auto* resourcesGenerateThumbnailCheck = new QCheckBox{resourcesGroup};
+	// Thumbnail resource
+	auto* resourcesGenerateThumbnailCheck = new QCheckBox{resourcesTab};
 	resourcesGenerateThumbnailCheck->setChecked(true);
-	resourcesLayout->addRow(tr("Compute Thumbnail"), resourcesGenerateThumbnailCheck);
+	resourcesGenerateThumbnailCheck->setToolTip(tr("Used to recolor impact particle SFX."));
+	resourcesTabLayout->addRow(tr("Compute Thumbnail"), resourcesGenerateThumbnailCheck);
 
-	/* ---------------------------------- SHT ----------------------------------- */
+	// Author resource
+	auto* resourcesATHInfo = new QLineEdit{resourcesTab};
+	resourcesATHInfo->setMinimumWidth(200);
+	resourcesATHInfo->setToolTip("Nonstandard resource used to specify the author of a given texture.");
+	resourcesTabLayout->addRow(tr("Author"), resourcesATHInfo);
 
-	auto* resourcesSHTGroup = new QGroupBox{resourcesGroup};
-	auto* resourcesSHTLayout = new QFormLayout{resourcesSHTGroup};
-	resourcesSHTLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* resourcesSHTEnableCheck = new QCheckBox{resourcesSHTGroup};
-	resourcesSHTLayout->addRow(tr("Add Resource"), resourcesSHTEnableCheck);
-
-	auto* resourcesSHTPathParent = new QWidget{resourcesSHTGroup};
-	auto* resourcesSHTPathLayout = new QHBoxLayout{resourcesSHTPathParent};
-	resourcesSHTPathLayout->setSpacing(4);
-	resourcesSHTPathLayout->setContentsMargins(0, 0, 0, 0);
-
-	auto* resourcesSHTPath = new QLineEdit{resourcesSHTGroup};
-	resourcesSHTPath->setMinimumWidth(200);
-	resourcesSHTPathLayout->addWidget(resourcesSHTPath);
-
-	auto* resourcesSHTPathSearch = new QPushButton{resourcesSHTGroup};
-	resourcesSHTPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
-	resourcesSHTPathLayout->addWidget(resourcesSHTPathSearch);
-
-	resourcesSHTLayout->addRow(tr("Path"), resourcesSHTPathParent);
-
-	resourcesLayout->addRow(tr("Particle Sheet"), resourcesSHTGroup);
-
-	/* ---------------------------------- CRC ----------------------------------- */
-
-	auto* resourcesCRCGroup = new QGroupBox{resourcesGroup};
-	auto* resourcesCRCLayout = new QFormLayout{resourcesCRCGroup};
-	resourcesCRCLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* resourcesCRCEnableCheck = new QCheckBox{resourcesCRCGroup};
-	resourcesCRCLayout->addRow(tr("Add Resource"), resourcesCRCEnableCheck);
-
-	auto* resourcesCRCValue = new QLineEdit{resourcesCRCGroup};
-	resourcesCRCValue->setInputMask("HHHHHHHH");
-	resourcesCRCLayout->addRow(tr("Value"), resourcesCRCValue);
-
-	resourcesLayout->addRow(tr("CRC32"), resourcesCRCGroup);
-
-	/* ---------------------------------- LOD ----------------------------------- */
-
-	auto* resourcesLODGroup = new QGroupBox{resourcesGroup};
+	// LOD control info resource
+	auto* resourcesLODGroup = new QGroupBox{resourcesTab};
 	auto* resourcesLODLayout = new QFormLayout{resourcesLODGroup};
 	resourcesLODLayout->setFormAlignment(Qt::AlignHCenter);
 
@@ -362,67 +310,49 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	resourcesLODVConsoleSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("V (Console)"), resourcesLODVConsoleSpin);
 
-	resourcesLayout->addRow(tr("LOD Control Info"), resourcesLODGroup);
+	resourcesTabLayout->addRow(tr("LOD Control Info"), resourcesLODGroup);
 
-	/* ---------------------------------- TS0 ----------------------------------- */
+	// CRC resource
+	auto* resourcesCRCValue = new QLineEdit{resourcesTab};
+	resourcesCRCValue->setInputMask("HHHHHHHH");
+	resourcesTabLayout->addRow(tr("CRC32"), resourcesCRCValue);
 
-	auto* resourcesTS0Group = new QGroupBox{resourcesGroup};
-	auto* resourcesTS0Layout = new QFormLayout{resourcesTS0Group};
-	resourcesTS0Layout->setFormAlignment(Qt::AlignHCenter);
+	// SHT resource
+	auto* resourcesSHTPathParent = new QWidget{resourcesTab};
+	auto* resourcesSHTPathLayout = new QHBoxLayout{resourcesSHTPathParent};
+	resourcesSHTPathLayout->setSpacing(4);
+	resourcesSHTPathLayout->setContentsMargins(0, 0, 0, 0);
 
-	auto* resourcesTS0EnableCheck = new QCheckBox{resourcesTS0Group};
-	resourcesTS0Layout->addRow(tr("Add Resource"), resourcesTS0EnableCheck);
+	auto* resourcesSHTPath = new QLineEdit{resourcesSHTPathParent};
+	resourcesSHTPath->setMinimumWidth(200);
+	resourcesSHTPathLayout->addWidget(resourcesSHTPath);
 
-	auto* resourcesTS0Value = new QLineEdit{resourcesTS0Group};
+	auto* resourcesSHTPathSearch = new QPushButton{resourcesSHTPathParent};
+	resourcesSHTPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
+	resourcesSHTPathLayout->addWidget(resourcesSHTPathSearch);
+
+	resourcesTabLayout->addRow(tr("Particle Sheet Path"), resourcesSHTPathParent);
+
+	// Extended flags resource
+	auto* resourcesTS0Value = new QLineEdit{resourcesTab};
 	resourcesTS0Value->setInputMask("HHHHHHHH");
-	resourcesTS0Layout->addRow(tr("Value"), resourcesTS0Value);
+	resourcesTabLayout->addRow(tr("Extended Flags"), resourcesTS0Value);
 
-	resourcesLayout->addRow(tr("Extended Flags"), resourcesTS0Group);
-
-	/* ---------------------------------- KVD ----------------------------------- */
-
-	auto* resourcesKVDGroup = new QGroupBox{resourcesGroup};
-	auto* resourcesKVDLayout = new QFormLayout{resourcesKVDGroup};
-	resourcesKVDLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* resourcesKVDEnableCheck = new QCheckBox{resourcesKVDGroup};
-	resourcesKVDLayout->addRow(tr("Add Resource"), resourcesKVDEnableCheck);
-
-	auto* resourcesKVDPathParent = new QWidget{resourcesKVDGroup};
+	// KeyValues Data resource
+	auto* resourcesKVDPathParent = new QWidget{resourcesTab};
 	auto* resourcesKVDPathLayout = new QHBoxLayout{resourcesKVDPathParent};
 	resourcesKVDPathLayout->setSpacing(4);
 	resourcesKVDPathLayout->setContentsMargins(0, 0, 0, 0);
 
-	auto* resourcesKVDPath = new QLineEdit{resourcesKVDGroup};
+	auto* resourcesKVDPath = new QLineEdit{resourcesKVDPathParent};
 	resourcesKVDPath->setMinimumWidth(200);
 	resourcesKVDPathLayout->addWidget(resourcesKVDPath);
 
-	auto* resourcesKVDPathSearch = new QPushButton{resourcesKVDGroup};
+	auto* resourcesKVDPathSearch = new QPushButton{resourcesKVDPathParent};
 	resourcesKVDPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
 	resourcesKVDPathLayout->addWidget(resourcesKVDPathSearch);
 
-	resourcesKVDLayout->addRow(tr("Path"), resourcesKVDPathParent);
-
-	resourcesLayout->addRow(tr("KeyValues Data"), resourcesKVDGroup);
-
-	/* ---------------------------------- ATH ----------------------------------- */
-
-	auto* resourcesATHGroup = new QGroupBox{resourcesGroup};
-	auto* resourcesATHLayout = new QFormLayout{resourcesATHGroup};
-	resourcesATHLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* resourcesATHEnableCheck = new QCheckBox{resourcesATHGroup};
-	resourcesATHLayout->addRow(tr("Add Resource"), resourcesATHEnableCheck);
-
-	auto* resourcesATHInfo = new QLineEdit{resourcesATHGroup};
-	resourcesATHInfo->setMinimumWidth(200);
-	resourcesATHLayout->addRow(tr("Author"), resourcesATHInfo);
-
-	resourcesLayout->addRow(tr("Author Info"), resourcesATHGroup);
-
-	/* ----------------------------- RESOURCES END ------------------------------ */
-
-	layout->addWidget(resourcesGroup, 0, 2, 6, 1);
+	resourcesTabLayout->addRow(tr("KeyValues Data Path"), resourcesKVDPathParent);
 
 	/* ---------------------------- FILESYSTEM BEGIN ---------------------------- */
 
@@ -498,7 +428,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	auto* recurseIntoSubdirsCheck = new QCheckBox{filesystemGroup};
 	recurseIntoSubdirsCheck->setChecked(createFromDir);
-	recurseIntoSubdirsCheck->setDisabled(!createFromDir);
+	recurseIntoSubdirsCheck->setVisible(!createFromDir);
 	filesystemLayout->addRow(tr("Enter Subfolders"), recurseIntoSubdirsCheck);
 
 	auto* watchFilesCheck = new QCheckBox{filesystemGroup};
@@ -506,7 +436,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	/* ----------------------------- FILESYSTEM END ----------------------------- */
 
-	layout->addWidget(filesystemGroup, 6, 2);
+	layout->addWidget(filesystemGroup);
 
 	/* ----------------------------- BUTTONS BEGIN ------------------------------ */
 
@@ -519,7 +449,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	/* ------------------------------ BUTTONS END ------------------------------- */
 
-	layout->addWidget(dialogButtons, 7, 2, Qt::AlignBottom | Qt::AlignRight);
+	layout->addWidget(dialogButtons, Qt::AlignBottom | Qt::AlignRight);
 
 	/* ------------------------------ LOGIC BEGIN ------------------------------- */
 
@@ -630,7 +560,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Particle Sheet", "CRC32", "LOD", "Extended Flags", "KeyValues Data" groups if platform is PC and version is less than 3, or platform is XBOX
 	// Repopulate "Flags" group checklist
 
-	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesTS0Group, resourcesKVDGroup, resourcesATHGroup](int index) {
+	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesATHInfo, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesCRCValue, resourcesSHTPathParent, resourcesTS0Value, resourcesKVDPathParent](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(index).toInt());
 
 		versionCombo->setDisabled(currentPlatform != vtfpp::VTF::PLATFORM_PC);
@@ -683,28 +613,30 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		resourcesLODVConsoleSpin->setDisabled(!resourcesLODEnableCheck->isChecked() || currentPlatform == vtfpp::VTF::PLATFORM_PC);
 #endif
 
-		resourcesSHTGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesCRCGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesATHGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		const bool disableResources = (currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX;
+		resourcesATHInfo->setDisabled(disableResources);
+		resourcesLODGroup->setDisabled(disableResources);
+		resourcesCRCValue->setDisabled(disableResources);
+		resourcesSHTPathParent->setDisabled(disableResources);
+		resourcesTS0Value->setDisabled(disableResources);
+		resourcesKVDPathParent->setDisabled(disableResources);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, versionCombo->currentIndex());
 	});
 	platformCombo->currentIndexChanged(platformCombo->currentIndex());
 
-	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesSHTGroup, resourcesCRCGroup, resourcesLODGroup, resourcesTS0Group, resourcesKVDGroup, resourcesATHGroup](int index) {
+	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesATHInfo, resourcesLODGroup, resourcesCRCValue, resourcesSHTPathParent, resourcesTS0Value, resourcesKVDPathParent](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		textureCompressionGroup->setDisabled(index != 6);
 
-		resourcesSHTGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesCRCGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesLODGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesTS0Group->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesKVDGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
-		resourcesATHGroup->setDisabled((currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX);
+		const bool disableResources = (currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX;
+		resourcesATHInfo->setDisabled(disableResources);
+		resourcesLODGroup->setDisabled(disableResources);
+		resourcesCRCValue->setDisabled(disableResources);
+		resourcesSHTPathParent->setDisabled(disableResources);
+		resourcesTS0Value->setDisabled(disableResources);
+		resourcesKVDPathParent->setDisabled(disableResources);
 
 		flagsChecks->repopulateFlagList(0, currentPlatform, index);
 	});
@@ -717,36 +649,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			resourcesSHTPath->setText(path);
 		}
 	});
-
-	// Disable "Path" and "Search" in "Particle Sheet" group if disabled
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(resourcesSHTEnableCheck, &QCheckBox::checkStateChanged, this, [resourcesSHTPath, resourcesSHTPathSearch](Qt::CheckState state) {
-		resourcesSHTPath->setDisabled(state != Qt::Checked);
-		resourcesSHTPathSearch->setDisabled(state != Qt::Checked);
-	});
-	resourcesSHTEnableCheck->checkStateChanged(resourcesSHTEnableCheck->checkState());
-#else
-	connect(resourcesSHTEnableCheck, &QCheckBox::stateChanged, this, [resourcesSHTPath, resourcesSHTPathSearch](bool state) {
-		resourcesSHTPath->setDisabled(!state);
-		resourcesSHTPathSearch->setDisabled(!state);
-	});
-	resourcesSHTEnableCheck->stateChanged(resourcesSHTEnableCheck->isChecked());
-#endif
-
-	// Disable "Value" in "CRC32" group if disabled
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(resourcesCRCEnableCheck, &QCheckBox::checkStateChanged, this, [resourcesCRCValue](Qt::CheckState state) {
-		resourcesCRCValue->setDisabled(state != Qt::Checked);
-	});
-	resourcesCRCEnableCheck->checkStateChanged(resourcesCRCEnableCheck->checkState());
-#else
-	connect(resourcesCRCEnableCheck, &QCheckBox::stateChanged, this, [resourcesCRCValue](bool state) {
-		resourcesCRCValue->setDisabled(!state);
-	});
-	resourcesCRCEnableCheck->stateChanged(resourcesCRCEnableCheck->isChecked());
-#endif
 
 	// Disable "U", "V", "U (Console)", "V (Console)" in "LOD" group if disabled
 	// - Also disable "U (Console)" and "V (Console)" if platform is PC
@@ -773,20 +675,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	resourcesLODEnableCheck->stateChanged(resourcesLODEnableCheck->isChecked());
 #endif
 
-	// Disable "Value" in "TS0" group if disabled
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(resourcesTS0EnableCheck, &QCheckBox::checkStateChanged, this, [resourcesTS0Value](Qt::CheckState state) {
-		resourcesTS0Value->setDisabled(state != Qt::Checked);
-	});
-	resourcesTS0EnableCheck->checkStateChanged(resourcesTS0EnableCheck->checkState());
-#else
-	connect(resourcesTS0EnableCheck, &QCheckBox::stateChanged, this, [resourcesTS0Value](bool state) {
-		resourcesTS0Value->setDisabled(!state);
-	});
-	resourcesTS0EnableCheck->stateChanged(resourcesTS0EnableCheck->isChecked());
-#endif
-
 	// Set path in "KeyValues Data" group when "Search" clicked
 
 	connect(resourcesKVDPathSearch, &QPushButton::pressed, this, [this, resourcesKVDPath] {
@@ -794,22 +682,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			resourcesKVDPath->setText(path);
 		}
 	});
-
-	// Disable "Path" and "Search" in "KeyValues Data" group if disabled
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(resourcesKVDEnableCheck, &QCheckBox::checkStateChanged, this, [resourcesKVDPath, resourcesKVDPathSearch](Qt::CheckState state) {
-		resourcesKVDPath->setDisabled(state != Qt::Checked);
-		resourcesKVDPathSearch->setDisabled(state != Qt::Checked);
-	});
-	resourcesKVDEnableCheck->checkStateChanged(resourcesKVDEnableCheck->checkState());
-#else
-	connect(resourcesKVDEnableCheck, &QCheckBox::stateChanged, this, [resourcesKVDPath, resourcesKVDPathSearch](bool state) {
-		resourcesKVDPath->setDisabled(!state);
-		resourcesKVDPathSearch->setDisabled(!state);
-	});
-	resourcesKVDEnableCheck->stateChanged(resourcesKVDEnableCheck->isChecked());
-#endif
 
 	// Set input path in "Filesystem" group when "Input Search" clicked
 
@@ -912,13 +784,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			cli->addArgPair("--flags-uint", std::format("{}", flagsUInt).data());
 		}
 		cli->addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
-		if (resourcesSHTGroup->isEnabled() && resourcesSHTEnableCheck->isChecked()) {
-			cli->addArgPair("--particle-sheet-resource", resourcesSHTPath->text());
-		}
-		if (resourcesCRCGroup->isEnabled() && resourcesCRCEnableCheck->isChecked()) {
-			uint32_t crc;
-			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
-			cli->addArgPair("--crc-resource", std::format("{}", crc).data());
+		if (resourcesATHInfo->isEnabled() && !resourcesATHInfo->text().isEmpty()) {
+			cli->addArgPair("--ath-resource", resourcesATHInfo->text());
 		}
 		if (resourcesLODGroup->isEnabled() && resourcesLODEnableCheck->isChecked()) {
 			if (resourcesLODUConsoleSpin->isEnabled() || resourcesLODVConsoleSpin->isEnabled()) {
@@ -927,16 +794,21 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				cli->addArgPair("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()).data());
 			}
 		}
-		if (resourcesTS0Group->isEnabled() && resourcesTS0EnableCheck->isChecked()) {
+		if (resourcesCRCValue->isEnabled() && !resourcesCRCValue->text().isEmpty()) {
+			uint32_t crc;
+			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
+			cli->addArgPair("--crc-resource", std::format("{}", crc).data());
+		}
+		if (resourcesSHTPathParent->isEnabled() && !resourcesSHTPath->text().isEmpty()) {
+			cli->addArgPair("--particle-sheet-resource", resourcesSHTPath->text());
+		}
+		if (resourcesTS0Value->isEnabled() && !resourcesTS0Value->text().isEmpty()) {
 			uint32_t ts0;
 			sourcepp::string::toInt(resourcesTS0Value->text().toUtf8().constData(), ts0, 16);
 			cli->addArgPair("--ts0-resource", std::format("{}", ts0).data());
 		}
-		if (resourcesKVDGroup->isEnabled() && resourcesKVDEnableCheck->isChecked()) {
+		if (resourcesKVDPathParent->isEnabled() && !resourcesKVDPath->text().isEmpty()) {
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
-		}
-		if (resourcesATHGroup->isEnabled() && resourcesATHEnableCheck->isChecked()) {
-			cli->addArgPair("--ath-resource", resourcesATHInfo->text());
 		}
 		if (!filesystemOutputPath->text().isEmpty()) {
 			cli->addArgPair("--output", filesystemOutputPath->text());
