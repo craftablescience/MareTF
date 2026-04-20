@@ -266,7 +266,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	auto* textureCompressionLevelSpin = new QMareSpinBox{textureCompressionGroup};
 	textureCompressionLevelSpin->setRange(1, 22);
-	textureCompressionLevelSpin->setValue(22);
+	textureCompressionLevelSpin->setValue(18);
 	textureCompressionLayout->addRow(tr("Level"), textureCompressionLevelSpin);
 
 	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
