@@ -45,7 +45,9 @@ QMareTextureWindow::QMareTextureWindow() {
 	// Window setup ---------------------------------------
 
 	this->setWindowIcon(QIcon(":/logo.png"));
+#ifndef Q_OS_WASM
 	this->resize(this->screen()->availableGeometry().size() * 0.7);
+#endif
 
 	// Settings helper ------------------------------------
 
@@ -68,13 +70,15 @@ QMareTextureWindow::QMareTextureWindow() {
 					this->loadTexture(path);
 				}
 			});
-			createTextureDialog->exec();
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
 		}
 	});
 
 	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
-			createTextureDialog->exec();
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
 		}
 	});
 
@@ -96,12 +100,6 @@ QMareTextureWindow::QMareTextureWindow() {
 		this->close();
 	});
 
-	// Edit menu ------------------------------------------
-
-#ifdef DEBUG // todo: edit textures
-	auto* editMenu = this->menuBar()->addMenu(tr("&Edit"));
-#endif
-
 	// View menu ------------------------------------------
 
 	auto* viewMenu = this->menuBar()->addMenu(tr("&View"));
@@ -112,9 +110,11 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* generalMenu = optionsMenu->addMenu(QIcon{":/logo.png"}, tr("&General"));
 
+#ifndef Q_OS_WASM
 	auto* optionRaiseToTopOpeningFileAction = generalMenu->addAction(tr("Raise When Opening New File"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
 	optionRaiseToTopOpeningFileAction->setCheckable(true);
 	optionRaiseToTopOpeningFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
+#endif
 
 	auto* optionShowTabBarForSingleFileAction = generalMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
 		QMareOptions::invert(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE);
@@ -164,6 +164,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		themeMenuGroup->addAction(action);
 	}
 
+#ifndef Q_OS_WASM
 	// Not translating this menu name, the translation is the same everywhere
 	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "&Discord");
 	const auto setupDiscordRichPresence = [] {
@@ -190,6 +191,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* discordUpdateTimer = new QTimer{this};
 	QObject::connect(discordUpdateTimer, &QTimer::timeout, this, &QMareDiscordPresence::update);
 	discordUpdateTimer->start(20);
+#endif
 
 	// Help menu ------------------------------------------
 

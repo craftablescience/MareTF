@@ -169,7 +169,7 @@ void QMareTextureWidget::saveCurrentTexture() {
 	const auto fileFormat = ::supportedImageFileFormatExtension(std::filesystem::path{savePath}.extension().string());
 	if (this->vtf.getFaceCount() > 1 && this->cubemapMode == 0) {
 		// ReSharper disable once CppRedundantCastExpression
-		const std::span imageData{reinterpret_cast<const std::byte*>(this->textureCurrent.constBits()), static_cast<uint64_t>(this->textureCurrent.sizeInBytes())};
+		const std::span imageData{reinterpret_cast<const std::byte*>(this->textureCurrent.constBits()), static_cast<std::span<const std::byte>::size_type>(this->textureCurrent.sizeInBytes())};
 		const auto fileData = vtfpp::ImageConversion::convertImageDataToFile(imageData, vtfpp::ImageFormat::BGRA8888, this->textureCurrent.width(), this->textureCurrent.height());
 		if (!fileData.empty() && sourcepp::fs::writeFileBuffer(savePath, fileData)) {
 			return;

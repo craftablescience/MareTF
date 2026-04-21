@@ -4,7 +4,7 @@
 
 namespace {
 
-#ifdef _WIN32
+#if defined(Q_OS_WIN) || defined(Q_OS_WASM)
 constexpr auto MARETF_PATH_SEPARATOR = ';';
 #else
 constexpr auto MARETF_PATH_SEPARATOR = ':';

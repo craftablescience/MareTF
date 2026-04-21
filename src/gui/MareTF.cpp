@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
 	const auto options = std::make_unique<QSettings>();
 	QMareOptions::setupOptions(*options);
 
+#ifndef Q_OS_WASM
 	const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
 	QLocalSocket socket;
 	socket.connectToServer(serverName);
@@ -71,6 +72,7 @@ int main(int argc, char* argv[]) {
 		});
 	});
 	server.listen(serverName);
+#endif
 
 	const auto languageOverride = QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE);
 	const auto locale = languageOverride.isEmpty() ? QLocale{} : QLocale{languageOverride};

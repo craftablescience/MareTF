@@ -42,13 +42,15 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 				g_ManeWindow->show();
 				this->close();
 			});
-			createTextureDialog->exec();
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
 		}
 	});
 
 	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
-			createTextureDialog->exec();
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
 		}
 	});
 
@@ -83,9 +85,11 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->addToolBar(Qt::ToolBarArea::TopToolBarArea, this->toolbar);
 
+#ifndef Q_OS_WASM
 	const auto scaledScreenSize = this->screen()->availableGeometry().size() * 0.5f;
 	const auto scaledScreenSizeMinDim = qMax(qMin(scaledScreenSize.width(), scaledScreenSize.height()), 300);
 	this->setFixedSize(scaledScreenSizeMinDim, scaledScreenSizeMinDim + this->toolbar->height());
+#endif
 
 	this->setContextMenuPolicy(Qt::NoContextMenu);
 	this->toolbar->setContextMenuPolicy(Qt::NoContextMenu);

@@ -7,15 +7,16 @@ CMakeSettings.json
 
 # Build
 .cache/
-build/
-dist/
+build*/
+dist*/
 cmake-build-*/
-out/
+out*/
 *.dll
 *.ilk
 *.pdb
 *.pyd
 *.so*
+*.user
 
 
 # Generated

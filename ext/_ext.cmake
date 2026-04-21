@@ -19,6 +19,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/indicators")
 set(SOURCEPP_LIBS_START_ENABLED OFF CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_KVPP            ON CACHE INTERNAL "" FORCE)
 set(SOURCEPP_USE_VTFPP           ON CACHE INTERNAL "" FORCE)
+if(EMSCRIPTEN)
+    set(SOURCEPP_BUILD_WITH_THREADS OFF CACHE INTERNAL "" FORCE)
+endif()
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/sourcepp")
 
 # Qt
@@ -34,6 +37,10 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         list(APPEND CMAKE_PREFIX_PATH "${QT_BASEDIR}")
         set(QT_INCLUDE "${QT_BASEDIR}/include")
         message(STATUS "Using ${QT_INCLUDE} as the Qt include directory")
+    endif()
+
+    if(EMSCRIPTEN)
+        set(QT_WASM_INITIAL_MEMORY "128MB" CACHE INTERNAL "" FORCE)
     endif()
 
     # CMake has an odd policy that links a special link lib for Qt on newer versions of CMake
@@ -55,6 +62,9 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         target_link_libraries(${TARGET} PRIVATE Qt::Core Qt::Gui Qt::Widgets Qt::Network)
         target_include_directories(${TARGET} PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets" "${QT_INCLUDE}/QtNetwork")
         qt_add_resources(${TARGET} "${TARGET}_qt_translations" BASE "${QT_TRANSLATIONS_DIR}" PREFIX "/i18n" FILES ${QT_I18N_QM_FILES})
+        if(EMSCRIPTEN)
+            target_link_options(${TARGET} PUBLIC --bind -sALLOW_MEMORY_GROWTH=1 -sASYNCIFY=1 -sASYNCIFY_IMPORTS=[QEventLoop::exec,QDialog::exec,QMessageBox::exec])
+        endif()
     endfunction()
 
     # Copy these in

@@ -143,6 +143,6 @@ QMareCreditsDialog::QMareCreditsDialog(QWidget* parent) : QDialog{parent} {
 
 void QMareCreditsDialog::showCredits(QWidget* parent) {
 	auto* dialog = new QMareCreditsDialog{parent};
-	dialog->exec();
-	dialog->deleteLater();
+	dialog->setAttribute(Qt::WA_DeleteOnClose);
+	dialog->open();
 }

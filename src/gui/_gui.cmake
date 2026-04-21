@@ -33,7 +33,7 @@ set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/windows/QMareTextureWindow.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/windows/QMareTextureWindow.h"
         "${CMAKE_CURRENT_LIST_DIR}/MareTF.cpp")
-add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE ${${PROJECT_NAME}_gui_SOURCES})
+qt_add_executable(${PROJECT_NAME}_gui WIN32 MACOSX_BUNDLE ${${PROJECT_NAME}_gui_SOURCES})
 cs_configure_target(${PROJECT_NAME}_gui LOGO MANIFEST)
 
 if(MARETF_BUILD_FOR_STRATA_SOURCE)
@@ -41,6 +41,9 @@ if(MARETF_BUILD_FOR_STRATA_SOURCE)
 endif()
 
 target_include_directories(${PROJECT_NAME}_gui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cli" "${CMAKE_CURRENT_SOURCE_DIR}/src/common" "${CMAKE_CURRENT_SOURCE_DIR}/src/gui")
+if(EMSCRIPTEN)
+    target_include_directories(${PROJECT_NAME}_gui PUBLIC "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
+endif()
 
 target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 
