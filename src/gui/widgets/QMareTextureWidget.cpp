@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QFileDialog>
+#include <QEvent>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -42,6 +43,7 @@ namespace {
 
 QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget{parent} {
 	this->setContextMenuPolicy(Qt::CustomContextMenu);
+	this->setAttribute(Qt::WA_AcceptTouchEvents);
 
 	auto* contextMenu = new QMenu{this};
 
@@ -231,7 +233,7 @@ uint8_t QMareTextureWidget::getCurrentMip() const {
 }
 
 void QMareTextureWidget::setCurrentMip(uint8_t mip) {
-	this->currentMip = std::clamp<uint8_t>(mip, 0, this->vtf.getMipCount() - 1);
+	this->currentMip = qBound<uint8_t>(0, mip, this->vtf.getMipCount() - 1);
 	this->reloadCurrentTexture();
 }
 
@@ -240,7 +242,7 @@ uint16_t QMareTextureWidget::getCurrentFrame() const {
 }
 
 void QMareTextureWidget::setCurrentFrame(uint16_t frame) {
-	this->currentFrame = std::clamp<uint16_t>(frame, 0, this->vtf.getFrameCount() - 1);
+	this->currentFrame = qBound<uint16_t>(0, frame, this->vtf.getFrameCount() - 1);
 	this->reloadCurrentTexture();
 }
 
@@ -249,7 +251,7 @@ uint8_t QMareTextureWidget::getCurrentFace() const {
 }
 
 void QMareTextureWidget::setCurrentFace(uint8_t face) {
-	this->currentFace = std::clamp<uint8_t>(face, 0, this->vtf.getFaceCount() - 1);
+	this->currentFace = qBound<uint8_t>(0, face, this->vtf.getFaceCount() - 1);
 	this->reloadCurrentTexture();
 }
 
@@ -258,7 +260,7 @@ uint16_t QMareTextureWidget::getCurrentDepth() const {
 }
 
 void QMareTextureWidget::setCurrentDepth(uint16_t depth) {
-	this->currentDepth = std::clamp<uint16_t>(depth, 0, this->vtf.getDepth() - 1);
+	this->currentDepth = qBound<uint16_t>(0, depth, this->vtf.getDepth() - 1);
 	this->reloadCurrentTexture();
 }
 
@@ -318,6 +320,31 @@ void QMareTextureWidget::setCurrentCubemapMode(int mode) {
 
 QMareTextureWidget::operator bool() const {
 	return !this->path.isEmpty() && !this->textureCurrent.isNull();
+}
+
+bool QMareTextureWidget::event(QEvent* e) {
+	if (
+		QTouchEvent* touch;
+		(e->type() == QEvent::TouchBegin || e->type() == QEvent::TouchUpdate || e->type() == QEvent::TouchEnd) && ((touch = dynamic_cast<QTouchEvent*>(e)))
+	) {
+		if (const auto& points = touch->points(); points.length() >= 2) {
+			const auto point0 = points[0].position();
+			const auto point1 = points[1].position();
+			const auto rawDistance = static_cast<float>(qSqrt(qPow(point1.x() - point0.x(), 2) + qPow(point1.y() - point0.y(), 2)));
+
+			if (e->type() == QEvent::TouchBegin) {
+				this->previousDistance = rawDistance;
+			}
+			const auto distance = qBound(0.5f, rawDistance / this->previousDistance, 5.f);
+			this->previousDistance = rawDistance;
+			this->textureZoom *= distance;
+
+			this->update();
+			e->accept();
+			return true;
+		}
+	}
+	return this->QWidget::event(e);
 }
 
 void QMareTextureWidget::mouseMoveEvent(QMouseEvent* e) {
