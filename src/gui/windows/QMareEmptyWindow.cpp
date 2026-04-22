@@ -85,7 +85,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->addToolBar(Qt::ToolBarArea::TopToolBarArea, this->toolbar);
 
-#ifndef Q_OS_WASM
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	const auto scaledScreenSize = this->screen()->availableGeometry().size() * 0.5f;
 	const auto scaledScreenSizeMinDim = qMax(qMin(scaledScreenSize.width(), scaledScreenSize.height()), 300);
 	this->setFixedSize(scaledScreenSizeMinDim, scaledScreenSizeMinDim + this->toolbar->height());

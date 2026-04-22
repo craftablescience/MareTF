@@ -45,7 +45,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	// Window setup ---------------------------------------
 
 	this->setWindowIcon(QIcon(":/logo.png"));
-#ifndef Q_OS_WASM
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	this->resize(this->screen()->availableGeometry().size() * 0.7);
 #endif
 
@@ -96,9 +96,11 @@ QMareTextureWindow::QMareTextureWindow() {
 		QDesktopServices::openUrl({"https://ko-fi.com/craftablescience"});
 	});
 
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Exit"), Qt::ALT | Qt::Key_F4, [this] {
 		this->close();
 	});
+#endif
 
 	// View menu ------------------------------------------
 
@@ -110,7 +112,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* generalMenu = optionsMenu->addMenu(QIcon{":/logo.png"}, tr("&General"));
 
-#ifndef Q_OS_WASM
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* optionRaiseToTopOpeningFileAction = generalMenu->addAction(tr("Raise When Opening New File"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
 	optionRaiseToTopOpeningFileAction->setCheckable(true);
 	optionRaiseToTopOpeningFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
@@ -164,7 +166,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		themeMenuGroup->addAction(action);
 	}
 
-#ifndef Q_OS_WASM
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	// Not translating this menu name, the translation is the same everywhere
 	auto* discordMenu = optionsMenu->addMenu(QIcon{":/button_discord.png"}, "&Discord");
 	const auto setupDiscordRichPresence = [] {

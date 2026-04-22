@@ -83,14 +83,35 @@ QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget{parent} {
 
 void QMareTextureWidget::loadTexture(const QString& path_) {
 	try {
-		if (auto loadVTF = vtfpp::VTF{path_.toUtf8().constData()}) {
-			this->path = path_;
-			this->vtf = std::move(loadVTF);
-			if (this->vtf.getFaceCount() >= 6) {
-				this->a = false;
+#if defined(Q_OS_WASM) || defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+		vtfpp::VTF tmpVTF;
+		{
+			QFile vtfFile{path_};
+			if (!vtfFile.open(QIODevice::ReadOnly)) {
+				return;
 			}
-			this->reloadCurrentTexture();
+			const auto data = vtfFile.readAll();
+			vtfFile.close();
+			tmpVTF = vtfpp::VTF{
+				std::span{reinterpret_cast<const std::byte*>(data.data()), static_cast<std::span<const std::byte>::size_type>(data.size())},
+				[](std::string path__) {
+					sourcepp::string::toLower(path__);
+					return path__.ends_with(".hdr.vtf") || path__.ends_with(".hdr.360.vtf") || path__.ends_with(".hdr.ps3.vtf");
+				}(std::filesystem::path{path_.toUtf8().constData()}.filename().string()),
+			};
 		}
+#else
+		auto tmpVTF = vtfpp::VTF{path_.toUtf8().constData()};
+		if (!tmpVTF) {
+			return;
+		}
+#endif
+		this->path = path_;
+		this->vtf = std::move(tmpVTF);
+		if (this->vtf.getFaceCount() >= 6) {
+			this->a = false;
+		}
+		this->reloadCurrentTexture();
 	} catch (const std::overflow_error&) {}
 }
 

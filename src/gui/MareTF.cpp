@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	const auto options = std::make_unique<QSettings>();
 	QMareOptions::setupOptions(*options);
 
-#ifndef Q_OS_WASM
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
 	QLocalSocket socket;
 	socket.connectToServer(serverName);

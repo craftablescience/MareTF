@@ -4,7 +4,7 @@
 
 namespace {
 
-#if defined(Q_OS_WIN) || defined(Q_OS_WASM)
+#if defined(Q_OS_WIN) || defined(Q_OS_WASM) || defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
 constexpr auto MARETF_PATH_SEPARATOR = ';';
 #else
 constexpr auto MARETF_PATH_SEPARATOR = ':';

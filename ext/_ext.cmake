@@ -63,7 +63,23 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         target_include_directories(${TARGET} PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets" "${QT_INCLUDE}/QtNetwork")
         qt_add_resources(${TARGET} "${TARGET}_qt_translations" BASE "${QT_TRANSLATIONS_DIR}" PREFIX "/i18n" FILES ${QT_I18N_QM_FILES})
         if(EMSCRIPTEN)
-            target_link_options(${TARGET} PUBLIC --bind -sALLOW_MEMORY_GROWTH=1 -sASYNCIFY=1 -sASYNCIFY_IMPORTS=[QEventLoop::exec,QDialog::exec,QMessageBox::exec])
+            # todo: -gN and -gsource-map should be debug only
+            target_compile_options(${PROJECT_NAME}_gui PRIVATE
+                    -fexceptions
+                    -fno-stack-protector
+                    -fno-sanitize=all
+                    -g3
+                    -gsource-map)
+            target_link_options(${TARGET} PRIVATE
+                    --bind
+                    -g3
+                    -gsource-map
+                    -sALLOW_MEMORY_GROWTH=1
+                    -sASSERTIONS=1
+                    -sASYNCIFY=1
+                    -sASYNCIFY_IMPORTS=[QEventLoop::exec,QDialog::exec,QMessageBox::exec]
+                    -sASYNCIFY_STACK_SIZE=65536
+                    -sNO_DISABLE_EXCEPTION_CATCHING=1)
         endif()
     endfunction()
 
