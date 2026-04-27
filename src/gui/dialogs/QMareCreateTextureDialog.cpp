@@ -106,7 +106,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
 		textureWidthResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
 	}
-	textureWidthResizeMethodCombo->setCurrentIndex(1); // Power of 2 (Bigger)
+	textureWidthResizeMethodCombo->setCurrentIndex(3); // Power of 2 (Nearest)
 	textureWidthLayout->addRow(tr("Resize"), textureWidthResizeMethodCombo);
 
 	auto* textureWidthClampModeCombo = new QMareComboBox{textureWidthGroup};
@@ -151,7 +151,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeMethod>(true)) {
 		textureHeightResizeMethodCombo->addItem(methodName.data(), static_cast<int>(method));
 	}
-	textureHeightResizeMethodCombo->setCurrentIndex(1); // Power of 2 (Bigger)
+	textureHeightResizeMethodCombo->setCurrentIndex(3); // Power of 2 (Nearest)
 	textureHeightLayout->addRow(tr("Resize"), textureHeightResizeMethodCombo);
 
 	auto* textureHeightClampModeCombo = new QMareComboBox{textureHeightGroup};

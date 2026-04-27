@@ -550,7 +550,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(hdriNoFilter);
 
-	std::string resizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
+	std::string resizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_NEAREST)};
 	createCLI
 		.add_argument("--resize-method")
 		.metavar("RESIZE_METHOD")
@@ -559,7 +559,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
 		.default_value(resizeMethod).store_into(resizeMethod);
 
-	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
+	std::string widthResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_NEAREST)};
 	createCLI
 		.add_argument("--width-resize-method")
 		.metavar("RESIZE_METHOD")
@@ -567,7 +567,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeMethod>, "RESIZE_METHOD"))
 		.default_value(widthResizeMethod).store_into(widthResizeMethod);
 
-	std::string heightResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER)};
+	std::string heightResizeMethod{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_NEAREST)};
 	createCLI
 		.add_argument("--height-resize-method")
 		.metavar("RESIZE_METHOD")
