@@ -485,18 +485,21 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	createCLI
 		.add_argument("-m", "--compression-method")
 		.metavar("COMPRESSION_METHOD")
-		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
+		.help("Set the CPU compression method. Deflate is supported on all Strata Source games for VTF v7.6."
 		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
 		      " LZMA is supported for console VTFs.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::CompressionMethod>, "COMPRESSION_METHOD"))
 		.default_value(compressionMethod).store_into(compressionMethod);
 
-	int compressionLevel = 6;
+	float compressionLevel = -1.f;
 	createCLI
 		.add_argument("-c", "--compression-level")
 		.metavar("LEVEL")
-		.help("Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for Zstd.")
-		.scan<'d', int>()
+		.help("The CPU compression level, between 0.0 and 1.0. Higher levels will take longer to create"
+		      " the texture. If level is below 0.0, default compression level will be used. If level"
+		      " is above 1.0, it is assumed the user is setting the exact compression level for the algorithm"
+		      " in use manually (this is for backwards compatibility). Ignored if CPU compression is not in use.")
+		.scan<'g', float>()
 		.default_value(compressionLevel).store_into(compressionLevel);
 
 	int startFrame = 0;
@@ -878,19 +881,22 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	editCLI
 		.add_argument("--set-compression-method")
 		.metavar("COMPRESSION_METHOD")
-		.help("Set the compression method. Deflate is supported on all Strata Source games for VTF v7.6."
+		.help("Set the CPU compression method. Deflate is supported on all Strata Source games for VTF v7.6."
 		      " Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution."
 		      " LZMA is supported for console VTFs.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::CompressionMethod>, "COMPRESSION_METHOD"))
 		.store_into(setCompressionMethod);
 
-	int setCompressionLevel;
+	float setCompressionLevel = -1.f;
 	editCLI
 		.add_argument("--set-compression-level")
 		.metavar("LEVEL")
-		.help("Set the compression level. -1 to 9 for Deflate and LZMA, -1 to 22 for Zstd.")
-		.scan<'d', int>()
-		.store_into(setCompressionLevel);
+		.help("Set the CPU compression level, between 0.0 and 1.0. Higher levels will take longer to create"
+			  " the texture. If level is below 0.0, default compression level will be used. If level"
+			  " is above 1.0, it is assumed the user is setting the exact compression level for the algorithm"
+			  " in use manually (this is for backwards compatibility). Ignored if CPU compression is not in use.")
+		.scan<'g', float>()
+		.default_value(compressionLevel).store_into(compressionLevel);
 
 	int setStartFrame;
 	editCLI
@@ -1268,6 +1274,36 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 			return EXIT_SUCCESS;
 		};
 
+		const auto getCompressionLevel = [&](vtfpp::CompressionMethod method, float level) -> int16_t {
+			if (level < 0) {
+				return -1;
+			}
+
+			std::string_view methodName;
+			float levelMax = 0.f;
+			switch (method) {
+				case vtfpp::CompressionMethod::DEFLATE:
+				case vtfpp::CompressionMethod::CONSOLE_LZMA:
+					methodName = "Deflate and LZMA";
+					levelMax = 9.f;
+					break;
+				case vtfpp::CompressionMethod::ZSTD:
+					methodName = "Zstd";
+					levelMax = 22.f;
+					break;
+			}
+
+			if (level <= 1) {
+				level *= levelMax;
+			}
+
+			if (level > levelMax) {
+				tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << static_cast<int>(levelMax) << END << " for " << methodName << ". Setting compression level to " << CYAN << static_cast<int>(levelMax) << END << "..." << tfendl;
+				return static_cast<int16_t>(levelMax);
+			}
+			return static_cast<int16_t>(level);
+		};
+
 		const auto handleSettingResourcesForVTF = [&](vtfpp::VTF& vtf, bool editMode) {
 			// Modify particle sheet resource
 			if ((editMode && cli.is_used("--set-particle-sheet-resource")) || (!editMode && cli.is_used("--particle-sheet-resource"))) {
@@ -1526,18 +1562,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				options.compressionMethod = *not_magic_enum::enum_cast<vtfpp::CompressionMethod>(compressionMethod);
 
 				// Set compression level
-				if (compressionLevel < -1) {
-					options.compressionLevel = -1;
-					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << '/' << CYAN << "22" << END << " (depending on the compression method). Setting compression level to " << CYAN << "-1" << END << "..." << tfendl;
-				} else if ((options.compressionMethod == vtfpp::CompressionMethod::DEFLATE || options.compressionMethod == vtfpp::CompressionMethod::CONSOLE_LZMA) && compressionLevel > 9) {
-					options.compressionLevel = 9;
-					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << '9' << END << " for Deflate and LZMA. Setting compression level to " << CYAN << '9' << END << "..." << tfendl;
-				} else if (options.compressionMethod == vtfpp::CompressionMethod::ZSTD && compressionLevel > 22) {
-					options.compressionLevel = 22;
-					tfout << "Compression level range is between " << CYAN << "-1" << END << " and " << CYAN << "22" << END << " for Zstd. Setting compression level to " << CYAN << "22" << END << "..." << tfendl;
-				} else {
-					options.compressionLevel = static_cast<int16_t>(compressionLevel);
-				}
+				options.compressionLevel = getCompressionLevel(options.compressionMethod, compressionLevel);
 
 				// Set start frame
 				options.startFrame = static_cast<uint16_t>(startFrame);
@@ -2153,17 +2178,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				// Set compression level
 				if (cli.is_used("--set-compression-level")) {
-					if (setCompressionLevel < -1) {
-						setCompressionLevel = -1;
-						tfout << "Compression level range is between -1 and 9/22 (depending on the compression method). Setting compression level to -1..." << tfendl;
-					} else if ((vtf.getCompressionMethod() == vtfpp::CompressionMethod::DEFLATE || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA) && setCompressionLevel > 9) {
-						setCompressionLevel = 9;
-						tfout << "Compression level range is between -1 and 9 for Deflate and LZMA. Setting compression level to 9..." << tfendl;
-					} else if (vtf.getCompressionMethod() == vtfpp::CompressionMethod::ZSTD && setCompressionLevel > 22) {
-						setCompressionLevel = 22;
-						tfout << "Compression level range is between -1 and 22 for Zstd. Setting compression level to 22..." << tfendl;
-					}
-					vtf.setCompressionLevel(static_cast<int16_t>(setCompressionLevel));
+					vtf.setCompressionLevel(getCompressionLevel(vtf.getCompressionMethod(), setCompressionLevel));
 				}
 
 				// Set resources
