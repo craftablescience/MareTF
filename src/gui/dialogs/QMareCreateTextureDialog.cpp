@@ -550,8 +550,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Disable "Bilinear Filter" check when HDRI mode is flat image
 
-	connect(textureHDRIConversionMethodCombo, &QMareComboBox::currentIndexChanged, this, [textureHDRIFilterCheck](int index) {
-		textureHDRIFilterCheck->setDisabled(index == 0);
+	connect(textureHDRIConversionMethodCombo, &QMareComboBox::currentIndexChanged, this, [textureHDRILayout, textureHDRIFilterCheck](int index) {
+		textureHDRILayout->setRowVisible(textureHDRIFilterCheck, index != 0);
 	});
 	textureHDRIConversionMethodCombo->currentIndexChanged(textureHDRIConversionMethodCombo->currentIndex());
 
@@ -788,8 +788,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		if (textureMipmapsScaleSpin->value() != 0) {
 			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 		}
+
 		cli->addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
-		cli->addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
+		if (textureHDRIConversionMethodCombo->currentIndex() != 0) {
+			cli->addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
+		}
+
 		cli->addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
 		if (textureGammaCorrectionEnableCheck->isChecked()) {
 			cli->addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
