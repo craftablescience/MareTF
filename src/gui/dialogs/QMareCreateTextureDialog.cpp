@@ -69,7 +69,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Format
 	auto* textureOpaqueFormatCombo = new QMareComboBox{textureTab};
-	//auto* textureTransparentFormatCombo = new QMareComboBox{generalTab};
+	//auto* textureTransparentFormatCombo = new QMareComboBox{textureTab};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
 		textureOpaqueFormatCombo->addItem(formatName.data(), static_cast<int>(format));
 		//textureTransparentFormatCombo->addItem(formatName.data(), static_cast<int>(format));
@@ -80,22 +80,17 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	//generalTabLayout->addRow(tr("Transparent Format"), textureTransparentFormatCombo);
 
 	// Compression quality
-	auto* textureCompressionQualityGroup = new QGroupBox{textureTab};
-	auto* textureCompressionQualityLayout = new QFormLayout{textureCompressionQualityGroup};
-	textureCompressionQualityLayout->setFormAlignment(Qt::AlignHCenter);
+	auto* textureCompressionQualityEnableCheck = new QCheckBox{tr("Compression Quality"), textureTab};
+	textureCompressionQualityEnableCheck->setLayoutDirection(Qt::RightToLeft);
 
-	auto* textureCompressionQualityEnableCheck = new QCheckBox{textureCompressionQualityGroup};
-	textureCompressionQualityLayout->addRow(tr("Override Default"), textureCompressionQualityEnableCheck);
-
-	auto* textureCompressionQualitySpin = new QMareSpinBox{textureCompressionQualityGroup};
+	auto* textureCompressionQualitySpin = new QMareSpinBox{textureTab};
 	textureCompressionQualitySpin->setRange(0, 100);
 	textureCompressionQualitySpin->setSingleStep(10);
 	textureCompressionQualitySpin->setSuffix("%");
 	textureCompressionQualitySpin->setValue(100);
 	textureCompressionQualitySpin->setDisabled(true);
-	textureCompressionQualityLayout->addRow(tr("Quality"), textureCompressionQualitySpin);
 
-	textureTabLayout->addRow(tr("Compression Quality"), textureCompressionQualityGroup);
+	textureTabLayout->addRow(textureCompressionQualityEnableCheck, textureCompressionQualitySpin);
 
 	// Width
 	auto* textureWidthGroup = new QGroupBox{textureTab};
@@ -187,13 +182,13 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureTabLayout->addRow(tr("Height"), textureHeightGroup);
 
 	// Mipmaps
+	auto* textureMipmapsGenerateCheck = new QCheckBox{tr("Mipmaps"), textureTab};
+	textureMipmapsGenerateCheck->setLayoutDirection(Qt::RightToLeft);
+	textureMipmapsGenerateCheck->setCheckState(Qt::Checked);
+
 	auto* textureMipmapsGroup = new QGroupBox{textureTab};
 	auto* textureMipmapsLayout = new QFormLayout{textureMipmapsGroup};
 	textureMipmapsLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* textureMipmapsGenerateCheck = new QCheckBox{textureMipmapsGroup};
-	textureMipmapsGenerateCheck->setCheckState(Qt::Checked);
-	textureMipmapsLayout->addRow(tr("Compute"), textureMipmapsGenerateCheck);
 
 	auto* textureMipmapsFilterCombo = new QMareComboBox{textureMipmapsGroup};
 	for (const auto& [filter, filterName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeFilter>(true)) {
@@ -206,7 +201,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureMipmapsScaleSpin->setMinimum(0);
 	textureMipmapsLayout->addRow(tr("Scale (Console)"), textureMipmapsScaleSpin);
 
-	textureTabLayout->addRow(tr("Mipmaps"), textureMipmapsGroup);
+	textureTabLayout->addRow(textureMipmapsGenerateCheck, textureMipmapsGroup);
 
 	// HDRI
 	auto* textureHDRIGroup = new QGroupBox{textureTab};
@@ -226,20 +221,15 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureTabLayout->addRow(tr("HDRI"), textureHDRIGroup);
 
 	// Gamma correction
-	auto* textureGammaCorrectionGroup = new QGroupBox{textureTab};
-	auto* textureGammaCorrectionLayout = new QFormLayout{textureGammaCorrectionGroup};
-	textureGammaCorrectionLayout->setFormAlignment(Qt::AlignHCenter);
+	auto* textureGammaCorrectionEnableCheck = new QCheckBox{tr("Gamma Correction"), textureTab};
+	textureGammaCorrectionEnableCheck->setLayoutDirection(Qt::RightToLeft);
 
-	auto* textureGammaCorrectionEnableCheck = new QCheckBox{textureGammaCorrectionGroup};
-	textureGammaCorrectionLayout->addRow(tr("Enabled"), textureGammaCorrectionEnableCheck);
-
-	auto* textureGammaCorrectionAmountSpin = new QMareDoubleSpinBox{textureGammaCorrectionGroup};
+	auto* textureGammaCorrectionAmountSpin = new QMareDoubleSpinBox{textureTab};
 	textureGammaCorrectionAmountSpin->setMinimum(0.0);
 	textureGammaCorrectionAmountSpin->setValue(1.0);
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
-	textureGammaCorrectionLayout->addRow(tr("Amount"), textureGammaCorrectionAmountSpin);
 
-	textureTabLayout->addRow(tr("Gamma Correction"), textureGammaCorrectionGroup);
+	textureTabLayout->addRow(textureGammaCorrectionEnableCheck, textureGammaCorrectionAmountSpin);
 
 	// Invert green channel
 	auto* textureInvertGreenCheck = new QCheckBox{textureTab};
@@ -264,10 +254,17 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionMethodCombo->setCurrentIndex(2); // Zstd
 	textureCompressionLayout->addRow(tr("Method"), textureCompressionMethodCombo);
 
+	auto* textureCompressionLevelEnableCheck = new QCheckBox{tr("Level"), textureCompressionGroup};
+	textureCompressionLevelEnableCheck->setLayoutDirection(Qt::RightToLeft);
+
 	auto* textureCompressionLevelSpin = new QMareSpinBox{textureCompressionGroup};
-	textureCompressionLevelSpin->setRange(1, 22);
-	textureCompressionLevelSpin->setValue(18);
-	textureCompressionLayout->addRow(tr("Level"), textureCompressionLevelSpin);
+	textureCompressionLevelSpin->setRange(0, 100);
+	textureCompressionLevelSpin->setSingleStep(4);
+	textureCompressionLevelSpin->setSuffix("%");
+	textureCompressionLevelSpin->setValue(100);
+	textureCompressionLevelSpin->setDisabled(true);
+
+	textureCompressionLayout->addRow(textureCompressionLevelEnableCheck, textureCompressionLevelSpin);
 
 	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
 
@@ -297,12 +294,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	resourcesTabLayout->addRow(tr("Author"), resourcesATHInfo);
 
 	// LOD control info resource
+	auto* resourcesLODEnableCheck = new QCheckBox{tr("LOD Control Info"), resourcesTab};
+	resourcesLODEnableCheck->setLayoutDirection(Qt::RightToLeft);
+
 	auto* resourcesLODGroup = new QGroupBox{resourcesTab};
 	auto* resourcesLODLayout = new QFormLayout{resourcesLODGroup};
 	resourcesLODLayout->setFormAlignment(Qt::AlignHCenter);
-
-	auto* resourcesLODEnableCheck = new QCheckBox{resourcesLODGroup};
-	resourcesLODLayout->addRow(tr("Add Resource"), resourcesLODEnableCheck);
 
 	auto* resourcesLODUSpin = new QMareSpinBox{resourcesLODGroup};
 	resourcesLODUSpin->setRange(0, 31);
@@ -320,7 +317,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	resourcesLODVConsoleSpin->setRange(0, 31);
 	resourcesLODLayout->addRow(tr("V (Console)"), resourcesLODVConsoleSpin);
 
-	resourcesTabLayout->addRow(tr("LOD Control Info"), resourcesLODGroup);
+	resourcesTabLayout->addRow(resourcesLODEnableCheck, resourcesLODGroup);
 
 	// CRC resource
 	auto* resourcesCRCValue = new QLineEdit{resourcesTab};
@@ -465,7 +462,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Disable "Compressed Quality" when format is uncompressed
 
-	connect(textureOpaqueFormatCombo, &QMareComboBox::currentIndexChanged, this, [textureOpaqueFormatCombo, textureCompressionQualitySpin](int index) {
+	connect(textureOpaqueFormatCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		const auto format = static_cast<vtfpp::ImageFormat>(textureOpaqueFormatCombo->itemData(index).toInt());
 		textureCompressionQualitySpin->setEnabled(format == vtfpp::VTF::FORMAT_UNCHANGED || format == vtfpp::VTF::FORMAT_DEFAULT || vtfpp::ImageFormatDetails::compressed(format));
 	});
@@ -473,12 +470,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Amount" spin when Compression Quality is disabled
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(textureCompressionQualityEnableCheck, &QCheckBox::checkStateChanged, this, [textureCompressionQualitySpin](Qt::CheckState state) {
+	connect(textureCompressionQualityEnableCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
 		textureCompressionQualitySpin->setDisabled(state != Qt::Checked);
 	});
 	textureCompressionQualityEnableCheck->checkStateChanged(textureCompressionQualityEnableCheck->checkState());
 #else
-	connect(textureCompressionQualityEnableCheck, &QCheckBox::stateChanged, this, [textureCompressionQualitySpin](bool state) {
+	connect(textureCompressionQualityEnableCheck, &QCheckBox::stateChanged, this, [=](bool state) {
 		textureCompressionQualitySpin->setDisabled(!state);
 	});
 	textureCompressionQualityEnableCheck->stateChanged(textureCompressionQualityEnableCheck->isChecked());
@@ -486,7 +483,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Change visibility of items in "Width" depending on mode
 
-	connect(textureWidthClampModeCombo, &QMareComboBox::currentIndexChanged, this, [textureWidthLayout](int index) {
+	connect(textureWidthClampModeCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		switch (index) {
 			case 0:
 				textureWidthLayout->setRowVisible(2, false);
@@ -510,7 +507,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Change visibility of items in "Height" depending on mode
 
-	connect(textureHeightClampModeCombo, &QMareComboBox::currentIndexChanged, this, [textureHeightLayout](int index) {
+	connect(textureHeightClampModeCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		switch (index) {
 			case 0:
 				textureHeightLayout->setRowVisible(2, false);
@@ -535,22 +532,22 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Filter" and "Scale (Console)" when mipmaps aren't computed, or "Scale (Console)" when platform is not PC
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(textureMipmapsGenerateCheck, &QCheckBox::checkStateChanged, this, [textureMipmapsFilterCombo, textureMipmapsScaleSpin, platformCombo](Qt::CheckState state) {
+	connect(textureMipmapsGenerateCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
 		textureMipmapsFilterCombo->setDisabled(state != Qt::Checked);
-		textureMipmapsScaleSpin->setDisabled(state != Qt::Checked || static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt()) == vtfpp::VTF::PLATFORM_PC);
+		textureMipmapsLayout->setRowVisible(textureMipmapsScaleSpin, state == Qt::Checked && static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt()) != vtfpp::VTF::PLATFORM_PC);
 	});
 	textureMipmapsGenerateCheck->checkStateChanged(textureMipmapsGenerateCheck->checkState());
 #else
-	connect(textureMipmapsGenerateCheck, &QCheckBox::stateChanged, this, [textureMipmapsFilterCombo, textureMipmapsScaleSpin, platformCombo](bool state) {
+	connect(textureMipmapsGenerateCheck, &QCheckBox::stateChanged, this, [textureMipmapsFilterCombo, textureMipmapsLayout, textureMipmapsScaleSpin, platformCombo](bool state) {
 		textureMipmapsFilterCombo->setDisabled(!state);
-		textureMipmapsScaleSpin->setDisabled(!state || static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt()) == vtfpp::VTF::PLATFORM_PC);
+		textureMipmapsLayout->setRowVisible(textureMipmapsScaleSpin, state == Qt::Checked && static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt()) != vtfpp::VTF::PLATFORM_PC);
 	});
 	textureMipmapsGenerateCheck->stateChanged(textureMipmapsGenerateCheck->isChecked());
 #endif
 
 	// Disable "Bilinear Filter" check when HDRI mode is flat image
 
-	connect(textureHDRIConversionMethodCombo, &QMareComboBox::currentIndexChanged, this, [textureHDRILayout, textureHDRIFilterCheck](int index) {
+	connect(textureHDRIConversionMethodCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		textureHDRILayout->setRowVisible(textureHDRIFilterCheck, index != 0);
 	});
 	textureHDRIConversionMethodCombo->currentIndexChanged(textureHDRIConversionMethodCombo->currentIndex());
@@ -558,12 +555,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Amount" spin when Gamma Correction is disabled
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(textureGammaCorrectionEnableCheck, &QCheckBox::checkStateChanged, this, [textureGammaCorrectionAmountSpin](Qt::CheckState state) {
+	connect(textureGammaCorrectionEnableCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
 		textureGammaCorrectionAmountSpin->setDisabled(state != Qt::Checked);
 	});
 	textureGammaCorrectionEnableCheck->checkStateChanged(textureGammaCorrectionEnableCheck->checkState());
 #else
-	connect(textureGammaCorrectionEnableCheck, &QCheckBox::stateChanged, this, [textureGammaCorrectionAmountSpin](bool state) {
+	connect(textureGammaCorrectionEnableCheck, &QCheckBox::stateChanged, this, [=](bool state) {
 		textureGammaCorrectionAmountSpin->setDisabled(!state);
 	});
 	textureGammaCorrectionEnableCheck->stateChanged(textureGammaCorrectionEnableCheck->isChecked());
@@ -578,7 +575,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Disable "Particle Sheet", "CRC32", "LOD", "Extended Flags", "KeyValues Data" groups if platform is PC and version is less than 3, or platform is XBOX
 	// Repopulate "Flags" group checklist
 
-	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [textureMipmapsGenerateCheck, textureMipmapsScaleSpin, textureCompressionGroup, textureCompressionMethodCombo, flagsChecks, platformCombo, versionCombo, resourcesATHInfo, resourcesLODGroup, resourcesLODEnableCheck, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin, resourcesCRCValue, resourcesSHTPathParent, resourcesTS0Value, resourcesKVDPathParent](int index) {
+	connect(platformCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(index).toInt());
 
 		versionCombo->setDisabled(currentPlatform != vtfpp::VTF::PLATFORM_PC);
@@ -598,7 +595,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				break;
 		}
 
-		textureCompressionGroup->setDisabled((currentPlatform != vtfpp::VTF::PLATFORM_PC || versionCombo->currentIndex() != 6) && currentPlatform != vtfpp::VTF::PLATFORM_X360 && currentPlatform != vtfpp::VTF::PLATFORM_PS3_PORTAL2);
+		textureTabLayout->setRowVisible(textureCompressionGroup, (currentPlatform == vtfpp::VTF::PLATFORM_PC && versionCombo->currentIndex() == 6) || currentPlatform == vtfpp::VTF::PLATFORM_X360 || currentPlatform == vtfpp::VTF::PLATFORM_PS3_PORTAL2);
 
 		const auto* textureCompressionMethodModel = qobject_cast<QStandardItemModel*>(textureCompressionMethodCombo->model());
 		if (currentPlatform == vtfpp::VTF::PLATFORM_X360 || currentPlatform == vtfpp::VTF::PLATFORM_PS3_PORTAL2) {
@@ -618,9 +615,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		}
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-		textureMipmapsScaleSpin->setDisabled(textureMipmapsGenerateCheck->checkState() != Qt::Checked || currentPlatform == vtfpp::VTF::PLATFORM_PC);
+		textureMipmapsLayout->setRowVisible(textureMipmapsScaleSpin, textureMipmapsGenerateCheck->checkState() == Qt::Checked && currentPlatform != vtfpp::VTF::PLATFORM_PC);
 #else
-		textureMipmapsScaleSpin->setDisabled(!textureMipmapsGenerateCheck->isChecked() || currentPlatform == vtfpp::VTF::PLATFORM_PC);
+		textureMipmapsLayout->setRowVisible(textureMipmapsScaleSpin, textureMipmapsGenerateCheck->isChecked() && currentPlatform != vtfpp::VTF::PLATFORM_PC);
 #endif
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
@@ -643,10 +640,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	});
 	platformCombo->currentIndexChanged(platformCombo->currentIndex());
 
-	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [textureCompressionGroup, flagsChecks, platformCombo, resourcesATHInfo, resourcesLODGroup, resourcesCRCValue, resourcesSHTPathParent, resourcesTS0Value, resourcesKVDPathParent](int index) {
+	connect(versionCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
-		textureCompressionGroup->setDisabled(index != 6);
+		textureTabLayout->setRowVisible(textureCompressionGroup, index == 6);
 
 		const bool disableResources = (currentPlatform == vtfpp::VTF::PLATFORM_PC && index < 3) || currentPlatform == vtfpp::VTF::PLATFORM_XBOX;
 		resourcesATHInfo->setDisabled(disableResources);
@@ -660,9 +657,23 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	});
 	versionCombo->currentIndexChanged(versionCombo->currentIndex());
 
+	// Disable "Level" spin when Compression Level is disabled
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(textureCompressionLevelEnableCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
+		textureCompressionLevelSpin->setDisabled(state != Qt::Checked);
+	});
+	textureCompressionLevelEnableCheck->checkStateChanged(textureCompressionLevelEnableCheck->checkState());
+#else
+	connect(textureCompressionLevelEnableCheck, &QCheckBox::stateChanged, this, [=](bool state) {
+		textureCompressionLevelSpin->setDisabled(!state);
+	});
+	textureCompressionLevelEnableCheck->stateChanged(textureCompressionLevelEnableCheck->isChecked());
+#endif
+
 	// Set path in "Particle Sheet" group when "Search" clicked
 
-	connect(resourcesSHTPathSearch, &QPushButton::pressed, this, [this, resourcesSHTPath] {
+	connect(resourcesSHTPathSearch, &QPushButton::pressed, this, [=, this] {
 		if (const auto path = QFileDialog::getOpenFileName(this, tr("Open Particle Sheet"), QString{}, "Particle Sheet (*.sht)"); !path.isEmpty()) {
 			resourcesSHTPath->setText(path);
 		}
@@ -672,7 +683,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// - Also disable "U (Console)" and "V (Console)" if platform is PC
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(resourcesLODEnableCheck, &QCheckBox::checkStateChanged, this, [platformCombo, resourcesLODUSpin, resourcesLODVSpin, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin](Qt::CheckState state) {
+	connect(resourcesLODEnableCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		resourcesLODUSpin->setDisabled(state != Qt::Checked);
@@ -682,7 +693,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	});
 	resourcesLODEnableCheck->checkStateChanged(resourcesLODEnableCheck->checkState());
 #else
-	connect(resourcesLODEnableCheck, &QCheckBox::stateChanged, this, [platformCombo, resourcesLODUSpin, resourcesLODVSpin, resourcesLODUConsoleSpin, resourcesLODVConsoleSpin](bool state) {
+	connect(resourcesLODEnableCheck, &QCheckBox::stateChanged, this, [=](bool state) {
 		const auto currentPlatform = static_cast<vtfpp::VTF::Platform>(platformCombo->itemData(platformCombo->currentIndex()).toInt());
 
 		resourcesLODUSpin->setDisabled(!state);
@@ -695,7 +706,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Set path in "KeyValues Data" group when "Search" clicked
 
-	connect(resourcesKVDPathSearch, &QPushButton::pressed, this, [this, resourcesKVDPath] {
+	connect(resourcesKVDPathSearch, &QPushButton::pressed, this, [=, this] {
 		if (const auto path = QFileDialog::getOpenFileName(this, tr("Open KeyValues File"), QString{}, "KeyValues File (*.kv *.txt *.vdf)"); !path.isEmpty()) {
 			resourcesKVDPath->setText(path);
 		}
@@ -703,7 +714,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Set input path in "Filesystem" group when "Input Search" clicked
 
-	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [this, createFromDir, filesystemInputPath] {
+	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [=, this] {
 		if (
 			const auto paths = !createFromDir
 				? QFileDialog::getOpenFileNames(this, tr("Open Images"), QString{}, ::supportedImageFileFormatsForLoad().data())
@@ -748,17 +759,22 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC) {
 			cli->addEnum<vtfpp::VTF::Platform>(platformCombo, "--platform");
 		}
+
 		cli->addArgPair("--version", std::format("7.{}", versionCombo->currentData().toInt()).data());
+
 		cli->addEnum<vtfpp::ImageFormat>(textureOpaqueFormatCombo, "--format");
+
 		if (textureCompressionQualityEnableCheck->isChecked()) {
 			cli->addArgPair("--quality", std::format("{}", static_cast<float>(textureCompressionQualitySpin->value()) / 100.f).data());
 		}
+
 		if (textureWidthResizeMethodCombo->currentIndex() == textureHeightResizeMethodCombo->currentIndex()) {
 			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--resize-method");
 		} else {
 			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo, "--width-resize-method");
 			cli->addEnum<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo, "--height-resize-method");
 		}
+
 		switch (textureWidthClampModeCombo->currentIndex()) {
 			default:
 			case 0:
@@ -771,6 +787,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				cli->addInt(textureWidthMaximumSizeSpin, "--max-width");
 				break;
 		}
+
 		switch (textureHeightClampModeCombo->currentIndex()) {
 			default:
 			case 0:
@@ -783,9 +800,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				cli->addInt(textureHeightMaximumSizeSpin, "--max-height");
 				break;
 		}
+
 		cli->addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
+
 		cli->addEnum<vtfpp::ImageConversion::ResizeFilter>(textureMipmapsFilterCombo, "--filter");
-		if (textureMipmapsScaleSpin->value() != 0) {
+
+		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC && textureMipmapsScaleSpin->value() != 0) {
 			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 		}
 
@@ -795,24 +815,35 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		}
 
 		cli->addFlag(textureGammaCorrectionEnableCheck, "--gamma-correct");
+
 		if (textureGammaCorrectionEnableCheck->isChecked()) {
 			cli->addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
 		}
+
 		cli->addFlag(textureInvertGreenCheck, "--invert-green");
+
 		if (textureBumpmapScaleSpin->value() != 1.0) {
 			cli->addFloat(textureBumpmapScaleSpin, "--bumpscale");
 		}
+
 		if (textureCompressionGroup->isEnabled() && textureCompressionMethodCombo->currentIndex() != 0) {
 			cli->addEnum<vtfpp::CompressionMethod>(textureCompressionMethodCombo, "--compression-method");
-			cli->addInt(textureCompressionLevelSpin, "--compression-level");
+
+			if (textureCompressionLevelSpin->isEnabled()) {
+				cli->addArgPair("--compression-level", std::format("{}", static_cast<float>(textureCompressionLevelSpin->value()) / 100.f).data());
+			}
 		}
+
 		if (const auto flagsUInt =  flagsChecks->getFlags(); flagsUInt != 0) {
 			cli->addArgPair("--flags-uint", std::format("{}", flagsUInt).data());
 		}
+
 		cli->addFlag(resourcesGenerateThumbnailCheck, "--no-thumbnail", true);
+
 		if (resourcesATHInfo->isEnabled() && !resourcesATHInfo->text().isEmpty()) {
 			cli->addArgPair("--ath-resource", resourcesATHInfo->text());
 		}
+
 		if (resourcesLODGroup->isEnabled() && resourcesLODEnableCheck->isChecked()) {
 			if (resourcesLODUConsoleSpin->isEnabled() || resourcesLODVConsoleSpin->isEnabled()) {
 				cli->addArgPair("--lod-resource", std::format("{}.{}.{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value(), resourcesLODUConsoleSpin->value(), resourcesLODVConsoleSpin->value()).data());
@@ -820,30 +851,39 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				cli->addArgPair("--lod-resource", std::format("{}.{}", resourcesLODUSpin->value(), resourcesLODVSpin->value()).data());
 			}
 		}
+
 		if (resourcesCRCValue->isEnabled() && !resourcesCRCValue->text().isEmpty()) {
 			uint32_t crc;
 			sourcepp::string::toInt(resourcesCRCValue->text().toUtf8().constData(), crc, 16);
 			cli->addArgPair("--crc-resource", std::format("{}", crc).data());
 		}
+
 		if (resourcesSHTPathParent->isEnabled() && !resourcesSHTPath->text().isEmpty()) {
 			cli->addArgPair("--particle-sheet-resource", resourcesSHTPath->text());
 		}
+
 		if (resourcesTS0Value->isEnabled() && !resourcesTS0Value->text().isEmpty()) {
 			uint32_t ts0;
 			sourcepp::string::toInt(resourcesTS0Value->text().toUtf8().constData(), ts0, 16);
 			cli->addArgPair("--ts0-resource", std::format("{}", ts0).data());
 		}
+
 		if (resourcesKVDPathParent->isEnabled() && !resourcesKVDPath->text().isEmpty()) {
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
 		}
+
 		if (!filesystemOutputPath->text().isEmpty()) {
 			cli->addArgPair("--output", filesystemOutputPath->text());
 		}
+
 		cli->addFlag(overwriteRadioYes, "--yes");
+
 		cli->addFlag(overwriteRadioNo, "--no");
+
 		if (createFromDir) {
 			cli->addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
 		}
+
 		cli->addFlag(watchFilesCheck, "--watch");
 
 		return cli;
@@ -851,7 +891,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Copy the CLI command to clipboard
 
-	connect(dialogButtonsCopyCommand, &QPushButton::clicked, this, [this, dialogButtonsCopyCommand, getCLI] {
+	connect(dialogButtonsCopyCommand, &QPushButton::clicked, this, [=, this] {
 		dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogApplyButton));
 		QTimer::singleShot(1000, this, [this, dialogButtonsCopyCommand] {
 			dialogButtonsCopyCommand->setIcon(this->style()->standardIcon(QStyle::SP_DialogSaveButton));
@@ -865,7 +905,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// On "OK", create the texture
 	// On "Cancel", close the dialog
 
-	connect(dialogButtons, &QDialogButtonBox::accepted, this, [this, createFromDir, platformCombo, filesystemInputPath, filesystemOutputPath, getCLI] {
+	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
 		auto* cli = getCLI();
 		if (cli->exec()) {
 			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
