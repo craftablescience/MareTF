@@ -496,7 +496,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
 	this->detailsConsoleMipScale = new QMareSpinBox{this->detailsDimsGroup};
 	this->detailsConsoleMipScale->setRange(0, 31);
-	detailsDimsLayout->addRow(tr("(Console) Mip Scale"), this->detailsConsoleMipScale);
+	detailsDimsLayout->addRow(tr("Mip Scale (Console)"), this->detailsConsoleMipScale);
 
 	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
 
