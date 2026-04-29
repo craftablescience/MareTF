@@ -452,6 +452,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	}
 	detailsFileTypeLayout->addRow(tr("Format"), this->detailsFormat);
 
+	this->detailsFileSizeLabel = new QLabel{this->detailsFileTypeGroup};
+	this->detailsFileSize = new QMareDoubleSpinBox{this->detailsFileTypeGroup};
+	this->detailsFileSize->setDecimals(3);
+	this->detailsFileSize->setDisabled(true);
+	detailsFileTypeLayout->addRow(this->detailsFileSizeLabel, this->detailsFileSize);
+
 	detailsWidgetLayout->addWidget(this->detailsFileTypeGroup);
 
 	this->detailsDimsGroup = new QGroupBox{tr("Dimensions"), detailsWidget};
@@ -764,6 +770,9 @@ void QMareTextureWindow::regenerateDetails() {
 		this->detailsPlatform->setCurrentIndex(0);
 		this->detailsVersion->setCurrentIndex(0);
 		this->detailsFormat->setCurrentIndex(0);
+		this->detailsFileSizeLabel->setText(tr("File Size"));
+		this->detailsFileSize->setSuffix(tr("b"));
+		this->detailsFileSize->setValue(0.0);
 
 		this->detailsDimsGroup->setVisible(false);
 		this->detailsWidth->setValue(0);
@@ -868,6 +877,25 @@ void QMareTextureWindow::regenerateDetails() {
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
 	this->detailsVersion->setCurrentIndex(static_cast<int>(vtf.getVersion()));
 	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
+	{
+		bool exactSize = true;
+		auto fileSize = static_cast<double>(vtf.estimateBakeSize(exactSize));
+		if (exactSize) {
+			this->detailsFileSizeLabel->setText(tr("File Size"));
+		} else {
+			this->detailsFileSizeLabel->setText(tr("Est. File Size"));
+		}
+		this->detailsFileSize->setSuffix(tr("b"));
+		if (fileSize >= 1024) {
+			fileSize /= 1024;
+			this->detailsFileSize->setSuffix(tr("kb"));
+		}
+		if (fileSize > 1024) {
+			fileSize /= 1024;
+			this->detailsFileSize->setSuffix(tr("mb"));
+		}
+		this->detailsFileSize->setValue(fileSize);
+	}
 
 	this->detailsDimsGroup->setVisible(true);
 	this->detailsWidth->setRange(0, std::numeric_limits<uint16_t>::max());

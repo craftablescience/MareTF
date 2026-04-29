@@ -62,6 +62,8 @@ protected:
 	QMareComboBox* detailsPlatform;
 	QMareComboBox* detailsVersion;
 	QMareComboBox* detailsFormat;
+	QLabel* detailsFileSizeLabel;
+	QMareDoubleSpinBox* detailsFileSize;
 
 	QGroupBox* detailsDimsGroup;
 	QMareSpinBox* detailsWidth;
