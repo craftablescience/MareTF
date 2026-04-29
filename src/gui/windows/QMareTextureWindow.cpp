@@ -125,6 +125,15 @@ QMareTextureWindow::QMareTextureWindow() {
 	optionShowTabBarForSingleFileAction->setCheckable(true);
 	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
 
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
+	auto* optionAllowMultipleAppInstancesAction = generalMenu->addAction(tr("Allow Multiple Application Instances"), [showRestartWarning] {
+		showRestartWarning();
+		QMareOptions::invert(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES);
+	});
+	optionAllowMultipleAppInstancesAction->setCheckable(true);
+	optionAllowMultipleAppInstancesAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES));
+#endif
+
 	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Language"));
 	auto* languageMenuGroup = new QActionGroup{languageMenu};
 	languageMenuGroup->setExclusive(true);
