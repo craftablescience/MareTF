@@ -104,7 +104,7 @@ Usage: maretf [--help] [--input PATH...] [--output PATH] [--yes] [--no] [--quiet
               [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
-              [--opengl] [--hdri] [--hdri-autodetect] [--hdri-no-filter]
+              [--opengl] [--hdri HDRI_MODE] [--hdri-autodetect HDRI_MODE] [--hdri-no-filter]
               [--resize-method RESIZE_METHOD] [--width-resize-method RESIZE_METHOD]
               [--height-resize-method RESIZE_METHOD] [--console-mip-scale SCALE]
               [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
@@ -233,15 +233,21 @@ Optional arguments:
   --no-thumbnail                               Disable thumbnail generation.
   -p, --platform                               Set the platform (PC/console) to build for.
                                                [nargs=0..1] [default: "PC"]
-  -m, --compression-method                     Set the compression method. Deflate is
+  -m, --compression-method                     Set the CPU compression method. Deflate is
                                                supported on all Strata Source games for VTF
                                                v7.6. Zstd is supported on all Strata Source
                                                games for VTF v7.6 besides Portal: Revolution.
                                                LZMA is supported for console VTFs.
                                                [nargs=0..1] [default: "ZSTD"]
-  -c, --compression-level                      Set the compression level. -1 to 9 for Deflate
-                                               and LZMA, -1 to 22 for Zstd. [nargs=0..1]
-                                               [default: 6]
+  -c, --compression-level                      The CPU compression level, between 0.0 and
+                                               1.0. Higher levels will take longer to create
+                                               the texture. If level is below 0.0, default
+                                               compression level will be used. If level is
+                                               above 1.0, it is assumed the user is setting
+                                               the exact compression level for the algorithm
+                                               in use manually (this is for backwards
+                                               compatibility). Ignored if CPU compression is
+                                               not in use. [nargs=0..1] [default: -1]
   --start-frame                                The start frame used in animations, counting
                                                from zero. Ignored when creating console VTFs.
                                                [nargs=0..1] [default: 0]
@@ -253,21 +259,23 @@ Optional arguments:
   --opengl                                     Alias of --invert-green, added for vtex2
                                                compatibility.
   --hdri                                       Interpret the given image as an
-                                               equirectangular HDRI and create a cubemap.
+                                               equirectangular HDRI and create a cubemap or
+                                               skybox. [nargs=0..1] [default: "FLAT"]
   --hdri-autodetect                            Automatically detects if given image is an
-                                               equirectangular HDRI and creates a cubemap if
-                                               it is.
+                                               equirectangular HDRI and creates a cubemap or
+                                               skybox if it is. Ignored if --hdri is
+                                               specified. [nargs=0..1] [default: "FLAT"]
   --hdri-no-filter                             When creating a cubemap from an input HDRI, do
                                                not perform bilinear filtering.
   --resize-method                              How to resize the texture's width and height
                                                to match a power of 2. Overridden by
                                                --width-resize-method and
                                                --height-resize-method. [nargs=0..1]
-                                               [default: "BIGGER"]
+                                               [default: "NEAREST"]
   --width-resize-method                        How to resize the texture's width to match a
-                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+                                               power of 2. [nargs=0..1] [default: "NEAREST"]
   --height-resize-method                       How to resize the texture's height to match a
-                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+                                               power of 2. [nargs=0..1] [default: "NEAREST"]
   --console-mip-scale                          On console platforms, expands the perceived
                                                size of the texture when applied to map
                                                geometry and models. For example, given a
@@ -374,13 +382,20 @@ Optional arguments:
                                                is specified, this argument is ignored.
   --recompute-reflectivity                     Recompute the reflectivity vector.
   --set-platform PLATFORM                      Set the VTF platform.
-  --set-compression-method COMPRESSION_METHOD  Set the compression method. Deflate is
+  --set-compression-method COMPRESSION_METHOD  Set the CPU compression method. Deflate is
                                                supported on all Strata Source games for VTF
                                                v7.6. Zstd is supported on all Strata Source
                                                games for VTF v7.6 besides Portal: Revolution.
                                                LZMA is supported for console VTFs.
-  --set-compression-level LEVEL                Set the compression level. -1 to 9 for Deflate
-                                               and LZMA, -1 to 22 for Zstd.
+  --set-compression-level                      Set the CPU compression level, between 0.0 and
+                                               1.0. Higher levels will take longer to create
+                                               the texture. If level is below 0.0, default
+                                               compression level will be used. If level is
+                                               above 1.0, it is assumed the user is setting
+                                               the exact compression level for the algorithm
+                                               in use manually (this is for backwards
+                                               compatibility). Ignored if CPU compression is
+                                               not in use. [nargs=0..1] [default: -1]
   --set-start-frame FRAME_INDEX                Set the start frame.
   --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
                                                point.
@@ -560,6 +575,11 @@ FLAG
  • CSGO_YCOCG
  • CSGO_ASYNC_SKIP_INITIAL_LOW_RES
  • IGNORE_PICMIP
+
+HDRI_MODE
+ • FLAT
+ • CUBEMAP
+ • SKYBOX
 
 HOTSPOT_RECT_FLAGS
  • RANDOM_ROTATION
