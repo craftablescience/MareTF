@@ -209,9 +209,9 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHDRILayout->setFormAlignment(Qt::AlignHCenter);
 
 	auto* textureHDRIConversionMethodCombo = new QMareComboBox{textureHDRIGroup};
-	textureHDRIConversionMethodCombo->addItem(tr("Flat Texture"));
-	textureHDRIConversionMethodCombo->addItem(tr("Cubemap"));
-	//textureHDRIConversionMethodCombo->addItem(tr("Skybox"));
+	for (const auto& [hdriMode, hdriModeName] : not_magic_enum::enum_entries<maretf::HDRIMode>(true)) {
+		textureHDRIConversionMethodCombo->addItem(hdriModeName.data(), static_cast<int>(hdriMode));
+	}
 	textureHDRILayout->addRow(tr("Convert to"), textureHDRIConversionMethodCombo);
 
 	auto* textureHDRIFilterCheck = new QCheckBox{textureHDRIGroup};
@@ -809,8 +809,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 		}
 
-		cli->addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
-		if (textureHDRIConversionMethodCombo->currentIndex() != 0) {
+		if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) != maretf::HDRIMode::FLAT) {
+			cli->addEnum<maretf::HDRIMode>(textureHDRIConversionMethodCombo, "--hdri-autodetect");
 			cli->addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
 		}
 

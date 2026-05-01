@@ -9,6 +9,8 @@
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
+#include "MareTF.h"
+
 namespace not_magic_enum {
 
 template<typename E>
@@ -20,7 +22,8 @@ concept SupportedEnum = std::same_as<E, vtfpp::HOT::Rect::Flags>
                      || std::same_as<E, vtfpp::CompressionMethod>
                      || std::same_as<E, vtfpp::Resource::Type>
                      || std::same_as<E, vtfpp::VTF::Flags>
-                     || std::same_as<E, vtfpp::VTF::Platform>;
+                     || std::same_as<E, vtfpp::VTF::Platform>
+                     || std::same_as<E, maretf::HDRIMode>;
 
 namespace detail {
 
@@ -60,6 +63,10 @@ extern const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E;
 extern const std::vector<std::string_view>     VTF_PLATFORM_S;
 extern const std::vector<std::string_view>     VTF_PLATFORM_P;
 
+extern const std::vector<maretf::HDRIMode> HDRI_MODE_E;
+extern const std::vector<std::string_view> HDRI_MODE_S;
+extern const std::vector<std::string_view> HDRI_MODE_P;
+
 template<SupportedEnum E>
 [[nodiscard]] const std::vector<E>& e() {
 	if constexpr (std::same_as<E, vtfpp::HOT::Rect::Flags>) {
@@ -80,6 +87,8 @@ template<SupportedEnum E>
 		return VTF_FLAGS_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return VTF_PLATFORM_E;
+	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {
+		return HDRI_MODE_E;
 	} else {
 		static std::vector<E> empty;
 		return empty;
@@ -106,6 +115,8 @@ template<SupportedEnum E>
 		return pretty ? VTF_FLAGS_P : VTF_FLAGS_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return pretty ? VTF_PLATFORM_P : VTF_PLATFORM_S;
+	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {
+		return pretty ? HDRI_MODE_P : HDRI_MODE_S;
 	} else {
 		static std::vector<std::string_view> empty;
 		return empty;

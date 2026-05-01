@@ -590,19 +590,22 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.flag()
 		.store_into(invertGreenChannelAlt);
 
-	bool hdri;
+	std::string hdriModeForce{not_magic_enum::enum_name(maretf::HDRIMode::FLAT)};
 	createCLI
 		.add_argument("--hdri")
-		.help("Interpret the given image as an equirectangular HDRI and create a cubemap.")
-		.flag()
-		.store_into(hdri);
+		.metavar("HDRI_MODE")
+		.help("Interpret the given image as an equirectangular HDRI and create a cubemap or skybox.")
+		.action(std::bind_front(&::enumValueValidityCheck<maretf::HDRIMode>, "HDRI_MODE"))
+		.default_value(hdriModeForce).store_into(hdriModeForce);
 
-	bool hdriAutodetect;
+	std::string hdriModeAuto{not_magic_enum::enum_name(maretf::HDRIMode::FLAT)};
 	createCLI
 		.add_argument("--hdri-autodetect")
-		.help("Automatically detects if given image is an equirectangular HDRI and creates a cubemap if it is.")
-		.flag()
-		.store_into(hdriAutodetect);
+		.metavar("HDRI_MODE")
+		.help("Automatically detects if given image is an equirectangular HDRI and creates a cubemap or skybox"
+		      " if it is. Ignored if --hdri is specified.")
+		.action(std::bind_front(&::enumValueValidityCheck<maretf::HDRIMode>, "HDRI_MODE"))
+		.default_value(hdriModeForce).store_into(hdriModeForce);
 
 	bool hdriNoFilter;
 	createCLI
@@ -1214,6 +1217,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	};
 	addEnumInfo.operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
 	addEnumInfo.operator()<vtfpp::VTF::Flags>("FLAG");
+	addEnumInfo.operator()<maretf::HDRIMode>("HDRI_MODE");
 	addEnumInfo.operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
 	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
@@ -1578,7 +1582,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 					}
-				} else if (animatedFrames && !hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
+				} else if (animatedFrames && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
 					// At least 2 digits to avoid false positives
 					frameNumberCount = 2;
 					inputStem.pop_back();
@@ -1601,6 +1605,26 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 				// Set default transparency flags
 				options.computeTransparencyFlags = !noTransparencyFlags;
+
+				// Set resize bounds
+				if (size || sizeWidth) {
+					options.resizeBounds.resizeMinWidth = options.resizeBounds.resizeMaxWidth = sizeWidth ? sizeWidth : size;
+				}
+				if (size || sizeHeight) {
+					options.resizeBounds.resizeMinHeight = options.resizeBounds.resizeMaxHeight = sizeHeight ? sizeHeight : size;
+				}
+				if (maxSize || maxSizeWidth) {
+					options.resizeBounds.resizeMaxWidth = maxSizeWidth ? maxSizeWidth : maxSize;
+				}
+				if (maxSize || maxSizeHeight) {
+					options.resizeBounds.resizeMaxHeight = maxSizeHeight ? maxSizeHeight : maxSize;
+				}
+				if (minSize || minSizeWidth) {
+					options.resizeBounds.resizeMinWidth = minSizeWidth ? minSizeWidth : minSize;
+				}
+				if (minSize || minSizeHeight) {
+					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
+				}
 
 				// Set mipmap generation
 				options.computeMips = !noMips;
@@ -1692,49 +1716,45 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				};
 
 				// Function to bake the VTF
-				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image) {
+				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image, std::filesystem::path outputPathOverride = {}) {
 					const auto vtfData = vtf.bake();
 					if (vtfData.empty()) {
 						tferr << "Failed to TF input " << image << " at " << BOLD << currentInputPath << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
 					const auto elapsed = stopwatch.get().count();
-					if (!sourcepp::fs::writeFileBuffer(outputPath, vtfData)) {
-						tferr << "Failed to write to " << BOLD << outputPath << END << "." << tfendl;
+					if (outputPathOverride.empty()) {
+						outputPathOverride = outputPath;
+					}
+					if (!sourcepp::fs::writeFileBuffer(outputPathOverride, vtfData)) {
+						tferr << "Failed to write to " << BOLD << outputPathOverride << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
 					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 					return EXIT_SUCCESS;
 				};
 
-				// We need to test if input texture is an HDRI. Yes this is expensive
-				if (hdriAutodetect) {
-					vtfpp::ImageFormat hdriFormat;
-					int hdriWidth, hdriHeight, hdriFrameCount;
-					static_cast<void>(vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount));
-					if (vtfpp::ImageFormatDetails::large(hdriFormat) && hdriWidth == hdriHeight * 2) {
-						hdri = true;
+				auto hdriMode = *not_magic_enum::enum_cast<maretf::HDRIMode>(hdriModeForce);
+				if (hdriMode == maretf::HDRIMode::FLAT) {
+					// We need to test if input texture is an HDRI. Yes this is expensive
+					if (const auto hdriModeTest = *not_magic_enum::enum_cast<maretf::HDRIMode>(hdriModeAuto); hdriModeTest != maretf::HDRIMode::FLAT) {
+						vtfpp::ImageFormat hdriFormat;
+						int hdriWidth, hdriHeight, hdriFrameCount;
+						static_cast<void>(vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount));
+						if (vtfpp::ImageFormatDetails::large(hdriFormat) && hdriWidth == hdriHeight * 2) {
+							hdriMode = hdriModeTest;
+						}
 					}
 				}
 
-				// Special case for HDRI -> cubemap conversion
-				if (hdri) {
-					options.isCubeMap = true;
-
-					// Compute mips if desired after the cubemap is constructed
-					options.computeMips = false;
-
-					// Another time-saver
-					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
-					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
-
+				const auto loadHDRI = [hdriNoFilter, &END, &BOLD, &findRequestedSize](const std::filesystem::path& hdriPath) -> std::optional<std::tuple<vtfpp::ImageFormat, uint16_t, std::array<std::vector<std::byte>, 6>>> {
 					// Load image
 					vtfpp::ImageFormat hdriFormat;
 					int hdriWidth, hdriHeight, hdriFrameCount;
-					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
+					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(hdriPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
 					if (hdriData.empty() || !hdriWidth || !hdriHeight || !hdriFrameCount) {
-						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-						return EXIT_FAILURE;
+						tferr << "Failed to TF input HDRI at " << BOLD << hdriPath << END << ". Is it a supported format?" << tfendl;
+						return std::nullopt;
 					}
 
 					// Find requested size
@@ -1752,136 +1772,217 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					// Split HDRI
 					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
-						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
-						return EXIT_FAILURE;
-					}
-					if (requestedSize > 0) {
-						hdriHeight = requestedSize;
+						tferr << "Failed to TF input HDRI at " << BOLD << hdriPath << END << ". Couldn't split the HDRI!" << tfendl;
+						return std::nullopt;
 					}
 
-					// Create VTF
-					vtfpp::VTF vtf = vtfpp::VTF::create(hdriFormat, hdriHeight, hdriHeight, options);
-					vtf.setFaceCount(true);
+					return {{hdriFormat, requestedSize > 0 ? requestedSize : hdriHeight, std::move(cubemapFaces)}};
+				};
 
-					// Set faces
-					for (int face = 0; face < 6; face++) {
-						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face)) {
-							tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
-							return EXIT_FAILURE;
-						}
-					}
-
-					// Now compute mips after faces exist
-					if (!noMips) {
-						vtf.computeMips(options.filter);
-					}
-
-					// And now convert to output format
-					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					}
-
-					// Set resources
-					handleSettingResourcesForVTF(vtf, false);
-
-					// Bake VTF
-					return bake(vtf, "HDRI");
-				}
-
-				// Set resize bounds
-				if (size || sizeWidth) {
-					options.resizeBounds.resizeMinWidth = options.resizeBounds.resizeMaxWidth = sizeWidth ? sizeWidth : size;
-				}
-				if (size || sizeHeight) {
-					options.resizeBounds.resizeMinHeight = options.resizeBounds.resizeMaxHeight = sizeHeight ? sizeHeight : size;
-				}
-				if (maxSize || maxSizeWidth) {
-					options.resizeBounds.resizeMaxWidth = maxSizeWidth ? maxSizeWidth : maxSize;
-				}
-				if (maxSize || maxSizeHeight) {
-					options.resizeBounds.resizeMaxHeight = maxSizeHeight ? maxSizeHeight : maxSize;
-				}
-				if (minSize || minSizeWidth) {
-					options.resizeBounds.resizeMinWidth = minSizeWidth ? minSizeWidth : minSize;
-				}
-				if (minSize || minSizeHeight) {
-					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
-				}
-
-				// Special case for animated VTFs
 				if (options.initialFrameCount > 1) {
-					// Compute mips later
-					options.computeMips = false;
+					switch (hdriMode) {
+						// Special case for animated VTFs
+						case maretf::HDRIMode::FLAT: {
+							// Compute mips later
+							options.computeMips = false;
 
-					// Another time-saver
-					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
-					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
 
-					// Create initial VTF
-					auto vtf = vtfpp::VTF::create(currentInputPath, options);
-					if (!vtf) {
-						tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-						return EXIT_FAILURE;
-					}
+							// Create initial VTF
+							auto vtf = vtfpp::VTF::create(currentInputPath, options);
+							if (!vtf) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+								return EXIT_FAILURE;
+							}
 
-					// Set frames
-					auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
-					auto currentInputPathBase = currentInputPathBasePath.string();
-					currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
-					std::unique_ptr<indicators::ProgressBar> bar;
-					if (!noPrettyFormatting && !quiet) {
-						bar = std::make_unique<indicators::ProgressBar>(
-							indicators::option::PostfixText{"Adding frames..."},
-							indicators::option::ShowPercentage{true},
-							indicators::option::MaxProgress{options.initialFrameCount}
-						);
-					}
-					for (int frame = frameNumberStart; frame < options.initialFrameCount; frame++) {
-						if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
-							tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
-							return EXIT_FAILURE;
+							// Set frames
+							auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+							auto currentInputPathBase = currentInputPathBasePath.string();
+							currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+							std::unique_ptr<indicators::ProgressBar> bar;
+							if (!noPrettyFormatting && !quiet) {
+								bar = std::make_unique<indicators::ProgressBar>(
+									indicators::option::PostfixText{"Adding frames..."},
+									indicators::option::ShowPercentage{true},
+									indicators::option::MaxProgress{options.initialFrameCount}
+								);
+							}
+							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
+								if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
+									tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
+									return EXIT_FAILURE;
+								}
+								if (bar) {
+									bar->tick();
+								}
+							}
+							if (bar) {
+								bar->mark_as_completed();
+							}
+
+							// Now compute mips after frames exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "animation");
 						}
-						if (bar) {
-							bar->tick();
+
+						// Special case for animated HDRI -> cubemap conversion
+						case maretf::HDRIMode::CUBEMAP: {
+							options.isCubeMap = true;
+
+							// Compute mips if desired after the cubemap is constructed
+							options.computeMips = false;
+
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+							// Create initial VTF
+							// We throw out this cubemap data since it is handled later, but it is necessary to establish format and size
+							const auto firstFrameHDRIData = loadHDRI(currentInputPath);
+							if (!firstFrameHDRIData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaces] = *firstFrameHDRIData;
+							vtfpp::VTF vtf = vtfpp::VTF::create(firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaceSize, options);
+
+							// Set frames
+							auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+							auto currentInputPathBase = currentInputPathBasePath.string();
+							currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+							std::unique_ptr<indicators::ProgressBar> bar;
+							if (!noPrettyFormatting && !quiet) {
+								bar = std::make_unique<indicators::ProgressBar>(
+									indicators::option::PostfixText{"Adding frames..."},
+									indicators::option::ShowPercentage{true},
+									indicators::option::MaxProgress{options.initialFrameCount}
+								);
+							}
+							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
+								// Load HDRI
+								const auto hdriData = loadHDRI(std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()));
+								if (!hdriData) {
+									return EXIT_FAILURE;
+								}
+								const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+								// Set faces
+								for (int face = 0; face < 6; face++) {
+									if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, frame, face)) {
+										tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " at frame " << CYAN << frame << END << " could not be set!" << tfendl;
+										return EXIT_FAILURE;
+									}
+								}
+								if (bar) {
+									bar->tick();
+								}
+							}
+							if (bar) {
+								bar->mark_as_completed();
+							}
+
+							// Now compute mips after faces exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "animated HDRI");
 						}
 					}
-					if (bar) {
-						bar->mark_as_completed();
+				} else {
+					switch (hdriMode) {
+						// Expected case for no animation, no cubemap/skybox
+						case maretf::HDRIMode::FLAT: {
+							// Create VTF
+							auto vtf = vtfpp::VTF::create(currentInputPath, options);
+							if (!vtf) {
+								tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+								return EXIT_FAILURE;
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "image");
+						}
+
+						// Special case for HDRI -> cubemap conversion
+						case maretf::HDRIMode::CUBEMAP: {
+							options.isCubeMap = true;
+
+							// Compute mips if desired after the cubemap is constructed
+							options.computeMips = false;
+
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+							// Load HDRI
+							const auto hdriData = loadHDRI(currentInputPath);
+							if (!hdriData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+							// Create VTF
+							vtfpp::VTF vtf = vtfpp::VTF::create(hdriFormat, cubemapFaceSize, cubemapFaceSize, options);
+
+							// Set faces
+							for (int face = 0; face < 6; face++) {
+								if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, 0, face)) {
+									tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
+									return EXIT_FAILURE;
+								}
+							}
+
+							// Now compute mips after faces exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "HDRI");
+						}
 					}
-
-					// Now compute mips after frames exist
-					if (!noMips) {
-						vtf.computeMips(options.filter);
-					}
-
-					// And now convert to output format
-					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					}
-
-					// Set resources
-					handleSettingResourcesForVTF(vtf, false);
-
-					// Bake VTF
-					return bake(vtf, "animation");
 				}
-
-				// Create VTF
-				auto vtf = vtfpp::VTF::create(currentInputPath, options);
-				if (!vtf) {
-					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-					return EXIT_FAILURE;
-				}
-
-				// Set resources
-				handleSettingResourcesForVTF(vtf, false);
-
-				// Bake VTF
-				return bake(vtf, "image");
+				return EXIT_FAILURE;
 			};
 
 			int out = EXIT_SUCCESS;

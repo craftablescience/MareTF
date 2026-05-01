@@ -407,4 +407,17 @@ const std::vector<std::string_view> VTF_PLATFORM_P{
 	"PS3 (P2, CS:GO)",
 };
 
+const std::vector<maretf::HDRIMode> HDRI_MODE_E{
+	maretf::HDRIMode::FLAT,
+	maretf::HDRIMode::CUBEMAP,
+};
+const std::vector<std::string_view> HDRI_MODE_S{
+	"FLAT",
+	"CUBEMAP",
+};
+const std::vector<std::string_view> HDRI_MODE_P{
+	"Flat Texture",
+	"Cubemap",
+};
+
 } // namespace not_magic_enum::detail
