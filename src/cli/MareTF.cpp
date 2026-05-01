@@ -1587,8 +1587,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					frameNumberCount = 2;
 					inputStem.pop_back();
 					inputStem.pop_back();
-					while (std::isdigit(inputStem.back())) {
-						frameNumberCount++;
+					for (; std::isdigit(inputStem.back()); frameNumberCount++) {
 						inputStem.pop_back();
 					}
 					{
@@ -1601,6 +1600,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					while (std::filesystem::exists(std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()))) {
 						options.initialFrameCount++;
 					}
+					options.initialFrameCount -= frameNumberStart;
 				}
 
 				// Set default transparency flags
@@ -1810,7 +1810,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 								);
 							}
 							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
-								if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
+								if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame - frameNumberStart)) {
 									tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
 									return EXIT_FAILURE;
 								}
@@ -1883,7 +1883,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 								// Set faces
 								for (int face = 0; face < 6; face++) {
-									if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, frame, face)) {
+									if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, frame - frameNumberStart, face)) {
 										tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " at frame " << CYAN << frame << END << " could not be set!" << tfendl;
 										return EXIT_FAILURE;
 									}
