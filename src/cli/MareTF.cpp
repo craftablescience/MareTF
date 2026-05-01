@@ -1910,6 +1910,11 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 							// Bake VTF
 							return bake(vtf, "animated HDRI");
 						}
+
+						// Special case for animated HDRI -> skybox conversion
+						case maretf::HDRIMode::SKYBOX: {
+							return EXIT_FAILURE;
+						}
 					}
 				} else {
 					switch (hdriMode) {
@@ -1975,6 +1980,40 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 							// Bake VTF
 							return bake(vtf, "HDRI");
+						}
+
+						// Special case for HDRI -> skybox conversion
+						case maretf::HDRIMode::SKYBOX: {
+							// Load HDRI
+							const auto hdriData = loadHDRI(currentInputPath);
+							if (!hdriData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+							// Create VTFs
+							int out = EXIT_SUCCESS;
+							const auto outputPaths = ::getOutputSkyboxPathsForInput(inputPaths.size() > 1 ? (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string() : currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
+							for (int face = 0; face < 6; face++) {
+								// Check for overwrite
+								{
+									bool checkFileShouldRet = true;
+									out = out || checkFileDoesntExist(outputPaths[face], checkFileShouldRet);
+									if (checkFileShouldRet) {
+										return out;
+									}
+								}
+
+								// Create VTF
+								vtfpp::VTF vtf = vtfpp::VTF::create(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options);
+
+								// Set resources
+								handleSettingResourcesForVTF(vtf, false);
+
+								// Bake VTF
+								out = out || bake(vtf, "HDRI", outputPaths[face]);
+							}
+							return out;
 						}
 					}
 				}

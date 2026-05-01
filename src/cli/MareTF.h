@@ -12,6 +12,7 @@ namespace maretf {
 enum class HDRIMode {
     FLAT,
     CUBEMAP,
+    SKYBOX,
 };
 
 } // namespace maretf

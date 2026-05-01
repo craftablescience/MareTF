@@ -410,14 +410,17 @@ const std::vector<std::string_view> VTF_PLATFORM_P{
 const std::vector<maretf::HDRIMode> HDRI_MODE_E{
 	maretf::HDRIMode::FLAT,
 	maretf::HDRIMode::CUBEMAP,
+	maretf::HDRIMode::SKYBOX,
 };
 const std::vector<std::string_view> HDRI_MODE_S{
 	"FLAT",
 	"CUBEMAP",
+	"SKYBOX",
 };
 const std::vector<std::string_view> HDRI_MODE_P{
 	"Flat Texture",
 	"Cubemap",
+	"Skybox",
 };
 
 } // namespace not_magic_enum::detail

@@ -35,6 +35,20 @@ using namespace sourcepp;
 	return "";
 }
 
+[[nodiscard]] std::array<std::string, 6> getOutputSkyboxPathsForInput(std::string_view inputPath, vtfpp::VTF::Platform outputPlatform) {
+	const std::filesystem::path inputPathPath{inputPath};
+	const auto inputPathStart = (inputPathPath.parent_path() / inputPathPath.stem()).string();
+	const auto inputPathEnd = inputPathPath.extension().string();
+	return {
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[0].data() + inputPathEnd, outputPlatform),
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[1].data() + inputPathEnd, outputPlatform),
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[2].data() + inputPathEnd, outputPlatform),
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[3].data() + inputPathEnd, outputPlatform),
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[4].data() + inputPathEnd, outputPlatform),
+		::getOutputPathForInput(inputPathStart + ::getOutputCubemapFacePathSuffixes()[5].data() + inputPathEnd, outputPlatform),
+	};
+}
+
 bool fileIsASupportedImageFileFormat(std::string_view extension) {
 	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
 		".apng",
