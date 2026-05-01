@@ -1,7 +1,10 @@
 #pragma once
 
+#include <string>
+#include <tuple>
+
 #ifndef MARETF_CLI
 #include <QWidget>
 
-int maretf_cli(int argc, const char* const argv[], QWidget* guiParent = nullptr);
+[[nodiscard]] std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWidget* guiParent = nullptr);
 #endif

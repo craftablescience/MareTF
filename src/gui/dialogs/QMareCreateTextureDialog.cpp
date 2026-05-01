@@ -907,8 +907,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
 		auto* cli = getCLI();
-		if (cli->exec()) {
-			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
+		if (const auto& [code, errMsg] = cli->exec(); code) {
+			QMessageBox::warning(this, tr("Error Creating Texture"), errMsg.c_str());
 		}
 		cli->deleteLater();
 

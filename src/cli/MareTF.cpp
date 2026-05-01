@@ -1,4 +1,6 @@
 // ReSharper disable CppDFATimeOver
+// ReSharper disable CppDeclaratorNeverUsed
+// ReSharper disable CppUnusedIncludeDirective
 // ReSharper disable CppUseStructuredBinding
 
 #include "MareTF.h"
@@ -16,10 +18,8 @@
 #include <mutex>
 #include <random>
 #include <ranges>
-#include <string>
 #include <string_view>
 #include <thread>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -167,44 +167,92 @@ private:
 
 struct tfout_t {
 	static inline bool QUIET = false;
+#ifdef MARETF_CLI
 	tfout_t& operator<<(const auto& x) {
 		if (!QUIET) std::cout << x;
 		return *this;
 	}
+#else
+	static inline std::optional<std::string> OUT_STRING = std::nullopt;
+	tfout_t& operator<<(const auto& x) {
+		if (!QUIET && OUT_STRING) {
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(x)>, std::filesystem::path>) {
+				// C++26 fixes this
+				*OUT_STRING += x.string();
+			} else {
+				*OUT_STRING += std::format("{}", x);
+			}
+		}
+		return *this;
+	}
+#endif
 } tfout;
 
 struct tferr_t {
 	static inline bool QUIET = false;
+#ifdef MARETF_CLI
 	tferr_t& operator<<(const auto& x) {
 		if (!QUIET) std::cerr << x;
 		return *this;
 	}
+#else
+	static inline std::optional<std::string> ERR_STRING = std::nullopt;
+	tferr_t& operator<<(const auto& x) {
+		if (!QUIET && ERR_STRING) {
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(x)>, std::filesystem::path>) {
+				// C++26 fixes this
+				*ERR_STRING += x.string();
+			} else {
+				*ERR_STRING += std::format("{}", x);
+			}
+		}
+		return *this;
+	}
+#endif
 } tferr;
 
 struct tfendl_t {} tfendl;
 
 // ReSharper disable once CppDeclaratorNeverUsed
 template<> tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
+#ifdef MARETF_CLI
 	if (!QUIET) std::cout << std::endl;
+#else
+	if (!QUIET && OUT_STRING) OUT_STRING->append("\n");
+#endif
 	return *this;
 }
 
 // ReSharper disable once CppDeclaratorNeverUsed
 template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
+#ifdef MARETF_CLI
 	if (!QUIET) std::cerr << std::endl;
+#else
+	if (!QUIET && ERR_STRING) ERR_STRING->append("\n");
+#endif
 	return *this;
 }
+
+#ifdef MARETF_CLI
+#define MARETF_RETURN(code) return code
+#else
+#define MARETF_RETURN(code) return {code, tferr_t::ERR_STRING ? *tferr_t::ERR_STRING : ""}
+#endif
 
 } // namespace
 
 #ifdef MARETF_CLI
 int main(int argc, const char* const argv[]) {
 #else
-int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
+std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 #endif
 #if defined(MARETF_CLI) && defined(_WIN32)
 	SetConsoleOutputCP(CP_UTF8); // Set up console to show UTF-8 characters
 	setvbuf(stdout, nullptr, _IOFBF, 1000); // Enable buffering so VS terminal won't chop up UTF-8 byte sequences
+#endif
+
+#ifndef MARETF_CLI
+	tferr_t::ERR_STRING = "";
 #endif
 
 	argparse::ArgumentParser cli{PROJECT_NAME, PROJECT_VERSION, argparse::default_arguments::help};
@@ -1870,7 +1918,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				outputPath = savedOutputPath;
 			}
 			if (out != EXIT_SUCCESS) {
-				return out;
+				MARETF_RETURN(out);
 			}
 
 			if (watch) {
@@ -2042,8 +2090,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					fileWatcher.removeWatch(watchID);
 				}
 			}
-
-			return EXIT_SUCCESS;
+			MARETF_RETURN(EXIT_SUCCESS);
 		}
 		if (mode == "edit") {
 			const auto edit = [&](const std::string& currentInputPath) {
@@ -2234,7 +2281,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 		if (mode == "extract") {
 			const auto extract = [&](const std::string& currentInputPath) {
@@ -2348,7 +2395,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 		if (mode == "info") {
 			const auto info = [&](const std::string& currentInputPath) {
@@ -2378,7 +2425,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
 
-					tfout << BOLD << "Flags:         " << END << CYAN << "0x" << std::hex << vtf.getFlags() << std::dec << END;
+					tfout << BOLD << "Flags:         " << END << CYAN << std::format("{:#x}", vtf.getFlags()) << END;
 					if (vtf.getFlags()) {
 						tfout << " (";
 						bool first = true;
@@ -2482,7 +2529,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 					tfout << BOLD << "Extended Flags: ";
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0ResourcePtr->getDataAsExtendedFlags() << std::dec;
+						tfout << GREEN << "Exists" << END << " — " << CYAN << std::format("{:#x}", ts0ResourcePtr->getDataAsExtendedFlags());
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -2490,7 +2537,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 					tfout << BOLD << "CRC:            ";
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << crcResourcePtr->getDataAsCRC() << std::dec;
+						tfout << GREEN << "Exists" << END << " — " << CYAN << std::format("{:#x}", crcResourcePtr->getDataAsCRC());
 					} else {
 						tfout << RED << "Doesn't exist";
 					}
@@ -2569,7 +2616,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
-							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END;
+							tfout << BOLD << "Flags:   " << END << CYAN << std::format("{:#x}", static_cast<int>(hotspots.getFlags())) << END;
 							if (hotspots.getFlags()) {
 								tfout << " (";
 								bool first = true;
@@ -2588,7 +2635,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 							for (int i = 0; i < hotspots.getRects().size(); i++) {
 								const auto& rect = hotspots.getRects().at(i);
 								tfout << BOLD << "Rect " << END << CYAN << (i + 1) << END << BOLD << ':' << END << tfendl;
-								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << "0x" << std::hex << static_cast<int>(rect.flags) << std::dec << END;
+								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << std::format("{:#x}", static_cast<int>(rect.flags)) << END;
 								if (rect.flags) {
 									tfout << " (";
 									bool first = true;
@@ -2749,7 +2796,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 			// This is for Stefan and other tool devs
 			if (inputPaths.size() == 1 && inputPaths[0] == "version") {
 				std::cout << PROJECT_VERSION << std::endl;
-				return EXIT_SUCCESS;
+				MARETF_RETURN(EXIT_SUCCESS);
 			}
 
 			int out = EXIT_SUCCESS;
@@ -2796,7 +2843,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 	} catch (const std::exception& e) {
 		if (argc > 1) {
@@ -2805,7 +2852,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		} else {
 			std::cout << cli << std::endl;
 		}
-		return EXIT_FAILURE;
+		MARETF_RETURN(EXIT_FAILURE);
 	}
-	return EXIT_SUCCESS;
+	MARETF_RETURN(EXIT_SUCCESS);
 }
