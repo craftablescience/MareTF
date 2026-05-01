@@ -1473,7 +1473,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				if (outputPath.empty()) {
 					outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 				} else if (inputPaths.size() > 1) {
-					outputPath = (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string();
+					outputPath = ::getOutputPathForInput((std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string(), *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 				}
 				{
 					bool checkFileShouldRet;
