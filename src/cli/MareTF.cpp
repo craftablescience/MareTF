@@ -1726,7 +1726,9 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 						tferr << "Failed to write to " << BOLD << outputPathOverride << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
-					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+					if (outputPathOverride.empty()) {
+						tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+					}
 					return EXIT_SUCCESS;
 				};
 
@@ -2013,6 +2015,8 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 								// Bake VTF
 								out = out || bake(vtf, "HDRI", outputPaths[face]);
 							}
+							const auto elapsed = stopwatch.get().count();
+							tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 							return out;
 						}
 					}
