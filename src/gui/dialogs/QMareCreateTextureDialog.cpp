@@ -916,8 +916,19 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (!createFromDir) {
 			QStringList outputPaths;
-			for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemInputPath->text())) {
-				outputPaths.push_back(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(inputPath.toUtf8().constData(), static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt())).c_str() : filesystemOutputPath->text());
+			if (!filesystemOutputPath->text().isEmpty()) {
+				outputPaths.push_back(filesystemOutputPath->text());
+			} else {
+				for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemInputPath->text())) {
+					const auto platformEnum = static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt());
+					if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) == maretf::HDRIMode::SKYBOX) {
+						for (const auto& skyboxOutputPath : ::getOutputSkyboxPathsForInput(inputPath.toUtf8().constData(), platformEnum)) {
+							outputPaths.push_back(skyboxOutputPath.c_str());
+						}
+					} else {
+						outputPaths.push_back(::getOutputPathForInput(inputPath.toUtf8().constData(), platformEnum).c_str());
+					}
+				}
 			}
 			emit this->createdTextures(outputPaths);
 		}
