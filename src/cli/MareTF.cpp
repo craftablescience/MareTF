@@ -27,7 +27,7 @@
 #include <io.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
 #endif
 
@@ -55,9 +55,11 @@ using namespace std::literals;
 namespace {
 
 [[nodiscard]] bool runningInTTY() {
-#if defined(_WIN32)
+#if !defined(MARETF_CLI)
+	static constexpr bool check = false;
+#elif defined(_WIN32)
 	static const bool check = _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
-#elif defined(__linux__)
+#elif defined(__unix__) || defined(__APPLE__)
 	static const bool check = isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
 #else
 	static constexpr bool check = true;
@@ -315,12 +317,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(noOverwrite);
 
 	bool quiet;
+#ifdef MARETF_CLI
 	cli
 		.add_argument("--quiet")
 		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully)."
 		      " Enabled by default if no TTY is detected.")
 		.flag()
 		.store_into(quiet);
+#else
+	quiet = true;
+#endif
 
 	bool verbose;
 	cli
@@ -338,12 +344,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(noRecurse);
 
 	bool noPrettyFormatting;
+#ifdef MARETF_CLI
 	cli
 		.add_argument("--no-pretty-formatting")
 		.help("Disables printing ANSI color codes and emojis. Pretty formatting is disabled by default"
 		      " if no TTY is detected.")
 		.flag()
 		.store_into(noPrettyFormatting);
+#else
+	noPrettyFormatting = true;
+#endif
 
 	//endregion
 
@@ -1229,16 +1239,11 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	try {
 		cli.parse_args(argc, argv);
 
-#ifdef MARETF_CLI
 		if (!::runningInTTY()) {
 			overwrite = true;
 			quiet = true;
 			noPrettyFormatting = true;
 		}
-#else
-		quiet = true;
-		noPrettyFormatting = true;
-#endif
 
 		if (quiet && !verbose) {
 			tfout_t::QUIET = true;
