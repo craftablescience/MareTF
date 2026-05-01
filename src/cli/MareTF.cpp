@@ -56,7 +56,7 @@ namespace {
 
 [[nodiscard]] bool runningInTTY() {
 #if !defined(MARETF_CLI)
-	static constexpr bool check = false;
+	static constexpr bool check = true;
 #elif defined(_WIN32)
 	static const bool check = _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
 #elif defined(__unix__) || defined(__APPLE__)
@@ -317,16 +317,12 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(noOverwrite);
 
 	bool quiet;
-#ifdef MARETF_CLI
 	cli
 		.add_argument("--quiet")
 		.help("Don't print anything to stdout or stderr (assuming program arguments are parsed successfully)."
 		      " Enabled by default if no TTY is detected.")
 		.flag()
 		.store_into(quiet);
-#else
-	quiet = true;
-#endif
 
 	bool verbose;
 	cli
