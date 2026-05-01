@@ -1743,7 +1743,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 				}
 
-				const auto loadHDRI = [hdriNoFilter, &END, &BOLD, &findRequestedSize](const std::filesystem::path& hdriPath) -> std::optional<std::tuple<vtfpp::ImageFormat, uint16_t, std::array<std::vector<std::byte>, 6>>> {
+				const auto loadHDRI = [hdriNoFilter, &END, &BOLD, &findRequestedSize](const std::filesystem::path& hdriPath, bool skybox = false) -> std::optional<std::tuple<vtfpp::ImageFormat, uint16_t, std::array<std::vector<std::byte>, 6>>> {
 					// Load image
 					vtfpp::ImageFormat hdriFormat;
 					int hdriWidth, hdriHeight, hdriFrameCount;
@@ -1766,7 +1766,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 
 					// Split HDRI
-					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter);
+					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter, skybox);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
 						tferr << "Failed to TF input HDRI at " << BOLD << hdriPath << END << ". Couldn't split the HDRI!" << tfendl;
 						return std::nullopt;
@@ -1985,7 +1985,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 						// Special case for HDRI -> skybox conversion
 						case maretf::HDRIMode::SKYBOX: {
 							// Load HDRI
-							const auto hdriData = loadHDRI(currentInputPath);
+							const auto hdriData = loadHDRI(currentInputPath, true);
 							if (!hdriData) {
 								return EXIT_FAILURE;
 							}
