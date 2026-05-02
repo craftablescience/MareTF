@@ -31,6 +31,10 @@ signals:
 	void themeUpdated();
 
 protected:
+	void dragEnterEvent(QDragEnterEvent* event) override;
+
+	void dropEvent(QDropEvent* event) override;
+
 	QMareMiddleClickTabWidget* textureTabs;
 
 	QDockWidget* previewDock;

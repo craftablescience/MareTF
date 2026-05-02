@@ -16,6 +16,7 @@
 #include <QLineEdit>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -747,6 +748,8 @@ QMareTextureWindow::QMareTextureWindow() {
 	// Final setup ----------------------------------------
 
 	this->regenerateDetails();
+
+	this->setAcceptDrops(true);
 }
 
 void QMareTextureWindow::loadTexture(const QString& path) {
@@ -1074,4 +1077,23 @@ void QMareTextureWindow::regenerateDetails() {
 			this->previewDock->minimumSizeHint().height(),
 		}, Qt::Vertical);
 	});
+}
+
+void QMareTextureWindow::dragEnterEvent(QDragEnterEvent* event) {
+	if (!event->mimeData()->hasUrls()) {
+		return;
+	}
+	for (const auto& url : event->mimeData()->urls()) {
+		if (!url.isLocalFile() || (!url.fileName().endsWith(".vtf") && !url.fileName().endsWith(".xtf"))) {
+			return;
+		}
+	}
+	event->acceptProposedAction();
+}
+
+void QMareTextureWindow::dropEvent(QDropEvent* event) {
+	for (const auto& url : event->mimeData()->urls()) {
+		this->loadTexture(url.toLocalFile());
+	}
+	event->acceptProposedAction();
 }
