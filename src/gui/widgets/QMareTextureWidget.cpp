@@ -390,8 +390,10 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		static_cast<int>(static_cast<float>(actualHeight) * this->textureZoom),
 	};
 
+	static constexpr QColor BACKGROUND_COLOR{20, 22, 24};
+
 	QPainter painter{this};
-	painter.fillRect(0, 0, this->width(), this->height(), {20, 22, 24});
+	painter.fillRect(0, 0, this->width(), this->height(), BACKGROUND_COLOR);
 
 	if (this->useBackground() && this->useA() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
 		static constexpr auto SQUARE_SIZE = 32;
@@ -431,11 +433,11 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		static constexpr auto MINIMAP_PADDING = 4;
 		static constexpr auto MINIMAP_OVERLAY_BORDER_SIZE = 2;
 
-		auto minimapBackgroundColor = this->palette().color(QPalette::Window).darker(100);
+		auto minimapBackgroundColor = BACKGROUND_COLOR.darker();
 		minimapBackgroundColor.setAlpha(0xA0);
-		auto minimapOverlayBorderColor = this->palette().color(QPalette::Highlight).lighter(70);
+		auto minimapOverlayBorderColor = this->palette().color(QPalette::Highlight);
 		minimapOverlayBorderColor.setAlpha(0xC0);
-		auto minimapOverlayFillColor = this->palette().color(QPalette::Highlight).lighter(100);
+		auto minimapOverlayFillColor = this->palette().color(QPalette::Highlight);
 		minimapOverlayFillColor.setAlpha(0x60);
 
 		const auto referenceDim = static_cast<int>(qMin(this->rect().width(), this->rect().height()) / (
