@@ -17,6 +17,8 @@
 
 #include "Common.h"
 
+#include "utility/QMareOptions.h"
+
 namespace {
 
 [[nodiscard]] std::vector<std::byte> drawCubemapNet(uint16_t faceWidth, uint16_t faceHeight, const QImage& xp, const QImage& xn, const QImage& yp, const QImage& yn, const QImage& zp, const QImage& zn, const QImage& sm) {
@@ -356,7 +358,7 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 	const auto aspectRatio = static_cast<double>(this->textureCurrent.width()) / this->textureCurrent.height();
 
 	int actualWidth, actualHeight;
-	if (aspectRatio > 1.0) {
+	if (aspectRatio > 1) {
 		actualWidth = static_cast<int>(availableWidth);
 		actualHeight = static_cast<int>(availableWidth / aspectRatio);
 		if (actualHeight > availableHeight) {
@@ -395,7 +397,56 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		}
 	}
 
-	painter.drawImage(targetRect, this->textureCurrent, QRect{0, 0, this->textureCurrent.width(), this->textureCurrent.height()});
+	const QRect srcRect{0, 0, this->textureCurrent.width(), this->textureCurrent.height()};
+	painter.drawImage(targetRect, this->textureCurrent, srcRect);
+
+	// Minimap
+	if (const auto minimapScaleChoice = QMareOptions::get<int>(QMareOptions::INT_MINIMAP_SCALE); minimapScaleChoice != 0 && !this->geometry().contains(targetRect)) {
+		static constexpr auto MINIMAP_SCALE_FACTOR_SMALL = 8;
+		static constexpr auto MINIMAP_SCALE_FACTOR_MEDIUM = 5.5;
+		static constexpr auto MINIMAP_SCALE_FACTOR_LARGE = 4;
+		static constexpr auto MINIMAP_MARGIN = 8;
+		static constexpr auto MINIMAP_PADDING = 4;
+		static constexpr auto MINIMAP_OVERLAY_BORDER_SIZE = 2;
+
+		const auto minimapBackgroundColor = this->palette().color(QPalette::Window).darker(100);
+		auto minimapOverlayBorderColor = this->palette().color(QPalette::Highlight).lighter(70);
+		minimapOverlayBorderColor.setAlpha(0xC0);
+		auto minimapOverlayFillColor = this->palette().color(QPalette::Highlight).lighter(100);
+		minimapOverlayFillColor.setAlpha(0x60);
+
+		const auto referenceDim = static_cast<int>(qMin(this->rect().width(), this->rect().height()) / (
+			minimapScaleChoice == -1
+				? MINIMAP_SCALE_FACTOR_SMALL
+				: minimapScaleChoice == -2
+					? MINIMAP_SCALE_FACTOR_MEDIUM
+					: minimapScaleChoice == -3
+						? MINIMAP_SCALE_FACTOR_LARGE
+						: minimapScaleChoice
+		));
+
+		QRect minimapTargetRect;
+		if (aspectRatio > 1) {
+			minimapTargetRect = QRect{this->rect().right() - referenceDim - MINIMAP_MARGIN, this->rect().top() + MINIMAP_MARGIN, referenceDim, static_cast<int>(static_cast<float>(referenceDim) / aspectRatio)};
+		} else {
+			const auto minimapWidth = static_cast<int>(static_cast<float>(referenceDim) * aspectRatio);
+			minimapTargetRect = QRect{this->rect().right() - minimapWidth - MINIMAP_MARGIN, this->rect().top() + MINIMAP_MARGIN, minimapWidth, referenceDim};
+		}
+		const auto minimapViewportScaleX = static_cast<float>(minimapTargetRect.width()) / (static_cast<float>(actualWidth) * this->textureZoom);
+		const auto minimapViewportScaleY = static_cast<float>(minimapTargetRect.height()) / (static_cast<float>(actualHeight) * this->textureZoom);
+
+		painter.fillRect(minimapTargetRect.adjusted(-MINIMAP_PADDING, -MINIMAP_PADDING, MINIMAP_PADDING, MINIMAP_PADDING), minimapBackgroundColor);
+		painter.drawImage(minimapTargetRect, this->textureCurrent, srcRect);
+
+		painter.setPen({minimapOverlayBorderColor, MINIMAP_OVERLAY_BORDER_SIZE});
+		painter.setBrush({minimapOverlayFillColor});
+		painter.drawRect(QRect{
+			minimapTargetRect.left() + static_cast<int>(static_cast<float>(this->rect().left() - targetRect.left()) * minimapViewportScaleX),
+			minimapTargetRect.top() + static_cast<int>(static_cast<float>(this->rect().top() - targetRect.top()) * minimapViewportScaleY),
+			static_cast<int>(static_cast<float>(this->rect().width()) * minimapViewportScaleX),
+			static_cast<int>(static_cast<float>(this->rect().height()) * minimapViewportScaleY)
+		});
+	}
 }
 
 void QMareTextureWidget::resizeEvent(QResizeEvent* e) {

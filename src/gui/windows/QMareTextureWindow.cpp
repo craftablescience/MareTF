@@ -110,22 +110,13 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
 
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* generalMenu = optionsMenu->addMenu(QIcon{":/logo.png"}, tr("&General"));
 
-#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* optionRaiseToTopOpeningFileAction = generalMenu->addAction(tr("Raise When Opening New File"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
 	optionRaiseToTopOpeningFileAction->setCheckable(true);
 	optionRaiseToTopOpeningFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
-#endif
 
-	auto* optionShowTabBarForSingleFileAction = generalMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
-		QMareOptions::invert(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE);
-		this->textureTabs->setTabBarAutoHide(!QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
-	});
-	optionShowTabBarForSingleFileAction->setCheckable(true);
-	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
-
-#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* optionAllowMultipleAppInstancesAction = generalMenu->addAction(tr("Allow Multiple Application Instances"), [showRestartWarning] {
 		showRestartWarning();
 		QMareOptions::invert(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES);
@@ -133,6 +124,36 @@ QMareTextureWindow::QMareTextureWindow() {
 	optionAllowMultipleAppInstancesAction->setCheckable(true);
 	optionAllowMultipleAppInstancesAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES));
 #endif
+
+	auto* workspaceMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_FileIcon), tr("&Workspace"));
+
+	auto* optionShowTabBarForSingleFileAction = workspaceMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
+		QMareOptions::invert(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE);
+		this->textureTabs->setTabBarAutoHide(!QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
+	});
+	optionShowTabBarForSingleFileAction->setCheckable(true);
+	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
+
+	auto* minimapScaleMenu = workspaceMenu->addMenu(tr("&Minimap Scale"));
+	auto* minimapScaleMenuGroup = new QActionGroup{minimapScaleMenu};
+	minimapScaleMenuGroup->setExclusive(true);
+	const QVector<QPair<QString, int>> minimapScaleMapping{
+		{tr("Disabled"),  0},
+		{tr("Small"),    -1},
+		{tr("Medium"),   -2},
+		{tr("Large"),    -3},
+	};
+	for (const auto& [minimapScaleName, minimapScaleValue] : minimapScaleMapping) {
+		auto* action = minimapScaleMenu->addAction(minimapScaleName, [this, minimapScaleValue] {
+			QMareOptions::set(QMareOptions::INT_MINIMAP_SCALE, minimapScaleValue);
+			if (auto* tab = this->textureTabs->currentWidget()) {
+				tab->update();
+			}
+		});
+		action->setCheckable(true);
+		action->setChecked(minimapScaleValue == QMareOptions::get<int>(QMareOptions::INT_MINIMAP_SCALE));
+		minimapScaleMenuGroup->addAction(action);
+	}
 
 	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Language"));
 	auto* languageMenuGroup = new QActionGroup{languageMenu};

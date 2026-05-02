@@ -10,12 +10,16 @@ void QMareOptions::setupOptions(QSettings& options) {
 		options.setValue(BOOL_RAISE_TO_TOP_OPENING_FILE, true);
 	}
 
+	if (!options.contains(BOOL_ALLOW_MULTIPLE_APP_INSTANCES)) {
+		options.setValue(BOOL_ALLOW_MULTIPLE_APP_INSTANCES, false);
+	}
+
 	if (!options.contains(BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE)) {
 		options.setValue(BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE, true);
 	}
 
-	if (!options.contains(BOOL_ALLOW_MULTIPLE_APP_INSTANCES)) {
-		options.setValue(BOOL_ALLOW_MULTIPLE_APP_INSTANCES, false);
+	if (!options.contains(INT_MINIMAP_SCALE)) {
+		options.setValue(INT_MINIMAP_SCALE, -1);
 	}
 
 	if (!options.contains(STR_STYLE)) {
