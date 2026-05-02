@@ -409,7 +409,8 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		static constexpr auto MINIMAP_PADDING = 4;
 		static constexpr auto MINIMAP_OVERLAY_BORDER_SIZE = 2;
 
-		const auto minimapBackgroundColor = this->palette().color(QPalette::Window).darker(100);
+		auto minimapBackgroundColor = this->palette().color(QPalette::Window).darker(100);
+		minimapBackgroundColor.setAlpha(0xA0);
 		auto minimapOverlayBorderColor = this->palette().color(QPalette::Highlight).lighter(70);
 		minimapOverlayBorderColor.setAlpha(0xC0);
 		auto minimapOverlayFillColor = this->palette().color(QPalette::Highlight).lighter(100);
