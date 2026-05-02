@@ -386,12 +386,13 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 
 	if (this->useBackground() && this->useA() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
 		static constexpr auto SQUARE_SIZE = 32;
-		for (int x = targetRect.left(), i = 0; x < targetRect.left() + targetRect.width(); x += SQUARE_SIZE, i++) {
-			for (int y = targetRect.top(), j = 0; y < targetRect.top() + targetRect.height(); y += SQUARE_SIZE, j++) {
-				if ((i + j) % 2 == 0) {
-					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {214, 214, 214});
+		QRect backgroundRect = this->rect().intersected(targetRect);
+		for (int x = backgroundRect.left() / SQUARE_SIZE * SQUARE_SIZE; x < backgroundRect.right(); x += SQUARE_SIZE) {
+			for (int y = backgroundRect.top() / SQUARE_SIZE * SQUARE_SIZE; y < backgroundRect.bottom(); y += SQUARE_SIZE) {
+				if ((x / SQUARE_SIZE + y / SQUARE_SIZE) % 2 == 0) {
+					painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {214, 214, 214});
 				} else {
-					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {242, 242, 242});
+					painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {242, 242, 242});
 				}
 			}
 		}
