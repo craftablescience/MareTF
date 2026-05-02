@@ -207,7 +207,7 @@ QIcon QMareTextureWidget::getIcon() const {
 	if (this->textureCurrent.isNull()) {
 		return {};
 	}
-	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio)};
+	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS) ? Qt::SmoothTransformation : Qt::FastTransformation)};
 }
 
 QString QMareTextureWidget::getPath() const {
@@ -461,7 +461,7 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		const auto minimapViewportScaleY = static_cast<float>(minimapTargetRect.height()) / (static_cast<float>(actualHeight) * this->textureZoom);
 
 		painter.fillRect(minimapTargetRect.adjusted(-MINIMAP_PADDING, -MINIMAP_PADDING, MINIMAP_PADDING, MINIMAP_PADDING), minimapBackgroundColor);
-		painter.drawImage(minimapTargetRect, this->textureCurrent, srcRect);
+		painter.drawImage(minimapTargetRect, this->textureCurrent.scaled(minimapTargetRect.width(), minimapTargetRect.height(), Qt::IgnoreAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP) ? Qt::SmoothTransformation : Qt::FastTransformation), {0, 0, minimapTargetRect.width(), minimapTargetRect.height()});
 
 		painter.setPen({minimapOverlayBorderColor, MINIMAP_OVERLAY_BORDER_SIZE});
 		painter.setBrush({minimapOverlayFillColor});

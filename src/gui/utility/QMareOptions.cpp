@@ -18,6 +18,14 @@ void QMareOptions::setupOptions(QSettings& options) {
 		options.setValue(BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE, true);
 	}
 
+	if (!options.contains(BOOL_HIGH_QUALITY_THUMBNAILS)) {
+		options.setValue(BOOL_HIGH_QUALITY_THUMBNAILS, true);
+	}
+
+	if (!options.contains(BOOL_HIGH_QUALITY_MINIMAP)) {
+		options.setValue(BOOL_HIGH_QUALITY_MINIMAP, true);
+	}
+
 	if (!options.contains(INT_MINIMAP_SCALE)) {
 		options.setValue(INT_MINIMAP_SCALE, -1);
 	}

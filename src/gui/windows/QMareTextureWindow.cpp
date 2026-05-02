@@ -135,6 +135,19 @@ QMareTextureWindow::QMareTextureWindow() {
 	optionShowTabBarForSingleFileAction->setCheckable(true);
 	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
 
+	auto* optionHighQualityThumbnailsAction = workspaceMenu->addAction(tr("High Quality File Thumbnails"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS));
+	optionHighQualityThumbnailsAction->setCheckable(true);
+	optionHighQualityThumbnailsAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS));
+
+	auto* optionHighQualityMinimapAction = workspaceMenu->addAction(tr("High Quality Minimap"), [this] {
+		QMareOptions::invert(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP);
+		if (auto* tab = this->textureTabs->currentWidget()) {
+			tab->update();
+		}
+	});
+	optionHighQualityMinimapAction->setCheckable(true);
+	optionHighQualityMinimapAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP));
+
 	auto* minimapScaleMenu = workspaceMenu->addMenu(tr("&Minimap Scale"));
 	auto* minimapScaleMenuGroup = new QActionGroup{minimapScaleMenu};
 	minimapScaleMenuGroup->setExclusive(true);
