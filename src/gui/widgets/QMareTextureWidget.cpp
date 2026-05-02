@@ -309,6 +309,15 @@ void QMareTextureWidget::setBackground(bool newBackground) {
 	this->reloadCurrentTexture();
 }
 
+bool QMareTextureWidget::useTiled() const {
+	return this->tiled;
+}
+
+void QMareTextureWidget::setTiled(bool newTiled) {
+	this->tiled = newTiled;
+	this->reloadCurrentTexture();
+}
+
 int QMareTextureWidget::getCurrentCubemapMode() const {
 	return this->cubemapMode;
 }
@@ -386,7 +395,7 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 
 	if (this->useBackground() && this->useA() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
 		static constexpr auto SQUARE_SIZE = 32;
-		QRect backgroundRect = this->rect().intersected(targetRect);
+		QRect backgroundRect = this->rect().intersected(this->tiled ? targetRect.adjusted(-targetRect.width(), -targetRect.height(), targetRect.width(), targetRect.height()) : targetRect);
 		for (int x = backgroundRect.left() / SQUARE_SIZE * SQUARE_SIZE; x < backgroundRect.right(); x += SQUARE_SIZE) {
 			for (int y = backgroundRect.top() / SQUARE_SIZE * SQUARE_SIZE; y < backgroundRect.bottom(); y += SQUARE_SIZE) {
 				if ((x / SQUARE_SIZE + y / SQUARE_SIZE) % 2 == 0) {
@@ -400,6 +409,18 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 
 	const QRect srcRect{0, 0, this->textureCurrent.width(), this->textureCurrent.height()};
 	painter.drawImage(targetRect, this->textureCurrent, srcRect);
+
+	// Tiles
+	if (this->tiled) {
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), -targetRect.height(), -targetRect.width(), -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(0,                   -targetRect.height(), 0,                   -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  -targetRect.height(), targetRect.width(),  -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  0,                    targetRect.width(),  0                   ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  targetRect.height(),  targetRect.width(),  targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(0,                   targetRect.height(),  0,                   targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), targetRect.height(),  -targetRect.width(), targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), 0,                    -targetRect.width(), 0                   ), this->textureCurrent, srcRect);
+	}
 
 	// Minimap
 	if (const auto minimapScaleChoice = QMareOptions::get<int>(QMareOptions::INT_MINIMAP_SCALE); minimapScaleChoice != 0 && !this->geometry().contains(targetRect)) {

@@ -46,6 +46,7 @@ protected:
 	QCheckBox* previewB;
 	QCheckBox* previewA;
 	QCheckBox* previewBackground;
+	QCheckBox* previewTiled;
 
 	QGroupBox* previewAnimationGroup;
 	QMareSpinBox* previewCurrentFrame;

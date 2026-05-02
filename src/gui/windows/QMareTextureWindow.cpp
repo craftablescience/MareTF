@@ -320,8 +320,12 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	previewGeneralLayout->addRow(tr("Channels"), rgbaParent);
 
-	this->previewBackground = new QCheckBox{previewWidget};
-	previewGeneralLayout->addRow(tr("Background"), this->previewBackground);
+	auto* previewExtrasParent = new QWidget{previewWidget};
+	auto* previewExtrasLayout = new QHBoxLayout{previewExtrasParent};
+	previewExtrasLayout->setContentsMargins(0, 0, 0, 0);
+
+	this->previewBackground = new QCheckBox{tr("Background"), previewExtrasParent};
+	previewExtrasLayout->addWidget(this->previewBackground);
 
 	// Change background
 	connect(this->previewBackground, &QCheckBox::toggled, this, [this](bool checked) {
@@ -329,6 +333,18 @@ QMareTextureWindow::QMareTextureWindow() {
 			activeTexture->setBackground(checked);
 		}
 	});
+
+	this->previewTiled = new QCheckBox{tr("Tiled"), previewExtrasParent};
+	previewExtrasLayout->addWidget(this->previewTiled);
+
+	// Change tiled
+	connect(this->previewTiled, &QCheckBox::toggled, this, [this](bool checked) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setTiled(checked);
+		}
+	});
+
+	previewGeneralLayout->addWidget(previewExtrasParent);
 
 	this->previewCurrentMip = new QMareSpinBox{previewWidget};
 	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);
@@ -787,6 +803,7 @@ void QMareTextureWindow::regenerateDetails() {
 		this->previewB->setChecked(true);
 		this->previewA->setChecked(true);
 		this->previewBackground->setChecked(true);
+		this->previewTiled->setChecked(false);
 		this->previewCurrentMip->setValue(0);
 
 		this->previewAnimationGroup->setVisible(false);
@@ -889,6 +906,7 @@ void QMareTextureWindow::regenerateDetails() {
 	this->previewB->setChecked(activeTexture->useB());
 	this->previewA->setChecked(activeTexture->useA());
 	this->previewBackground->setChecked(activeTexture->useBackground());
+	this->previewTiled->setChecked(activeTexture->useTiled());
 	this->previewCurrentMip->setRange(0, vtf.getMipCount() - 1);
 	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());
 	this->previewCurrentMip->setEnabled(vtf.getMipCount() > 1);

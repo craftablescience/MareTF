@@ -66,6 +66,10 @@ public:
 
 	void setBackground(bool newBackground);
 
+	[[nodiscard]] bool useTiled() const;
+
+	void setTiled(bool newTiled);
+
 	[[nodiscard]] int getCurrentCubemapMode() const;
 
 	void setCurrentCubemapMode(int mode);
@@ -100,6 +104,7 @@ protected:
 	bool b = true;
 	bool a = true;
 	bool background = true;
+	bool tiled = false;
 	int cubemapMode = 0;
 
 	QPointF mousePressPosition;
