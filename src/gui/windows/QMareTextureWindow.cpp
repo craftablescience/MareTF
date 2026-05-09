@@ -1063,7 +1063,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 		this->resTS0Group->setVisible(true);
-		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsExtendedFlags(), 8, 16, QChar{u'0'}));
+		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsFlags(), 8, 16, QChar{u'0'}));
 	} else {
 		this->resTS0Group->setVisible(false);
 		this->resTS0Value->setText("00000000");

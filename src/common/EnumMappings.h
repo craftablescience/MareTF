@@ -22,6 +22,7 @@ concept SupportedEnum = std::same_as<E, vtfpp::HOT::Rect::Flags>
                      || std::same_as<E, vtfpp::CompressionMethod>
                      || std::same_as<E, vtfpp::Resource::Type>
                      || std::same_as<E, vtfpp::VTF::Flags>
+                     || std::same_as<E, vtfpp::VTF::FlagsExtra>
                      || std::same_as<E, vtfpp::VTF::Platform>
                      || std::same_as<E, maretf::HDRIMode>;
 
@@ -55,9 +56,13 @@ extern const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E;
 extern const std::vector<std::string_view>      RESOURCE_TYPE_S;
 extern const std::vector<std::string_view>      RESOURCE_TYPE_P;
 
-extern const std::vector<vtfpp::VTF::Flags>  VTF_FLAGS_E;
-extern const std::vector<std::string_view>   VTF_FLAGS_S;
-extern const std::vector<std::string_view>   VTF_FLAGS_P;
+extern const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E;
+extern const std::vector<std::string_view>  VTF_FLAGS_S;
+extern const std::vector<std::string_view>  VTF_FLAGS_P;
+
+extern const std::vector<vtfpp::VTF::FlagsExtra> VTF_FLAGS_EXTRA_E;
+extern const std::vector<std::string_view>       VTF_FLAGS_EXTRA_S;
+extern const std::vector<std::string_view>       VTF_FLAGS_EXTRA_P;
 
 extern const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E;
 extern const std::vector<std::string_view>     VTF_PLATFORM_S;
@@ -85,6 +90,8 @@ template<SupportedEnum E>
 		return RESOURCE_TYPE_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
 		return VTF_FLAGS_E;
+	} else if constexpr (std::same_as<E, vtfpp::VTF::FlagsExtra>) {
+		return VTF_FLAGS_EXTRA_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return VTF_PLATFORM_E;
 	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {
@@ -113,6 +120,8 @@ template<SupportedEnum E>
 		return pretty ? RESOURCE_TYPE_P : RESOURCE_TYPE_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
 		return pretty ? VTF_FLAGS_P : VTF_FLAGS_S;
+	} else if constexpr (std::same_as<E, vtfpp::VTF::FlagsExtra>) {
+		return pretty ? VTF_FLAGS_EXTRA_P : VTF_FLAGS_EXTRA_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return pretty ? VTF_PLATFORM_P : VTF_PLATFORM_S;
 	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {

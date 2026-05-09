@@ -484,8 +484,8 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
-		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied"
-		      " automatically based on the VTF properties.")
+		.help("Flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied automatically"
+		      " based on the VTF properties.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(flags);
@@ -494,8 +494,8 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	createCLI
 		.add_argument("--flags-uint")
 		.metavar("FLAGS")
-		.help("Extra flags to add, specified as an unsigned integer. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA,"
-			  " and NO_MIP flags are applied automatically based on the VTF properties. This is for advanced users.")
+		.help("Flags to add, specified as an unsigned integer. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP"
+			  " flags are applied automatically based on the VTF properties. This is for advanced users.")
 		.scan<'u', unsigned int>()
 		.store_into(flagsUInt);
 
@@ -505,6 +505,23 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.help("Disable adding ONE_BIT_ALPHA and MULTI_BIT_ALPHA flags by default depending on the output image format.")
 		.flag()
 		.store_into(noTransparencyFlags);
+
+	std::vector<std::string> flagsExtra;
+	createCLI
+		.add_argument("--flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to add.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(flagsExtra);
+
+	unsigned int flagsExtraUInt = 0;
+	createCLI
+		.add_argument("--flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to add, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(flagsExtraUInt);
 
 	bool noMips;
 	createCLI
@@ -891,6 +908,40 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.flag()
 		.store_into(recomputeTransparencyFlags);
 
+	std::vector<std::string> addFlagsExtra;
+	editCLI
+		.add_argument("--add-flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to add.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(addFlagsExtra);
+
+	unsigned int addFlagsExtraUInt = 0;
+	createCLI
+		.add_argument("--add-flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to add, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(addFlagsExtraUInt);
+
+	std::vector<std::string> removeFlagsExtra;
+	editCLI
+		.add_argument("--remove-flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to remove.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(removeFlagsExtra);
+
+	unsigned int removeFlagsExtraUInt = 0;
+	createCLI
+		.add_argument("--remove-flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to remove, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(removeFlagsExtraUInt);
+
 	bool recomputeMips;
 	editCLI
 		.add_argument("--recompute-mips")
@@ -1213,6 +1264,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	};
 	addEnumInfo.operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
 	addEnumInfo.operator()<vtfpp::VTF::Flags>("FLAG");
+	addEnumInfo.operator()<vtfpp::VTF::FlagsExtra>("FLAG_EXTRA");
 	addEnumInfo.operator()<maretf::HDRIMode>("HDRI_MODE");
 	addEnumInfo.operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
 	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
@@ -1601,6 +1653,12 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 				// Set default transparency flags
 				options.computeTransparencyFlags = !noTransparencyFlags;
+
+				// Set extra flags
+				options.flagsExtra |= flagsExtraUInt;
+				for (const auto& flag : flagsExtra) {
+					options.flagsExtra |= *not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag);
+				}
 
 				// Set resize bounds
 				if (size || sizeWidth) {
@@ -2369,6 +2427,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 				}
 
+				// Set extra flags
+				vtf.addFlagsExtra(addFlagsExtraUInt);
+				for (const auto& flag : addFlagsExtra) {
+					vtf.addFlagsExtra(*not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag));
+				}
+				vtf.removeFlagsExtra(removeFlagsExtraUInt);
+				for (const auto& flag : removeFlagsExtra) {
+					vtf.removeFlagsExtra(*not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag));
+				}
+
 				// Set platform
 				if (cli.is_used("--set-platform")) {
 					vtf.setPlatform(*not_magic_enum::enum_cast<vtfpp::VTF::Platform>(setPlatform));
@@ -2711,47 +2779,35 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 					tfout << END << tfendl;
 
-					tfout << BOLD << "Palette:        ";
 					if (vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA)) {
-						tfout << GREEN << "Exists";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Palette:        " << END << GREEN << "Exists" << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Fallback:       ";
 					if (vtf.hasFallbackData()) {
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "Dimensions: " << CYAN << static_cast<int>(vtf.getFallbackWidth()) << END << " x " << CYAN << static_cast<int>(vtf.getFallbackHeight()) << END << " — " << BOLD << "Mips: " << CYAN << static_cast<int>(vtf.getFallbackMipCount());
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Fallback:       " << "Dimensions: " << END << CYAN << static_cast<int>(vtf.getFallbackWidth()) << END << " x " << CYAN << static_cast<int>(vtf.getFallbackHeight()) << END << " — " << BOLD << "Mips: " << CYAN << static_cast<int>(vtf.getFallbackMipCount()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Particle Sheet: ";
 					const auto* particleSheetResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
 					if (particleSheetResourcePtr) {
+						tfout << BOLD << "Particle Sheet: " << END;
 						if (const auto sheet = particleSheetResourcePtr->getDataAsParticleSheet()) {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+							tfout << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Hotspot Data:   ";
 					const auto* hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
 					if (hotspotDataResourcePtr) {
+						tfout << BOLD << "Hotspot Data:   " << END;
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+							tfout << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
 					tfout << BOLD << "Image:          ";
 					if (vtf.hasImageData()) {
@@ -2761,53 +2817,54 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 					tfout << END << tfendl;
 
-					tfout << BOLD << "Extended Flags: ";
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << std::format("{:#x}", ts0ResourcePtr->getDataAsExtendedFlags());
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Extended Flags: " << END << CYAN << std::format("{:#x}", ts0ResourcePtr->getDataAsFlags()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "CRC:            ";
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << std::format("{:#x}", crcResourcePtr->getDataAsCRC());
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "CRC:            " << END << CYAN << std::format("{:#x}", crcResourcePtr->getDataAsCRC()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "LOD:            ";
 					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
 						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
+						tfout << BOLD << "LOD:            " << END << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-							tfout << END << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
+							tfout << END << " — " << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "KeyValues Data: ";
 					const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
 					if (kvdResourcePtr) {
 						const auto keyvalues = kvdResourcePtr->getDataAsKeyValuesData();
-						tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "KeyValues Data: " << END << CYAN << keyvalues.size() << " chars" << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Author Info: ";
 					const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO);
 					if (athResourcePtr) {
 						const auto authorInfo = athResourcePtr->getDataAsAuthorInfo();
-						tfout << GREEN << "Exists" << END << " — " << CYAN << authorInfo.size() << " chars";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Author Info:    " << END << CYAN << authorInfo.size() << " chars" << END << tfendl;
 					}
-					tfout << END << tfendl;
+
+					if (const auto sppFlags = vtf.getFlagsExtra(); sppFlags != 0) {
+						tfout << BOLD << "MareTF Flags:   " << CYAN << std::format("{:#x}", sppFlags) << END;
+						if (sppFlags) {
+							tfout << " (";
+							const auto& sppPrettyFlagNames = not_magic_enum::enum_names<vtfpp::VTF::FlagsExtra>(true);
+							bool first = true;
+							for (int i = 0; i < sppPrettyFlagNames.size(); i++) {
+								if (sppFlags & 1 << i) {
+									if (!first) {
+										tfout << " | ";
+									}
+									first = false;
+									tfout << CYAN << sppPrettyFlagNames[i] << END;
+								}
+							}
+							tfout << ')';
+						}
+						tfout << tfendl;
+					}
 
 					// Bail here if requested
 					if (infoSkipResources) {
@@ -2999,7 +3056,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 						}
 					}
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsExtendedFlags());
+						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsFlags());
 					}
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
 						kv["resources"]["crc"] = static_cast<int>(crcResourcePtr->getDataAsCRC());
@@ -3016,6 +3073,9 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 					if (const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)) {
 						kv["resources"]["ath"] = athResourcePtr->getDataAsAuthorInfo();
+					}
+					if (const auto sppFlags = vtf.getFlagsExtra(); sppFlags != 0) {
+						kv["resources"]["spp"] = static_cast<int>(sppFlags);
 					}
 
 					// ...and print it all out

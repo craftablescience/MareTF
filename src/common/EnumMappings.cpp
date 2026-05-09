@@ -385,6 +385,16 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 };
 const std::vector<std::string_view> VTF_FLAGS_P = VTF_FLAGS_S;
 
+const std::vector<vtfpp::VTF::FlagsExtra> VTF_FLAGS_EXTRA_E{
+	vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE,
+};
+const std::vector<std::string_view> VTF_FLAGS_EXTRA_S{
+	"USING_PREMULTIPLIED_ALPHA_RESIZE",
+};
+const std::vector<std::string_view> VTF_FLAGS_EXTRA_P{
+	"Premultiplied Alpha Resize",
+};
+
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{
 	vtfpp::VTF::PLATFORM_PC,
 	vtfpp::VTF::PLATFORM_XBOX,
