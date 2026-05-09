@@ -208,7 +208,7 @@ jobs:
         cpack_generator:
           - DEB
           - RPM
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -217,6 +217,12 @@ jobs:
 
       - name: Install Necessary Packages
         run: sudo apt update && sudo apt install -y chrpath
+
+      - name: Install Newer GCC
+        uses: egor-tensin/setup-gcc@v2
+        with:
+          version: 13
+          platform: x64
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -291,12 +297,18 @@ jobs:
       matrix:
         build_type:
           - Release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
           submodules: recursive
+
+      - name: Install Newer GCC
+        uses: egor-tensin/setup-gcc@v2
+        with:
+          version: 13
+          platform: x64
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
