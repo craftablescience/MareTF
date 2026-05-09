@@ -749,6 +749,15 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	resWidgetLayout->addWidget(this->resAuthorInfoGroup);
 
+	this->resSourcePPFlagsGroup = new QGroupBox{tr("MareTF Flags"), resWidget};
+	auto* resSourcePPFlagsLayout = new QVBoxLayout{this->resSourcePPFlagsGroup};
+	resSourcePPFlagsLayout->setAlignment(Qt::AlignHCenter);
+
+	this->resSourcePPFlagsList = new QMareFlagsExtraWidget{this->resSourcePPFlagsGroup};
+	resSourcePPFlagsLayout->addWidget(this->resSourcePPFlagsList);
+
+	resWidgetLayout->addWidget(this->resSourcePPFlagsGroup);
+
 	// todo: particle sheet
 
 	// todo: hotspot
@@ -894,6 +903,9 @@ void QMareTextureWindow::regenerateDetails() {
 
 		this->resAuthorInfoGroup->setVisible(false);
 		this->resAuthorInfoData->clear();
+
+		this->resSourcePPFlagsGroup->setVisible(false);
+		this->resSourcePPFlagsList->clear();
 
 		return;
 	}
@@ -1098,6 +1110,14 @@ void QMareTextureWindow::regenerateDetails() {
 	} else {
 		this->resAuthorInfoGroup->setVisible(false);
 		this->resAuthorInfoData->clear();
+	}
+
+	if (const auto sppFlags = vtf.getFlagsExtra()) {
+		this->resSourcePPFlagsGroup->setVisible(true);
+		this->resSourcePPFlagsList->repopulateFlagList(sppFlags);
+	} else {
+		this->resSourcePPFlagsGroup->setVisible(false);
+		this->resSourcePPFlagsList->clear();
 	}
 
 	// Delay a tick to allow everything to be laid out

@@ -231,6 +231,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(textureGammaCorrectionEnableCheck, textureGammaCorrectionAmountSpin);
 
+	// Premultiplied alpha
+	auto* texturePremultipliedAlpha = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Premultiplied Alpha"), texturePremultipliedAlpha);
+
 	// Invert green channel
 	auto* textureInvertGreenCheck = new QCheckBox{textureTab};
 	textureTabLayout->addRow(tr("Invert Green Channel"), textureInvertGreenCheck);
@@ -818,6 +822,11 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (textureGammaCorrectionEnableCheck->isChecked()) {
 			cli->addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+		}
+
+		if (texturePremultipliedAlpha->isChecked()) {
+			// Change this if we ever add more flags
+			cli->addArgPair("--flags-extra-uint", std::format("{}", static_cast<uint32_t>(vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE)).data());
 		}
 
 		cli->addFlag(textureInvertGreenCheck, "--invert-green");

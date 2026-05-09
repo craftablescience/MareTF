@@ -14,6 +14,7 @@ class QTimer;
 class QMareComboBox;
 class QMareDoubleSpinBox;
 class QMareFlagsWidget;
+class QMareFlagsExtraWidget;
 class QMareMiddleClickTabWidget;
 class QMareSpinBox;
 
@@ -125,6 +126,9 @@ protected:
 
 	QGroupBox* resAuthorInfoGroup;
 	QLineEdit* resAuthorInfoData;
+
+	QGroupBox* resSourcePPFlagsGroup;
+	QMareFlagsExtraWidget* resSourcePPFlagsList;
 
 	QDockWidget* flagsDock;
 
