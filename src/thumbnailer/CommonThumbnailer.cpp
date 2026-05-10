@@ -73,7 +73,7 @@ std::pair<std::vector<std::byte>, vtfpp::ImageFormat> createThumbnail(const vtfp
 			if (targetHeight <= 0) {
 				targetHeight = height;
 			}
-			return {vtfpp::ImageConversion::resizeImageData(data, format, width, targetWidth, height, targetHeight, vtf.isSRGB(), vtfpp::ImageConversion::ResizeFilter::BILINEAR), format};
+			return {vtfpp::ImageConversion::resizeImageData(data, format, width, targetWidth, height, targetHeight, vtf.isSRGB(), false, vtfpp::ImageConversion::ResizeFilter::BILINEAR), format};
 		}
 		targetWidth = width;
 		targetHeight = height;
