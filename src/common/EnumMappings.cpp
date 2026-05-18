@@ -206,6 +206,25 @@ const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_P{
 	"NICE",
 };
 
+const std::vector<vtfpp::ImageConversion::ResizeEdge> IMAGE_CONVERSION_RESIZE_EDGE_E{
+	vtfpp::ImageConversion::ResizeEdge::CLAMP,
+	vtfpp::ImageConversion::ResizeEdge::REFLECT,
+	vtfpp::ImageConversion::ResizeEdge::WRAP,
+	vtfpp::ImageConversion::ResizeEdge::ZERO,
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_EDGE_S{
+	"CLAMP",
+	"REFLECT",
+	"WRAP",
+	"ZERO",
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_EDGE_P{
+	"Clamp",
+	"Reflect",
+	"Wrap",
+	"Zero",
+};
+
 const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E{
 	vtfpp::ImageConversion::ResizeMethod::NONE,
 	vtfpp::ImageConversion::ResizeMethod::POWER_OF_TWO_BIGGER,
