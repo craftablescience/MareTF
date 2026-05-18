@@ -6,6 +6,7 @@
 #include "MareTF.h"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <csignal>
 #include <cstdio>
@@ -135,6 +136,14 @@ template<not_magic_enum::SupportedEnum E>
 void enumValueValidityCheck(std::string_view enumName, const std::string& arg) {
 	if (!not_magic_enum::enum_cast<E>(arg)) {
 		throw std::runtime_error{"Invalid " + std::string{enumName} + " enum value: " + arg};
+	}
+}
+
+void reduceValueValidityCheck(const std::string& value) {
+	uint16_t num = 0;
+	sourcepp::string::toInt(value, num);
+	if (!std::has_single_bit(num)) {
+		throw std::runtime_error{"Invalid reduce value (not a power of 2): " + value};
 	}
 }
 
@@ -403,10 +412,112 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
-		.help("The resize filter used to generate mipmaps and when resizing the base texture to match a power of 2"
-		      " (if necessary).")
+		.help("The resize filter used to generate mipmaps, resize the base texture to match a power of 2"
+		      " (if necessary), and downscale non-alpha channels when distance mapping.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
 		.default_value(filter).store_into(filter);
+
+	std::string edge{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeEdge::CLAMP)};
+	createCLI
+		.add_argument("-e", "--edge")
+		.metavar("RESIZE_EDGE")
+		.help("The edge policy used when distance mapping to govern alpha sampling and downscale non-alpha channels.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeEdge>, "RESIZE_EDGE"))
+		.default_value(edge).store_into(edge);
+
+	bool alphaToDistance = false;
+	createCLI
+		.add_argument("-D", "--alpha-to-distance")
+		.help("Transform the texture's alpha channel (or, if the input image type is single-channel, its only channel)"
+		      " into a distance map, downscaling any color channels if present.")
+		.flag()
+		.store_into(alphaToDistance);
+
+	uint16_t reduce = 4;
+	createCLI
+		.add_argument("-R", "--reduce")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale when distance mapping. Must be a power of 2. Overridden by"
+		      " --reduce-x and --reduce-y.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduce).store_into(reduce);
+
+	uint16_t reduceX = 0;
+	createCLI
+		.add_argument("--reduce-x")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale width when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceX).store_into(reduceX);
+
+	uint16_t reduceY = 0;
+	createCLI
+		.add_argument("--reduce-y")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale height when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceY).store_into(reduceY);
+
+	bool noValveDistanceQuirks = false;
+	createCLI
+		.add_argument("--no-valve-distance-quirks")
+		.help("Do not mimic vtex by forcing the edges of a generated distance map to zero, nor warn when"
+		      " this happens.")
+		.flag()
+		.store_into(noValveDistanceQuirks);
+
+	bool distanceDoDither = false;
+	createCLI
+		.add_argument("--distance-dither")
+		.help("When distance mapping, and the output format is not floating-point, run an experimental"
+		      " gradient-aligned dither filter on the alpha channel before it is quantized from the floating-point"
+		      " representation used to compute it. Effect may differ between releases until this notice is removed.")
+		.flag()
+		.store_into(distanceDoDither);
+
+	float distanceSpread = 1.f;
+	createCLI
+		.add_argument("--distance-spread")
+		.metavar("SPREAD")
+		.scan<'f', float>()
+		.help("Multiply the search radius when determining distance. Large values are computationally expensive. Must"
+		      " not result in a radius of zero when multiplied by either reduction factor.")
+		.default_value(distanceSpread).store_into(distanceSpread);
+
+	float alphaThreshold = 0.04f;
+	createCLI
+		.add_argument("--alpha-threshold")
+		.metavar("THRESHOLD")
+		.scan<'f', float>()
+		.help("Alpha value, expressed in the range 0..1, below which alpha is considered zero when distance mapping.")
+		.default_value(alphaThreshold).store_into(alphaThreshold);
+
+	bool distanceAA = false;
+	createCLI
+		.add_argument("--distance-aa")
+		.help("When distance mapping, interpret the alpha channel as antialiased. May reduce second-order artifacts or worsen"
+		      " them depending on the contents.")
+		.flag()
+		.store_into(distanceAA);
+
+	bool distanceEuclidean = false;
+	createCLI
+		.add_argument("--distance-euclidean")
+		.help("When distance mapping, accept distance hits only in an ellipse governed by reduction and spread, rather than"
+		      " in a rectangle as vtex does.")
+		.flag()
+		.store_into(distanceEuclidean);
+
+	bool distanceSampleCentered = false;
+	createCLI
+		.add_argument("--distance-sample-centered")
+		.help("When distance mapping, sample from the center of pixels in destination coordinate space, rather than"
+		      " from the northwest corner as vtex does. Can mitigate a perceived southeast shift at extreme reductions.")
+		.flag()
+		.store_into(distanceSampleCentered);
 
 	int size = 0;
 	createCLI
@@ -1732,6 +1843,27 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				// Set console mip scale
 				options.consoleMipScale = consoleMipScale;
 
+				// Setup distance mapping flags
+				auto distanceFlags = vtfpp::DistanceMapping::Flags::NONE;
+				if (distanceAA) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::DISTANCEAA;
+				}
+				if (distanceEuclidean) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::EUCLIDEAN;
+				}
+				if (distanceSampleCentered) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::SAMPLECENTERED;
+				}
+
+				// Set up distance dither method
+				const auto distanceDither = distanceDoDither ? vtfpp::DistanceMapping::Dither::GRADIENT_TANGENT : vtfpp::DistanceMapping::Dither::NONE;
+				if (!reduceX) {
+					reduceX = reduce;
+				}
+				if (!reduceY) {
+					reduceY = reduce;
+				}
+
 				// Start stopwatch
 				::ElapsedTime stopwatch;
 
@@ -1802,6 +1934,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					return EXIT_SUCCESS;
 				};
 
+				// Process HDRI mode
 				auto hdriMode = *not_magic_enum::enum_cast<maretf::HDRIMode>(hdriModeForce);
 				if (hdriMode == maretf::HDRIMode::FLAT) {
 					// We need to test if input texture is an HDRI. Yes this is expensive
@@ -1815,6 +1948,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					}
 				}
 
+				// Function to load HDRIs into an array of cubemap faces
 				const auto loadHDRI = [hdriNoFilter, &END, &BOLD, &findRequestedSize](const std::filesystem::path& hdriPath, bool skybox = false) -> std::optional<std::tuple<vtfpp::ImageFormat, uint16_t, std::array<std::vector<std::byte>, 6>>> {
 					// Load image
 					vtfpp::ImageFormat hdriFormat;
@@ -1847,6 +1981,109 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					return {{hdriFormat, requestedSize > 0 ? requestedSize : hdriHeight, std::move(cubemapFaces)}};
 				};
 
+				// Function to create a distance map from the input path if requested
+				const auto createDistanceMap = [alphaToDistance, reduceX, reduceY, noValveDistanceQuirks, &filter, &edge, srgb, distanceSpread, alphaThreshold, &END, &CYAN, &BOLD, &options, distanceFlags, distanceDither](const std::string& imagePath, uint16_t& newWidth, uint16_t& newHeight) -> std::optional<std::vector<std::byte>> {
+					if (!alphaToDistance) {
+						return std::nullopt;
+					}
+
+					int inputWidth = 0, inputHeight = 0, inputFrameCount = 1;
+					vtfpp::ImageFormat inputFormat;
+					auto image = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(imagePath), inputFormat, inputWidth, inputHeight, inputFrameCount);
+
+					std::string_view outputFormatIntent;
+					switch (options.outputFormat) {
+						default:
+							outputFormatIntent = "Requested";
+							break;
+						case vtfpp::VTF::FORMAT_UNCHANGED:
+						case vtfpp::VTF::FORMAT_DEFAULT:
+							options.outputFormat = inputFormat;
+							outputFormatIntent = "Inferred";
+							break;
+					}
+
+					static constexpr auto getDistanceMapFormat = [](vtfpp::ImageFormat fmt) {
+						using namespace vtfpp::ImageFormatDetails;
+						return alpha(fmt)
+							? vtfpp::ImageFormat::RGBA32323232F
+							: red(fmt) == bpp(fmt) && bpp(fmt)
+								? vtfpp::ImageFormat::R32F
+								: vtfpp::ImageFormat::EMPTY;
+					};
+
+					const vtfpp::ImageFormat intermediateFormat = getDistanceMapFormat(inputFormat);
+					if (intermediateFormat == vtfpp::ImageFormat::EMPTY) {
+						tferr << "Could not find a suitable channel for distance mapping in " << BOLD << imagePath << END << " using inferred format " << BOLD << not_magic_enum::enum_name(inputFormat) << END << "." << tfendl;
+						return std::nullopt;
+					}
+					if (getDistanceMapFormat(options.outputFormat) == vtfpp::ImageFormat::EMPTY) {
+						tferr << outputFormatIntent << " output format " << BOLD << not_magic_enum::enum_name(options.outputFormat) << END << " cannot represent a distance map." << tfendl;
+						return std::nullopt;
+					}
+
+					newWidth = inputWidth;
+					newHeight = inputHeight;
+					vtfpp::ImageConversion::setResizedDims(newWidth, options.widthResizeMethod, newHeight, options.heightResizeMethod);
+					image = vtfpp::ImageConversion::resizeImageData(image, inputFormat, inputWidth, newWidth, inputHeight, newHeight, srgb, options.flagsExtra & vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE, options.filter);
+					auto sampleImage = vtfpp::ImageConversion::convertImageDataToFormat(image, inputFormat, intermediateFormat, newWidth, newHeight);
+
+					const auto checkReduceScale = [&END, &CYAN, &BOLD, distanceSpread](uint16_t val, char dimID, uint16_t dim) -> bool {
+						if (val > dim) {
+							tferr << "Reduce " << dimID << " value (" << CYAN << val << END << ") is greater than the dimension it divides.";
+							return false;
+						}
+						const auto rad = static_cast<uint16_t>(std::ceil(distanceSpread * static_cast<float>(val)));
+						if (rad * 2 > dim) {
+							tferr << "Reduce " << dimID << " by " << BOLD << "--distance-spread" << END << " results in a search radius greater than the input image." << tfendl;
+							return true; // technically valid, but anomalous enough that the user would want to know
+						}
+						if (!rad) {
+							tferr << "Reduce " << dimID << " by " << BOLD << "--distance-spread" << END << " results in a search radius of zero." << tfendl;
+							return false;
+						}
+						return true;
+					};
+					if (!checkReduceScale(reduceX, 'X', newWidth) || !checkReduceScale(reduceY, 'Y', newHeight)) {
+						return std::nullopt;
+					}
+
+					bool valveQuirks = false;
+					auto distanceMapped = vtfpp::DistanceMapping::alphaToDistance(sampleImage, intermediateFormat, options.outputFormat, newWidth, newHeight, reduceX, reduceY, srgb, distanceSpread, alphaThreshold, distanceFlags, distanceDither, *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter), *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeEdge>(edge), noValveDistanceQuirks ? nullptr : &valveQuirks);
+					if (valveQuirks) {
+						tferr << "Edges of generated distance map were opaque; forcibly masking. Pass " << BOLD << "--no-valve-distance-quirks" << END << " to disable this." << tfendl;
+					}
+					if (distanceMapped.empty()) {
+						tferr << "Distance mapping returned empty image." << tfendl;
+						return std::nullopt;
+					}
+					return distanceMapped;
+				};
+
+				// Function to create a VTF which may be using distance mapping
+				const auto createVTF = [alphaToDistance, reduceX, reduceY, &currentInputPath, &options, &createDistanceMap]() -> std::optional<vtfpp::VTF> {
+					if (alphaToDistance) {
+						uint16_t newWidth = 0, newHeight = 0;
+						if (const auto distanceMapped = createDistanceMap(currentInputPath, newWidth, newHeight)) {
+							return vtfpp::VTF::create(*distanceMapped, options.outputFormat, newWidth / reduceX, newHeight / reduceY, options);
+						}
+						return std::nullopt;
+					}
+					return vtfpp::VTF::create(currentInputPath, options);
+				};
+
+				// Function to set a VTF frame which may be using distance mapping
+				const auto setVTFFrame = [alphaToDistance, reduceX, reduceY, &options, &createDistanceMap](vtfpp::VTF& vtf, const std::string& framePath, uint16_t frame) -> bool {
+					if (alphaToDistance) {
+						uint16_t newWidth = 0, newHeight = 0;
+						if (const auto distanceMapped = createDistanceMap(framePath, newWidth, newHeight)) {
+							return vtf.setImage(*distanceMapped, options.outputFormat, newWidth / reduceX, newHeight / reduceY, options.filter, 0, frame);
+						}
+						return false;
+					}
+					return vtf.setImage(framePath, options.filter, 0, frame);
+				};
+
 				if (options.initialFrameCount > 1) {
 					switch (hdriMode) {
 						// Special case for animated VTFs
@@ -1859,7 +2096,12 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
 
 							// Create initial VTF
-							auto vtf = vtfpp::VTF::create(currentInputPath, options);
+							auto initialVTF = createVTF();
+							if (!initialVTF) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << " due to a distance mapping error." << tfendl;
+								return EXIT_FAILURE;
+							}
+							auto vtf = std::move(*initialVTF);
 							if (!vtf) {
 								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 								return EXIT_FAILURE;
@@ -1878,7 +2120,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 								);
 							}
 							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
-								if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame - frameNumberStart)) {
+								if (!setVTFFrame(vtf, (std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), frame - frameNumberStart)) {
 									tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
 									return EXIT_FAILURE;
 								}
@@ -2081,8 +2323,13 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					switch (hdriMode) {
 						// Expected case for no animation, no cubemap/skybox
 						case maretf::HDRIMode::FLAT: {
-							// Create VTF
-							auto vtf = vtfpp::VTF::create(currentInputPath, options);
+							// Create initial VTF
+							auto initialVTF = createVTF();
+							if (!initialVTF) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << " due to a distance mapping error." << tfendl;
+								return EXIT_FAILURE;
+							}
+							auto vtf = std::move(*initialVTF);
 							if (!vtf) {
 								tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
 								return EXIT_FAILURE;

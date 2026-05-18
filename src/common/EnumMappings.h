@@ -18,6 +18,7 @@ concept SupportedEnum = std::same_as<E, vtfpp::HOT::Rect::Flags>
                      || std::same_as<E, vtfpp::ImageFormat>
                      || std::same_as<E, vtfpp::ImageConversion::FileFormat>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeFilter>
+                     || std::same_as<E, vtfpp::ImageConversion::ResizeEdge>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeMethod>
                      || std::same_as<E, vtfpp::CompressionMethod>
                      || std::same_as<E, vtfpp::Resource::Type>
@@ -43,6 +44,10 @@ extern const std::vector<std::string_view>                   IMAGE_CONVERSION_FI
 extern const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_FILTER_E;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_FILTER_S;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_FILTER_P;
+
+extern const std::vector<vtfpp::ImageConversion::ResizeEdge> IMAGE_CONVERSION_RESIZE_EDGE_E;
+extern const std::vector<std::string_view>                   IMAGE_CONVERSION_RESIZE_EDGE_S;
+extern const std::vector<std::string_view>                   IMAGE_CONVERSION_RESIZE_EDGE_P;
 
 extern const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_METHOD_S;
@@ -82,6 +87,8 @@ template<SupportedEnum E>
 		return IMAGE_CONVERSION_FILE_FORMAT_E;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeFilter>) {
 		return IMAGE_CONVERSION_RESIZE_FILTER_E;
+	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeEdge>) {
+		return IMAGE_CONVERSION_RESIZE_EDGE_E;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeMethod>) {
 		return IMAGE_CONVERSION_RESIZE_METHOD_E;
 	} else if constexpr (std::same_as<E, vtfpp::CompressionMethod>) {
@@ -112,6 +119,8 @@ template<SupportedEnum E>
 		return pretty ? IMAGE_CONVERSION_FILE_FORMAT_P : IMAGE_CONVERSION_FILE_FORMAT_S;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeFilter>) {
 		return pretty ? IMAGE_CONVERSION_RESIZE_FILTER_P : IMAGE_CONVERSION_RESIZE_FILTER_S;
+	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeEdge>) {
+		return pretty ? IMAGE_CONVERSION_RESIZE_EDGE_P : IMAGE_CONVERSION_RESIZE_EDGE_S;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeMethod>) {
 		return pretty ? IMAGE_CONVERSION_RESIZE_METHOD_P : IMAGE_CONVERSION_RESIZE_METHOD_S;
 	} else if constexpr (std::same_as<E, vtfpp::CompressionMethod>) {
