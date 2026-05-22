@@ -1004,7 +1004,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 			  " is above 1.0, it is assumed the user is setting the exact compression level for the algorithm"
 			  " in use manually (this is for backwards compatibility). Ignored if CPU compression is not in use.")
 		.scan<'g', float>()
-		.default_value(compressionLevel).store_into(compressionLevel);
+		.default_value(setCompressionLevel).store_into(setCompressionLevel);
 
 	int setStartFrame;
 	editCLI
