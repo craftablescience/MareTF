@@ -155,11 +155,11 @@ protected:
 
 class MareTFFileWatchListener : public efsw::FileWatchListener {
 public:
-	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, std::string)>;
+	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, const std::string&)>;
 
 	explicit MareTFFileWatchListener(Callback callback_) : efsw::FileWatchListener{}, callback{std::move(callback_)} {}
 
-	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) override {
+	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, const std::string& oldFilename) override {
 		this->callback(watchID, dir, filename, action, oldFilename);
 	}
 
