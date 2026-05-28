@@ -1525,7 +1525,14 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		};
 
 		if (mode == "create" || mode == "convert") {
+			std::vector<std::filesystem::path> processedInputPathFrames;
+
 			const auto create = [&](const std::string& currentInputPath) {
+				// Used to work around animated frames being multiple files
+				if (const auto processedCurrentInputPath = std::filesystem::weakly_canonical(currentInputPath); std::ranges::find(processedInputPathFrames, processedCurrentInputPath) != processedInputPathFrames.end()) {
+					return EXIT_SUCCESS;
+				}
+
 				// Check output path
 				if (outputPath.empty()) {
 					outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
@@ -1645,7 +1652,12 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 						sourcepp::string::toInt(temp, frameNumberStart);
 					}
 					options.initialFrameCount = 1;
-					while (std::filesystem::exists(std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()))) {
+					while (true) {
+						const auto framePath = std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string());
+						if (!std::filesystem::exists(framePath)) {
+							break;
+						}
+						processedInputPathFrames.emplace_back(std::filesystem::weakly_canonical(framePath));
 						options.initialFrameCount++;
 					}
 					options.initialFrameCount -= frameNumberStart;
