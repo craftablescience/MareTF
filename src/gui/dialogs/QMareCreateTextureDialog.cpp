@@ -203,6 +203,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(textureMipmapsGenerateCheck, textureMipmapsGroup);
 
+	// Animated frames
+	auto* textureAnimatedFramesCheck = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Animate Numbered Sequences"), textureAnimatedFramesCheck);
+
 	// HDRI
 	auto* textureHDRIGroup = new QGroupBox{textureTab};
 	auto* textureHDRILayout = new QFormLayout{textureHDRIGroup};
@@ -811,6 +815,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC && textureMipmapsScaleSpin->value() != 0) {
 			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
+		}
+
+		if (textureAnimatedFramesCheck->isChecked()) {
+			cli->addFlag(textureAnimatedFramesCheck, "--animated-frames");
 		}
 
 		if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) != maretf::HDRIMode::FLAT) {
