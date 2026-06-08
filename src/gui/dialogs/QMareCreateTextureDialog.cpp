@@ -241,7 +241,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Premultiplied alpha
 	auto* texturePremultipliedAlpha = new QCheckBox{textureTab};
-	textureTabLayout->addRow(tr("Premultiplied Alpha"), texturePremultipliedAlpha);
+	textureTabLayout->addRow(tr("Treat Alpha As Mask (Premultiplied)"), texturePremultipliedAlpha);
 
 	// Invert green channel
 	auto* textureInvertGreenCheck = new QCheckBox{textureTab};
