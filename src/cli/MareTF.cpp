@@ -3400,12 +3400,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 			MARETF_RETURN(out);
 		}
 	} catch (const std::exception& e) {
+#ifdef MARETF_CLI
 		if (argc > 1) {
 			std::cerr << e.what() << '\n' << std::endl;
 			std::cerr << "Run " << argv[0] << " with no arguments for usage information." << '\n' << std::endl;
 		} else {
 			std::cout << cli << std::endl;
 		}
+#else
+		tferr << e.what() << '\n' << tfendl;
+#endif
 		MARETF_RETURN(EXIT_FAILURE);
 	}
 	MARETF_RETURN(EXIT_SUCCESS);
