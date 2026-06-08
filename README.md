@@ -28,7 +28,7 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Original Xbox
     - Xbox 360
     - PlayStation 3
-  - Create distance mapped textures for [`$distancealpha`](https://developer.valvesoftware.com/wiki/$distancealpha) with better quality than vtex
+  - Create distance mapped textures for [`$distancealpha`](https://developer.valvesoftware.com/wiki/$distancealpha)
   - Uses an improved version of Valve's NICE mipmap filtering by default
   - Supports new formats in Alien Swarm and beyond, Titanfall 1/2, Strata Source
   - Supports new Strata Source VTF version with CPU compression (Deflate / Zstd)
@@ -99,19 +99,24 @@ maretf info input.vtf
 Usage: maretf [--help] [--input PATH...] [--output PATH] [--yes] [--no] [--quiet] [--verbose]
               [--no-recurse] [--no-pretty-formatting] [--watch] [--version X.Y]
               [--format IMAGE_FORMAT] [--quality COMPRESSION_QUALITY]
-              [--filter RESIZE_FILTER] [--size SIZE] [--width WIDTH] [--height HEIGHT]
-              [--max-size SIZE] [--max-width WIDTH] [--max-height HEIGHT] [--min-size SIZE]
-              [--min-width WIDTH] [--min-height HEIGHT] [--flag FLAG]... [--flags-uint FLAGS]
-              [--no-automatic-transparency-flags] [--no-mips] [--animated-frames]
-              [--no-thumbnail] [--platform PLATFORM]
+              [--filter RESIZE_FILTER] [--edge RESIZE_EDGE] [--size SIZE] [--width WIDTH]
+              [--height HEIGHT] [--max-size SIZE] [--max-width WIDTH] [--max-height HEIGHT]
+              [--min-size SIZE] [--min-width WIDTH] [--min-height HEIGHT] [--flag FLAG]...
+              [--flags-uint FLAGS] [--no-automatic-transparency-flags]
+              [--flag-extra FLAG_EXTRA]... [--flags-extra-uint FLAGS_EXTRA] [--no-mips]
+              [--animated-frames] [--no-thumbnail] [--platform PLATFORM]
               [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
               [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
               [--opengl] [--hdri HDRI_MODE] [--hdri-autodetect HDRI_MODE] [--hdri-no-filter]
               [--resize-method RESIZE_METHOD] [--width-resize-method RESIZE_METHOD]
               [--height-resize-method RESIZE_METHOD] [--console-mip-scale SCALE]
-              [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
-              [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
-              [--particle-sheet-resource PATH] [--crc-resource CRC]
+              [--gamma-correct] [--gamma-correct-amount GAMMA] [--alpha-to-distance]
+              [--distance-reduce FACTOR] [--distance-reduce-x FACTOR]
+              [--distance-reduce-y FACTOR] [--distance-no-valve-quirks] [--distance-dither]
+              [--distance-spread SPREAD] [--distance-alpha-threshold THRESHOLD]
+              [--distance-aa] [--distance-euclidean] [--distance-sample-centered] [--srgb]
+              [--clamps] [--clampt] [--clampu] [--pointsample] [--trilinear] [--aniso]
+              [--normal] [--ssbump] [--particle-sheet-resource PATH] [--crc-resource CRC]
               [--lod-resource U.V[.U360.V360]] [--ts0-resource COMBINED_FLAGS]
               [--kvd-resource PATH] [--ath-resource INFO] [--hotspot-data-resource PATH]
               [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
@@ -194,10 +199,14 @@ Optional arguments:
                                                values will be used (0.1 for BC7, BC6H, and
                                                1.0 for all others). Ignored if output format
                                                is uncompressed. [nargs=0..1] [default: -1]
-  -r, --filter                                 The resize filter used to generate mipmaps and
-                                               when resizing the base texture to match a
-                                               power of 2 (if necessary). [nargs=0..1]
+  -r, --filter                                 The resize filter used to generate mipmaps,
+                                               resize the base texture to match a power of 2
+                                               (if necessary), and downscale non-alpha
+                                               channels when distance mapping. [nargs=0..1]
                                                [default: "NICE"]
+  -e, --edge                                   The edge policy used when distance mapping to
+                                               govern alpha sampling and downscale non-alpha
+                                               channels. [nargs=0..1] [default: "CLAMP"]
   -s, --size SIZE                              Sets the width and height of the output
                                                texture if nonzero.
   --width WIDTH                                Sets the width of the output texture if
@@ -216,11 +225,11 @@ Optional arguments:
                                                if nonzero.
   --min-height HEIGHT                          Sets the minimum height of the output texture
                                                if nonzero.
-  --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA,
+  --flag FLAG                                  Flags to add. ENVMAP, ONE_BIT_ALPHA,
                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                automatically based on the VTF properties.
                                                [may be repeated]
-  --flags-uint FLAGS                           Extra flags to add, specified as an unsigned
+  --flags-uint FLAGS                           Flags to add, specified as an unsigned
                                                integer. ENVMAP, ONE_BIT_ALPHA,
                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                automatically based on the VTF properties.
@@ -228,6 +237,9 @@ Optional arguments:
   --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
+  --flag-extra FLAG_EXTRA                      Extra flags to add. [may be repeated]
+  --flags-extra-uint FLAGS_EXTRA               Extra flags to add, specified as an unsigned
+                                               integer. This is for advanced users.
   --no-mips                                    Disable mipmap generation.
   -a, --animated-frames                        If input texture filename ends in two or more
                                                numbers, check for consecutive numbered files
@@ -290,6 +302,51 @@ Optional arguments:
                                                of 1/2.2 is assumed by a good deal of code in
                                                Source engine, change this if you know what
                                                you're doing. [nargs=0..1] [default: 0.454545]
+  -D, --alpha-to-distance                      Transform the texture's alpha channel (or, if
+                                               the input image type is single-channel, its
+                                               only channel) into a distance map, downscaling
+                                               any color channels if present.
+  -R, --distance-reduce                        Factor by which to downscale when distance
+                                               mapping. Must be a power of 2. Overridden by
+                                               --distance-reduce-x and --distance-reduce-y.
+                                               [nargs=0..1] [default: 4]
+  --distance-reduce-x                          Factor by which to downscale width when
+                                               distance mapping. Must be a power of 2.
+                                               [nargs=0..1] [default: 0]
+  --distance-reduce-y                          Factor by which to downscale height when
+                                               distance mapping. Must be a power of 2.
+                                               [nargs=0..1] [default: 0]
+  --distance-no-valve-quirks                   Do not mimic vtex by forcing the edges of a
+                                               generated distance map to zero, nor warn when
+                                               this happens.
+  --distance-dither                            When distance mapping, and the output format
+                                               is not floating-point, run an experimental
+                                               gradient-aligned dither filter on the alpha
+                                               channel before it is quantized from the
+                                               floating-point representation used to compute
+                                               it. Effect may differ between releases until
+                                               this notice is removed.
+  --distance-spread                            Multiply the search radius when determining
+                                               distance. Large values are computationally
+                                               expensive. Must not result in a radius of zero
+                                               when multiplied by either reduction factor.
+                                               [nargs=0..1] [default: 1]
+  --distance-alpha-threshold                   Alpha value, expressed in the range 0..1,
+                                               below which alpha is considered zero when
+                                               distance mapping. [nargs=0..1] [default: 0.04]
+  --distance-aa                                When distance mapping, interpret the alpha
+                                               channel as antialiased. May reduce
+                                               second-order artifacts or worsen them
+                                               depending on the contents.
+  --distance-euclidean                         When distance mapping, accept distance hits
+                                               only in an ellipse governed by reduction and
+                                               spread, rather than in a rectangle as vtex
+                                               does.
+  --distance-sample-centered                   When distance mapping, sample from the center
+                                               of pixels in destination coordinate space,
+                                               rather than from the northwest corner as vtex
+                                               does. Can mitigate a perceived southeast shift
+                                               at extreme reductions.
   --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
                                                adds SRGB flag otherwise.
   --clamps                                     Alias of --flag CLAMP_S, added for vtex2
@@ -577,6 +634,9 @@ FLAG
  • CSGO_YCOCG
  • CSGO_ASYNC_SKIP_INITIAL_LOW_RES
  • IGNORE_PICMIP
+
+FLAG_EXTRA
+ • USING_PREMULTIPLIED_ALPHA_RESIZE
 
 HDRI_MODE
  • FLAT

@@ -425,100 +425,6 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeEdge>, "RESIZE_EDGE"))
 		.default_value(edge).store_into(edge);
 
-	bool alphaToDistance = false;
-	createCLI
-		.add_argument("-D", "--alpha-to-distance")
-		.help("Transform the texture's alpha channel (or, if the input image type is single-channel, its only channel)"
-		      " into a distance map, downscaling any color channels if present.")
-		.flag()
-		.store_into(alphaToDistance);
-
-	uint16_t reduce = 4;
-	createCLI
-		.add_argument("-R", "--reduce")
-		.metavar("FACTOR")
-		.help("Factor by which to downscale when distance mapping. Must be a power of 2. Overridden by"
-		      " --reduce-x and --reduce-y.")
-		.scan<'u', uint16_t>()
-		.action(&::reduceValueValidityCheck)
-		.default_value(reduce).store_into(reduce);
-
-	uint16_t reduceX = 0;
-	createCLI
-		.add_argument("--reduce-x")
-		.metavar("FACTOR")
-		.help("Factor by which to downscale width when distance mapping. Must be a power of 2.")
-		.scan<'u', uint16_t>()
-		.action(&::reduceValueValidityCheck)
-		.default_value(reduceX).store_into(reduceX);
-
-	uint16_t reduceY = 0;
-	createCLI
-		.add_argument("--reduce-y")
-		.metavar("FACTOR")
-		.help("Factor by which to downscale height when distance mapping. Must be a power of 2.")
-		.scan<'u', uint16_t>()
-		.action(&::reduceValueValidityCheck)
-		.default_value(reduceY).store_into(reduceY);
-
-	bool noValveDistanceQuirks = false;
-	createCLI
-		.add_argument("--no-valve-distance-quirks")
-		.help("Do not mimic vtex by forcing the edges of a generated distance map to zero, nor warn when"
-		      " this happens.")
-		.flag()
-		.store_into(noValveDistanceQuirks);
-
-	bool distanceDoDither = false;
-	createCLI
-		.add_argument("--distance-dither")
-		.help("When distance mapping, and the output format is not floating-point, run an experimental"
-		      " gradient-aligned dither filter on the alpha channel before it is quantized from the floating-point"
-		      " representation used to compute it. Effect may differ between releases until this notice is removed.")
-		.flag()
-		.store_into(distanceDoDither);
-
-	float distanceSpread = 1.f;
-	createCLI
-		.add_argument("--distance-spread")
-		.metavar("SPREAD")
-		.scan<'f', float>()
-		.help("Multiply the search radius when determining distance. Large values are computationally expensive. Must"
-		      " not result in a radius of zero when multiplied by either reduction factor.")
-		.default_value(distanceSpread).store_into(distanceSpread);
-
-	float alphaThreshold = 0.04f;
-	createCLI
-		.add_argument("--alpha-threshold")
-		.metavar("THRESHOLD")
-		.scan<'f', float>()
-		.help("Alpha value, expressed in the range 0..1, below which alpha is considered zero when distance mapping.")
-		.default_value(alphaThreshold).store_into(alphaThreshold);
-
-	bool distanceAA = false;
-	createCLI
-		.add_argument("--distance-aa")
-		.help("When distance mapping, interpret the alpha channel as antialiased. May reduce second-order artifacts or worsen"
-		      " them depending on the contents.")
-		.flag()
-		.store_into(distanceAA);
-
-	bool distanceEuclidean = false;
-	createCLI
-		.add_argument("--distance-euclidean")
-		.help("When distance mapping, accept distance hits only in an ellipse governed by reduction and spread, rather than"
-		      " in a rectangle as vtex does.")
-		.flag()
-		.store_into(distanceEuclidean);
-
-	bool distanceSampleCentered = false;
-	createCLI
-		.add_argument("--distance-sample-centered")
-		.help("When distance mapping, sample from the center of pixels in destination coordinate space, rather than"
-		      " from the northwest corner as vtex does. Can mitigate a perceived southeast shift at extreme reductions.")
-		.flag()
-		.store_into(distanceSampleCentered);
-
 	int size = 0;
 	createCLI
 		.add_argument("-s", "--size")
@@ -788,6 +694,100 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		      " engine, change this if you know what you're doing.")
 		.scan<'g', float>()
 		.default_value(gammaCorrectionAmount).store_into(gammaCorrectionAmount);
+
+	bool alphaToDistance = false;
+	createCLI
+		.add_argument("-D", "--alpha-to-distance")
+		.help("Transform the texture's alpha channel (or, if the input image type is single-channel, its only channel)"
+		      " into a distance map, downscaling any color channels if present.")
+		.flag()
+		.store_into(alphaToDistance);
+
+	uint16_t reduce = 4;
+	createCLI
+		.add_argument("-R", "--distance-reduce")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale when distance mapping. Must be a power of 2. Overridden by"
+		      " --distance-reduce-x and --distance-reduce-y.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduce).store_into(reduce);
+
+	uint16_t reduceX = 0;
+	createCLI
+		.add_argument("--distance-reduce-x")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale width when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceX).store_into(reduceX);
+
+	uint16_t reduceY = 0;
+	createCLI
+		.add_argument("--distance-reduce-y")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale height when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceY).store_into(reduceY);
+
+	bool noValveDistanceQuirks = false;
+	createCLI
+		.add_argument("--distance-no-valve-quirks")
+		.help("Do not mimic vtex by forcing the edges of a generated distance map to zero, nor warn when"
+		      " this happens.")
+		.flag()
+		.store_into(noValveDistanceQuirks);
+
+	bool distanceDoDither = false;
+	createCLI
+		.add_argument("--distance-dither")
+		.help("When distance mapping, and the output format is not floating-point, run an experimental"
+		      " gradient-aligned dither filter on the alpha channel before it is quantized from the floating-point"
+		      " representation used to compute it. Effect may differ between releases until this notice is removed.")
+		.flag()
+		.store_into(distanceDoDither);
+
+	float distanceSpread = 1.f;
+	createCLI
+		.add_argument("--distance-spread")
+		.metavar("SPREAD")
+		.scan<'f', float>()
+		.help("Multiply the search radius when determining distance. Large values are computationally expensive. Must"
+		      " not result in a radius of zero when multiplied by either reduction factor.")
+		.default_value(distanceSpread).store_into(distanceSpread);
+
+	float alphaThreshold = 0.04f;
+	createCLI
+		.add_argument("--distance-alpha-threshold")
+		.metavar("THRESHOLD")
+		.scan<'f', float>()
+		.help("Alpha value, expressed in the range 0..1, below which alpha is considered zero when distance mapping.")
+		.default_value(alphaThreshold).store_into(alphaThreshold);
+
+	bool distanceAA = false;
+	createCLI
+		.add_argument("--distance-aa")
+		.help("When distance mapping, interpret the alpha channel as antialiased. May reduce second-order artifacts or worsen"
+		      " them depending on the contents.")
+		.flag()
+		.store_into(distanceAA);
+
+	bool distanceEuclidean = false;
+	createCLI
+		.add_argument("--distance-euclidean")
+		.help("When distance mapping, accept distance hits only in an ellipse governed by reduction and spread, rather than"
+		      " in a rectangle as vtex does.")
+		.flag()
+		.store_into(distanceEuclidean);
+
+	bool distanceSampleCentered = false;
+	createCLI
+		.add_argument("--distance-sample-centered")
+		.help("When distance mapping, sample from the center of pixels in destination coordinate space, rather than"
+		      " from the northwest corner as vtex does. Can mitigate a perceived southeast shift at extreme reductions.")
+		.flag()
+		.store_into(distanceSampleCentered);
 
 	bool srgb;
 	createCLI
