@@ -46,7 +46,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureTabScroll->setWidget(textureTab);
 	auto* textureTabLayout = new QFormLayout{textureTab};
 	textureTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(textureTabScroll, tr("Texture"));
+	tabs->addTab(textureTabScroll, tr("General"));
 
 	// Platform
 	auto* platformCombo = new QMareComboBox{textureTab};
@@ -235,6 +235,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(textureGammaCorrectionEnableCheck, textureGammaCorrectionAmountSpin);
 
+	// Distance mapping
+	auto* textureUseDistanceMapping = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Distance Mapping"), textureUseDistanceMapping);
+
 	// Premultiplied alpha
 	auto* texturePremultipliedAlpha = new QCheckBox{textureTab};
 	textureTabLayout->addRow(tr("Premultiplied Alpha"), texturePremultipliedAlpha);
@@ -275,6 +279,69 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionLayout->addRow(textureCompressionLevelEnableCheck, textureCompressionLevelSpin);
 
 	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
+
+	// Distance mapping tab
+	auto* distanceTabScroll = new QScrollArea{tabs};
+	auto* distanceTab = new QWidget{distanceTabScroll};
+	distanceTabScroll->setWidgetResizable(true);
+	distanceTabScroll->setWidget(distanceTab);
+	auto* distanceTabLayout = new QFormLayout{distanceTab};
+	distanceTabLayout->setFormAlignment(Qt::AlignHCenter);
+	tabs->addTab(distanceTabScroll, tr("Distance Mapping"));
+
+	auto* distanceReduceGroup = new QGroupBox{distanceTab};
+	auto* distanceReduceLayout = new QFormLayout{distanceReduceGroup};
+	distanceReduceLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* distanceReduceAxesDifferCheck = new QCheckBox{distanceReduceGroup};
+	distanceReduceLayout->addRow(tr("Axes Differ"), distanceReduceAxesDifferCheck);
+
+	auto* distanceReduceFactorSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor"), distanceReduceFactorSpin);
+
+	auto* distanceReduceFactorXSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorXSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor (X)"), distanceReduceFactorXSpin);
+
+	auto* distanceReduceFactorYSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorYSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor (Y)"), distanceReduceFactorYSpin);
+
+	auto* distanceReduceEdgeCombo = new QMareComboBox{distanceReduceGroup};
+	for (const auto& [edge, edgeName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeEdge>(true)) {
+		distanceReduceEdgeCombo->addItem(edgeName.data(), static_cast<int>(edge));
+	}
+	distanceReduceEdgeCombo->setCurrentIndex(0); // CLAMP
+	distanceReduceLayout->addRow(tr("Edge"), distanceReduceEdgeCombo);
+
+	distanceTabLayout->addRow(tr("Reduce"), distanceReduceGroup);
+
+	auto* distanceNoValveQuirksCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("No Valve Quirks"), distanceNoValveQuirksCheck);
+
+	auto* distanceGradientDitherCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("(Experimental) Gradient-Aligned Dither Filter"), distanceGradientDitherCheck);
+
+	auto* distanceSpreadSpin = new QMareDoubleSpinBox{distanceTab};
+	distanceSpreadSpin->setValue(1.0);
+	distanceSpreadSpin->setSingleStep(0.1);
+	distanceTabLayout->addRow(tr("Search Radius"), distanceSpreadSpin);
+
+	auto* distanceAlphaThresholdSpin = new QMareDoubleSpinBox{distanceTab};
+	distanceAlphaThresholdSpin->setRange(0.0, 100.0);
+	distanceAlphaThresholdSpin->setSuffix("%");
+	distanceAlphaThresholdSpin->setValue(4.0);
+	distanceTabLayout->addRow(tr("Alpha Threshold"), distanceAlphaThresholdSpin);
+
+	auto* distanceAntialiasingCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Antialiased Alpha"), distanceAntialiasingCheck);
+
+	auto* distanceEuclideanCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Euclidean"), distanceEuclideanCheck);
+
+	auto* distanceSampleCenteredCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Sample Centered"), distanceSampleCenteredCheck);
 
 	// Flags tab
 	auto* flagsChecks = new QMareFlagsWidget{tabs};
@@ -574,6 +641,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureGammaCorrectionEnableCheck->stateChanged(textureGammaCorrectionEnableCheck->isChecked());
 #endif
 
+	// Enable "Distance Mapping" tab when Distance Mapping is checked
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(textureUseDistanceMapping, &QCheckBox::checkStateChanged, this, [tabs](Qt::CheckState state) {
+		tabs->setTabVisible(1, state == Qt::Checked);
+	});
+	textureUseDistanceMapping->checkStateChanged(textureUseDistanceMapping->checkState());
+#else
+	connect(textureUseDistanceMapping, &QCheckBox::stateChanged, this, [tabs](bool state) {
+		tabs->setTabVisible(1, state);
+	});
+	textureUseDistanceMapping->stateChanged(textureUseDistanceMapping->isChecked());
+#endif
+
 	// Disable "Version" combo when platform is not PC, and set it to the appropriate version so the flags list is correct
 	// "CPU Compression" group has many restrictions from "Version" group:
 	// - Disable group entirely if platform is PC and version is not 7.6, or if platform is XBOX, or if platform is PS3_ORANGEBOX
@@ -677,6 +758,24 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		textureCompressionLevelSpin->setDisabled(!state);
 	});
 	textureCompressionLevelEnableCheck->stateChanged(textureCompressionLevelEnableCheck->isChecked());
+#endif
+
+	// Enable individual x, y factor spins when Axes Differ is checked
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(distanceReduceAxesDifferCheck, &QCheckBox::checkStateChanged, this, [distanceReduceLayout, distanceReduceFactorSpin, distanceReduceFactorXSpin, distanceReduceFactorYSpin](Qt::CheckState state) {
+		distanceReduceLayout->setRowVisible(distanceReduceFactorSpin, state != Qt::Checked);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorXSpin, state == Qt::Checked);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorYSpin, state == Qt::Checked);
+	});
+	distanceReduceAxesDifferCheck->checkStateChanged(distanceReduceAxesDifferCheck->checkState());
+#else
+	connect(distanceReduceAxesDifferCheck, &QCheckBox::stateChanged, this, [distanceReduceLayout, distanceReduceFactorSpin, distanceReduceFactorXSpin, distanceReduceFactorYSpin](bool state) {
+		distanceReduceLayout->setRowVisible(distanceReduceFactorSpin, !state);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorXSpin, state);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorYSpin, state);
+	});
+	distanceReduceAxesDifferCheck->stateChanged(distanceReduceAxesDifferCheck->isChecked());
 #endif
 
 	// Set path in "Particle Sheet" group when "Search" clicked
@@ -835,6 +934,38 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		if (texturePremultipliedAlpha->isChecked()) {
 			// Change this if we ever add more flags
 			cli->addArgPair("--flags-extra-uint", std::format("{}", static_cast<uint32_t>(vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE)).data());
+		}
+
+		cli->addFlag(textureUseDistanceMapping, "--alpha-to-distance");
+		if (textureUseDistanceMapping->isChecked()) {
+			if (distanceReduceAxesDifferCheck->isChecked()) {
+				if (distanceReduceFactorXSpin->value() != 4) {
+					cli->addInt(distanceReduceFactorXSpin, "--distance-reduce-x");
+				}
+				if (distanceReduceFactorYSpin->value() != 4) {
+					cli->addInt(distanceReduceFactorYSpin, "--distance-reduce-y");
+				}
+			} else if (distanceReduceFactorSpin->value() != 4) {
+				cli->addInt(distanceReduceFactorSpin, "--distance-reduce");
+			}
+
+			cli->addEnum<vtfpp::ImageConversion::ResizeEdge>(distanceReduceEdgeCombo, "--edge");
+
+			cli->addFlag(distanceNoValveQuirksCheck, "--distance-no-valve-quirks");
+
+			cli->addFlag(distanceGradientDitherCheck, "--distance-dither");
+
+			cli->addFloat(distanceSpreadSpin, "--distance-spread");
+
+			if (distanceAlphaThresholdSpin->value() != 4.0) {
+				cli->addArgPair("--distance-alpha-threshold", std::format("{}", static_cast<float>(distanceAlphaThresholdSpin->value()) / 100.f).data());
+			}
+
+			cli->addFlag(distanceAntialiasingCheck, "--distance-aa");
+
+			cli->addFlag(distanceEuclideanCheck, "--distance-euclidean");
+
+			cli->addFlag(distanceSampleCenteredCheck, "--distance-sample-centered");
 		}
 
 		cli->addFlag(textureInvertGreenCheck, "--invert-green");
