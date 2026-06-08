@@ -3,7 +3,7 @@
 - koerismo - Initial NICE filtering algorithm implementation
 - HurricanePootis - AUR maintainer
 - lunairekitty - Additional CLI creation messages
-- partyvan - Initial big-endian support
+- partyvan - Distance mapping support, initial big-endian support
 
 ## Artists
 - [pastacrylic](https://linktr.ee/pastacrylic) - Splashscreen

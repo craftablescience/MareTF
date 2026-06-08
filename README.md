@@ -28,6 +28,7 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Original Xbox
     - Xbox 360
     - PlayStation 3
+  - Create distance mapped textures for [`$distancealpha`](https://developer.valvesoftware.com/wiki/$distancealpha) with better quality than vtex
   - Uses an improved version of Valve's NICE mipmap filtering by default
   - Supports new formats in Alien Swarm and beyond, Titanfall 1/2, Strata Source
   - Supports new Strata Source VTF version with CPU compression (Deflate / Zstd)
@@ -43,7 +44,7 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Defaults to PNG or EXR based on the image format
 - Info
   - Print out all VTF metadata and non-image resource data
-  - Parse compiled particle sheet resource to plaintext
+  - Parse compiled particle sheet resource, hotspot resource to plaintext
   - Print data as colored human-readable text or as plain KeyValues
 - Thumbnail
   - Display thumbnails for all VTF platforms and versions on Windows and Linux in your file explorer of choice
@@ -62,6 +63,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - [indicators](https://github.com/p-ranav/indicators)
   - [SourcePP](https://sourcepp.org)
   - [Qt](https://www.qt.io)
+- See the [CREDITS](/CREDITS) file for more information
 
 ## Example CLI Usage
 
