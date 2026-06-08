@@ -1381,6 +1381,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
 	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
+	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeEdge>("RESIZE_EDGE");
 	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeMethod>("RESIZE_METHOD");
 	addEnumInfo.operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
 
