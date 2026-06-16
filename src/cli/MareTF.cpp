@@ -1292,7 +1292,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.default_value(extractFormat).store_into(extractFormat);
 
 	int extractMip = 0;
-	editCLI
+	extractCLI
 		.add_argument("--extract-mip")
 		.metavar("MIP")
 		.help("Set the mip to extract. Overridden by --extract-all-mips.")
@@ -1307,7 +1307,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(extractAllMips);
 
 	int extractFrame = 0;
-	editCLI
+	extractCLI
 		.add_argument("--extract-frame")
 		.metavar("FRAME")
 		.help("Set the frame to extract. Overridden by --extract-all-frames.")
@@ -1322,7 +1322,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(extractAllFrames);
 
 	int extractFace = 0;
-	editCLI
+	extractCLI
 		.add_argument("--extract-face")
 		.metavar("FACE")
 		.help("Set the face to extract. Overridden by --extract-all-faces.")
@@ -1337,7 +1337,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.store_into(extractAllFaces);
 
 	int extractSlice = 0;
-	editCLI
+	extractCLI
 		.add_argument("--extract-slices")
 		.metavar("SLICE")
 		.help("Set the slice to extract. Overridden by --extract-all-slices.")
@@ -2893,7 +2893,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
 								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
 								if (extractAllSlices && vtf.getDepth() > 1) {
-									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 2) + outputPathFixupSlice.extension().string());
+									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
 								}
 								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
 									std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
