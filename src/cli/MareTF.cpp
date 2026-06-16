@@ -1283,13 +1283,35 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 	auto& extractCLI = cli.add_group(R"("extract" mode)");
 
-	std::string extractFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
+	std::string extractFileFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
 	extractCLI
-		.add_argument("--extract-format")
+		.add_argument("--extract-file-format")
 		.metavar("FILE_FORMAT")
 		.help("Output file format.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::FileFormat>, "FILE_FORMAT"))
-		.default_value(extractFormat).store_into(extractFormat);
+		.default_value(extractFileFormat).store_into(extractFileFormat);
+
+	std::string extractImageFormat{not_magic_enum::enum_name(vtfpp::VTF::FORMAT_UNCHANGED)};
+	extractCLI
+		.add_argument("--extract-image-format")
+		.metavar("IMAGE_FORMAT")
+		.help("The image format to convert the texture data to before extracting.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
+		.default_value(extractImageFormat).store_into(extractImageFormat);
+
+	bool extractAlphaChannel;
+	extractCLI
+		.add_argument("--extract-alpha-channel")
+		.help("If image has an alpha channel, extract the alpha and convert to a black-and-white image, where black is 0% alpha and white is 100% alpha.")
+		.flag()
+		.store_into(extractAlphaChannel);
+
+	bool extractAlphaChannelAsRed;
+	extractCLI
+		.add_argument("--extract-alpha-channel-as-red")
+		.help("When --extract-alpha-channel is specified, treat alpha as a red channel instead of greyscale.")
+		.flag()
+		.store_into(extractAlphaChannelAsRed);
 
 	int extractMip = 0;
 	extractCLI
@@ -2856,10 +2878,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				}
 				tfout << "Loaded input VTF at " << BOLD << currentInputPath << END << " in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
 
-				// Get output format
-				vtfpp::ImageConversion::FileFormat fileFormat = *not_magic_enum::enum_cast<vtfpp::ImageConversion::FileFormat>(extractFormat);
+				// Get output file format
+				vtfpp::ImageConversion::FileFormat fileFormat = *not_magic_enum::enum_cast<vtfpp::ImageConversion::FileFormat>(extractFileFormat);
 				if (fileFormat == vtfpp::ImageConversion::FileFormat::DEFAULT) {
 					fileFormat = vtfpp::ImageConversion::getDefaultFileFormatForImageFormat(vtf.getFormat());
+				}
+
+				// Get output image format
+				vtfpp::ImageFormat imageFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(extractImageFormat);
+				if (imageFormat == vtfpp::VTF::FORMAT_DEFAULT) {
+					imageFormat = vtfpp::VTF::FORMAT_UNCHANGED;
 				}
 
 				// Check output path
@@ -2879,38 +2907,103 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				if (extractAll) {
 					extractAllMips = extractAllFrames = extractAllFaces = extractAllSlices = true;
 				}
-				if (extractAllMips || extractAllFrames || extractAllFaces || extractAllSlices) {
-					for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
-						std::filesystem::path outputPathFixupFrame{outputPath};
-						if (extractAllFrames && vtf.getFrameCount() > 1) {
-							outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
+				for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
+					std::filesystem::path outputPathFixupFrame{outputPath};
+					if (extractAllFrames && vtf.getFrameCount() > 1) {
+						outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
+					}
+					for (int face = extractAllFaces ? 0 : extractFace; face < (extractAllFaces ? vtf.getFaceCount() : extractFace + 1); face++) {
+						std::filesystem::path outputPathFixupFace = outputPathFixupFrame;
+						if (extractAllFaces && vtf.getFaceCount() > 1) {
+							outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
 						}
-						for (int face = extractAllFaces ? 0 : extractFace; face < (extractAllFaces ? vtf.getFaceCount() : extractFace + 1); face++) {
-							std::filesystem::path outputPathFixupFace = outputPathFixupFrame;
-							if (extractAllFaces && vtf.getFaceCount() > 1) {
-								outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
+						for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
+							std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
+							if (extractAllSlices && vtf.getDepth() > 1) {
+								outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
 							}
-							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
-								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
-								if (extractAllSlices && vtf.getDepth() > 1) {
-									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
+							for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
+								std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
+								if (extractAllMips && vtf.getMipCount() > 1) {
+									outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
 								}
-								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
-									std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
-									if (extractAllMips && vtf.getMipCount() > 1) {
-										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
+								bool shouldContinue;
+								checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
+								if (shouldContinue) {
+									continue;
+								}
+
+								// Convert image data
+								std::span<std::byte> currentData = vtf.getImageDataRaw(mip, frame, face, slice);
+								std::vector<std::byte> currentDataBacking;
+								if (imageFormat != vtfpp::VTF::FORMAT_UNCHANGED) {
+									currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, vtf.getFormat(), imageFormat, vtf.getWidth(mip), vtf.getHeight(mip));
+									currentData = currentDataBacking;
+								} else {
+									imageFormat = vtf.getFormat();
+								}
+
+								// Decompress image data now so it is easier to work with
+								if (vtfpp::ImageFormatDetails::compressed(imageFormat)) {
+									currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, imageFormat, vtfpp::ImageFormatDetails::containerFormat(imageFormat), vtf.getWidth(mip), vtf.getHeight(mip));
+									currentData = currentDataBacking;
+									imageFormat = vtfpp::ImageFormatDetails::containerFormat(imageFormat);
+								}
+
+								// Extract image data to file
+								if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
+									extractionSuccessful.push_back(false);
+								} else {
+									extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
+								}
+
+								if (extractionSuccessful.back()) {
+									// Extract alpha channel
+									if (extractAlphaChannel) {
+										if (vtfpp::ImageFormatDetails::alpha(imageFormat) > 0) {
+											std::filesystem::path outputPathFixupAlpha = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_alpha" + outputPathFixupMip.extension().string());
+											checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
+											if (shouldContinue) {
+												continue;
+											}
+
+											// todo: pull this into sourcepp
+											switch (imageFormat) {
+												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
+													case vtfpp::ImageFormat::format: \
+														extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), extractAlphaChannelAsRed ? vtfpp::ImageFormat::STRATA_R8 : vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat))); \
+														break
+
+												MARETF_EXTRACT_ALPHA_CASE(RGBA8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(ABGR8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(IA88, a);
+												MARETF_EXTRACT_ALPHA_CASE(A8, a);
+												MARETF_EXTRACT_ALPHA_CASE(ARGB8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA4444, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA5551, a);
+												MARETF_EXTRACT_ALPHA_CASE(UVWQ8888, q);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA16161616F, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA16161616, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA32323232F, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA1010102, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA1010102, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_RGBA8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_ABGR8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_ARGB8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_BGRA8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_RGBA16161616_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_BGRA8888_LE, a);
+												default: break;
+
+												#undef MARETF_EXTRACT_ALPHA_CASE
+											}
+										}
 									}
-									bool notSuccess;
-									checkFileDoesntExist(outputPathFixupMip.string(), notSuccess);
-									extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPathFixupMip.string(), mip, frame, face, slice, fileFormat));
 								}
 							}
 						}
 					}
-				} else {
-					bool notSuccess;
-					checkFileDoesntExist(outputPath, notSuccess);
-					extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPath, extractMip, extractFrame, extractFace, extractSlice, fileFormat));
 				}
 
 				// Extract VTF
