@@ -68,12 +68,30 @@ elseif(UNIX)
         # Desktop file
         configure_file(
                 "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"
-                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop")
-        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop"
+                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_APPLICATION_ID}.desktop")
+        install(PROGRAMS "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_APPLICATION_ID}.desktop"
                 DESTINATION "share/applications")
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
                 DESTINATION "share/icons/hicolor/512x512/apps"
-                RENAME "${PROJECT_NAME}.png")
+                RENAME "${PROJECT_APPLICATION_ID}.png")
+
+        # MIME type info
+        configure_file(
+                "${CMAKE_CURRENT_LIST_DIR}/linux/mime-type.xml.in"
+                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml")
+        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml"
+                DESTINATION "share/mime/packages"
+                RENAME "${PROJECT_APPLICATION_ID}.xml")
+    endif()
+
+    if(MARETF_BUILD_CLI OR MARETF_BUILD_GUI)
+        # MetaInfo file
+        configure_file(
+            "${CMAKE_CURRENT_LIST_DIR}/linux/metainfo.xml.in"
+            "${CMAKE_CURRENT_LIST_DIR}/linux/generated/metainfo.xml")
+        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/metainfo.xml"
+                DESTINATION "share/metainfo"
+                RENAME "${PROJECT_APPLICATION_ID}.metainfo.xml")
     endif()
 
     if(MARETF_BUILD_THUMBNAILER)
@@ -85,18 +103,6 @@ elseif(UNIX)
                 "${CMAKE_CURRENT_SOURCE_DIR}/install/linux/generated/${PROJECT_NAME}.thumbnailer")
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/install/linux/generated/${PROJECT_NAME}.thumbnailer"
                 DESTINATION "share/thumbnailers")
-    endif()
-
-    if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
-        # Use system Qt - no install rules
-
-        # MIME type info
-        configure_file(
-                "${CMAKE_CURRENT_LIST_DIR}/linux/mime-type.xml.in"
-                "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml")
-        install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/mime-type.xml"
-                DESTINATION "share/mime/packages"
-                RENAME "${PROJECT_NAME}.xml")
     endif()
 else()
     message(FATAL_ERROR "No install rules for selected platform.")
@@ -145,7 +151,7 @@ if(WIN32)
         set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait 'regsvr32 /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
         set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "ExecWait 'regsvr32 /u /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
     endif()
-else()
+elseif(NOT FLATPAK)
     if(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
         if(MARETF_BUILD_GUI)
@@ -163,7 +169,7 @@ else()
             set(CPACK_RPM_COMPRESSION_TYPE "zstd")
         endif()
     else()
-        message(FATAL_ERROR "CPACK_GENERATOR is unset! Only DEB and RPM generators are supported.")
+        message(AUTHOR_WARNING "CPACK_GENERATOR is unset! Only DEB and RPM generators are supported.")
     endif()
 endif()
 include(CPack)

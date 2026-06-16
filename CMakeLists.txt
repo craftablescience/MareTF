@@ -16,6 +16,7 @@ include(CS_All)
 set(PROJECT_NAME_PRETTY "MareTF" CACHE STRING "" FORCE)
 cs_version_pretty() # PROJECT_VERSION_PRETTY
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
+set(PROJECT_APPLICATION_ID "science.craftable.${PROJECT_NAME_PRETTY}" CACHE STRING "" FORCE)
 
 # options
 option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)

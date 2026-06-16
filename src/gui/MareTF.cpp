@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 	QCoreApplication::setApplicationVersion(PROJECT_VERSION);
 
 #if !defined(__APPLE__) && !defined(_WIN32)
-	QGuiApplication::setDesktopFileName(PROJECT_NAME);
+	QGuiApplication::setDesktopFileName(PROJECT_APPLICATION_ID);
 #endif
 
 	const auto options = std::make_unique<QSettings>();

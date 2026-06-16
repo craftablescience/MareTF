@@ -337,12 +337,38 @@ jobs:
             ${{env.BUILD_DIR}}/maretf_gui
           retention-days: 7
 
+  build-flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
+      options: --privileged
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6.6
+        with:
+          bundle: science.craftable.MareTF.flatpak
+          manifest-path: .build-aux/flatpak/science.craftable.MareTF.yml
+          upload-artifact: false
+
+      - name: Upload Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'MareTF-Linux-Flatpak-Installer-gcc-Release'
+          path: science.craftable.MareTF.flatpak
+          retention-days: 7
+
   deploy:
     needs:
       - build-windows-maretf
       - build-windows-stratasource
       - build-linux-maretf
       - build-linux-stratasource
+      - build-flatpak
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts

@@ -28,7 +28,7 @@ void QMareDiscordPresence::init(std::string_view appID) {
 	__try {
 #endif
 	DiscordEventHandlers handlers{};
-	Discord_Initialize(appID.data(), &handlers, 1, nullptr);
+	Discord_Initialize(appID.data(), &handlers, 0, nullptr);
 	std::atexit(&QMareDiscordPresence::shutdown);
 	g_DiscordInitialized = true;
 #ifdef _WIN32

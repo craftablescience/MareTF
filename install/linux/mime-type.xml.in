@@ -3,12 +3,11 @@
     <mime-type type="image/x-vtf">
         <alias type="image/vnd.valve.source.texture"/>
         <comment>Valve Texture Format File</comment>
-        <icon name="${PROJECT_NAME}"/>
+        <icon name="${PROJECT_APPLICATION_ID}"/>
         <acronym>VTF</acronym>
         <expanded-acronym>Valve Texture Format</expanded-acronym>
         <glob-deleteall/>
         <glob pattern="*.vtf"/>
-        <glob pattern="*.VTF"/>
         <magic priority="50">
             <!-- PC -->
             <match value="VTF\0" type="string" offset="0">
@@ -43,12 +42,11 @@
     </mime-type>
     <mime-type type="image/x-xtf">
         <comment>Valve Xbox Texture Format File</comment>
-        <icon name="${PROJECT_NAME}"/>
+        <icon name="${PROJECT_APPLICATION_ID}"/>
         <acronym>XTF</acronym>
         <expanded-acronym>Valve Xbox Texture Format</expanded-acronym>
         <glob-deleteall/>
         <glob pattern="*.xtf"/>
-        <glob pattern="*.XTF"/>
         <magic priority="50">
             <match value="XTF\0" type="string" offset="0">
                 <match value="0x05000000" type="little32" offset="4">

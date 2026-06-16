@@ -19,6 +19,12 @@ out*/
 *.user
 
 
+# Flatpak
+.flatpak-builder/
+builddir/
+repo/
+
+
 # Generated
 **/generated/
 src/common/Config.h
