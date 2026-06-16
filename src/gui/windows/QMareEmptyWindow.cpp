@@ -11,6 +11,7 @@
 #include <QStyle>
 #include <QToolBar>
 
+#include "Common.h"
 #include "Config.h"
 
 #include "dialogs/QMareCreateTextureDialog.h"
@@ -110,7 +111,11 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 		return;
 	}
 	for (const auto& url : event->mimeData()->urls()) {
-		if (!url.isLocalFile() || (!url.fileName().endsWith(".vtf") && !url.fileName().endsWith(".xtf"))) {
+		if (!(
+			url.isLocalFile() &&
+			(url.fileName().endsWith(".vtf") || url.fileName().endsWith(".xtf")) ||
+			::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())
+		)) {
 			return;
 		}
 	}
@@ -119,10 +124,7 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 
 void QMareEmptyWindow::dropEvent(QDropEvent* event) {
 	g_ManeWindow = new QMareTextureWindow;
-	for (const auto& url : event->mimeData()->urls()) {
-		g_ManeWindow->loadTexture(url.toLocalFile());
-	}
 	g_ManeWindow->show();
-	event->acceptProposedAction();
+	g_ManeWindow->dropEvent(event);
 	this->close();
 }

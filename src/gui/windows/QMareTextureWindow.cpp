@@ -1135,7 +1135,11 @@ void QMareTextureWindow::dragEnterEvent(QDragEnterEvent* event) {
 		return;
 	}
 	for (const auto& url : event->mimeData()->urls()) {
-		if (!url.isLocalFile() || (!url.fileName().endsWith(".vtf") && !url.fileName().endsWith(".xtf"))) {
+		if (!(
+			url.isLocalFile() &&
+			(url.fileName().endsWith(".vtf") || url.fileName().endsWith(".xtf")) ||
+			::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())
+		)) {
 			return;
 		}
 	}
@@ -1143,8 +1147,25 @@ void QMareTextureWindow::dragEnterEvent(QDragEnterEvent* event) {
 }
 
 void QMareTextureWindow::dropEvent(QDropEvent* event) {
+	QStringList texturesToCreate;
 	for (const auto& url : event->mimeData()->urls()) {
-		this->loadTexture(url.toLocalFile());
+		if (::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())) {
+			texturesToCreate.append(url.fileName());
+		} else {
+			this->loadTexture(url.toLocalFile());
+		}
 	}
 	event->acceptProposedAction();
+
+	if (!texturesToCreate.isEmpty()) {
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this, texturesToCreate)) {
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
+				for (const auto& path : paths) {
+					this->loadTexture(path);
+				}
+			});
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
+		}
+	}
 }

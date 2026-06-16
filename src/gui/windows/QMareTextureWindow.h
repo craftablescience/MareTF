@@ -19,6 +19,8 @@ class QMareMiddleClickTabWidget;
 class QMareSpinBox;
 
 class QMareTextureWindow : public QMainWindow {
+	friend class QMareEmptyWindow;
+
 	Q_OBJECT;
 
 public:

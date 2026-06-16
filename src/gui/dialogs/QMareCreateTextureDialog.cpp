@@ -1086,20 +1086,24 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTextureDialog::reject);
 }
 
-QMareCreateTextureDialog* QMareCreateTextureDialog::fromImages(QWidget* parent) {
-	const auto inputPaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
-	if (inputPaths.isEmpty()) {
-		return nullptr;
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromImages(QWidget* parent, QStringList imagePaths) {
+	if (imagePaths.isEmpty()) {
+		imagePaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
+		if (imagePaths.isEmpty()) {
+			return nullptr;
+		}
 	}
-	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPaths.last()}.canonicalPath());
-	return new QMareCreateTextureDialog{inputPaths, false, parent};
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{imagePaths.last()}.canonicalPath());
+	return new QMareCreateTextureDialog{imagePaths, false, parent};
 }
 
-QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
-	const auto inputPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR));
-	if (inputPath.isEmpty()) {
-		return nullptr;
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent, QString dirPath) {
+	if (dirPath.isEmpty()) {
+		dirPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR));
+		if (dirPath.isEmpty()) {
+			return nullptr;
+		}
 	}
-	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
-	return new QMareCreateTextureDialog{{inputPath}, true, parent};
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{dirPath}.canonicalPath());
+	return new QMareCreateTextureDialog{{dirPath}, true, parent};
 }

@@ -11,9 +11,9 @@ protected:
 	explicit QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent = nullptr);
 
 public:
-	[[nodiscard]] static QMareCreateTextureDialog* fromImages(QWidget* parent = nullptr);
+	[[nodiscard]] static QMareCreateTextureDialog* fromImages(QWidget* parent = nullptr, QStringList imagePaths = {});
 
-	[[nodiscard]] static QMareCreateTextureDialog* fromDir(QWidget* parent = nullptr);
+	[[nodiscard]] static QMareCreateTextureDialog* fromDir(QWidget* parent = nullptr, QString dirPath = {});
 
 signals:
 	void createdTextures(const QStringList& paths);
