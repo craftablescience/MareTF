@@ -1151,8 +1151,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	bool removeParticleSheetResource;
 	editCLI
 		.add_argument("--remove-particle-sheet-resource")
-		.help("Remove the particle sheet resource. If set particle sheet resource is specified,"
-		      " this argument is ignored.")
+		.help("Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored.")
 		.flag()
 		.store_into(removeParticleSheetResource);
 
@@ -1259,29 +1258,16 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 	//endregion
 
-	//region Info Mode Arguments
-
-	auto& infoCLI = cli.add_group(R"("info" mode)");
-
-	std::string infoOutputMode{"human"};
-	infoCLI
-		.add_argument("--info-output-mode")
-		.help(R"(The mode to output information in. Can be "human" or "kv1".)")
-		.choices("human", "kv1")
-		.default_value(infoOutputMode).store_into(infoOutputMode);
-
-	bool infoSkipResources;
-	infoCLI
-		.add_argument("--info-skip-resources")
-		.help("Do not print resource internals.")
-		.flag()
-		.store_into(infoSkipResources);
-
-	//endregion
-
 	//region Extract Mode Arguments
 
 	auto& extractCLI = cli.add_group(R"("extract" mode)");
+
+	bool extractSkipImage;
+	extractCLI
+		.add_argument("--extract-skip-image")
+		.help("Do not extract image data. Useful if a different resource in the file is desired.")
+		.flag()
+		.store_into(extractSkipImage);
 
 	std::string extractFileFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
 	extractCLI
@@ -1324,7 +1310,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	bool extractAllMips;
 	extractCLI
 		.add_argument("--extract-all-mips")
-		.help("Extract all mips. Overridden by --extract-all.")
+		.help("Extract all mips. Overridden by --extract-all-images.")
 		.flag()
 		.store_into(extractAllMips);
 
@@ -1339,7 +1325,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	bool extractAllFrames;
 	extractCLI
 		.add_argument("--extract-all-frames")
-		.help("Extract all frames. Overridden by --extract-all.")
+		.help("Extract all frames. Overridden by --extract-all-images.")
 		.flag()
 		.store_into(extractAllFrames);
 
@@ -1354,7 +1340,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	bool extractAllFaces;
 	extractCLI
 		.add_argument("--extract-all-faces")
-		.help("Extract all faces. Overridden by --extract-all.")
+		.help("Extract all faces. Overridden by --extract-all-images.")
 		.flag()
 		.store_into(extractAllFaces);
 
@@ -1369,16 +1355,78 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 	bool extractAllSlices;
 	extractCLI
 		.add_argument("--extract-all-slices")
-		.help("Extract all slices. Overridden by --extract-all.")
+		.help("Extract all slices. Overridden by --extract-all-images.")
 		.flag()
 		.store_into(extractAllSlices);
 
-	bool extractAll;
+	bool extractAllImages;
 	extractCLI
-		.add_argument("--extract-all")
+		.add_argument("--extract-all-images")
 		.help("Extract all mips, frames, faces, and slices.")
 		.flag()
-		.store_into(extractAll);
+		.store_into(extractAllImages);
+
+	bool extractThumbnail;
+	extractCLI
+		.add_argument("--extract-thumbnail")
+		.help("Extract thumbnail resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractThumbnail);
+
+	bool extractParticleSheetResource;
+	extractCLI
+		.add_argument("--extract-particle-sheet-resource")
+		.help("Extract particle sheet resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractParticleSheetResource);
+
+	bool extractKeyValuesDataResource;
+	extractCLI
+		.add_argument("--extract-kvd-resource")
+		.help("Extract the nonstandard KVD (KeyValues Data) resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractKeyValuesDataResource);
+
+	bool extractAuthorInfoResource;
+	extractCLI
+		.add_argument("--extract-ath-resource")
+		.help("Extract the nonstandard ATH (Author Info) resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractAuthorInfoResource);
+
+	bool extractHotspotDataResource;
+	extractCLI
+		.add_argument("--extract-hotspot-data-resource")
+		.help("Extract the hotspot data resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractHotspotDataResource);
+
+	bool extractAllResources;
+	extractCLI
+		.add_argument("--extract-all-resources")
+		.help("Extract all resources to disk.")
+		.flag()
+		.store_into(extractAllResources);
+
+	//endregion
+
+	//region Info Mode Arguments
+
+	auto& infoCLI = cli.add_group(R"("info" mode)");
+
+	std::string infoOutputMode{"human"};
+	infoCLI
+		.add_argument("--info-output-mode")
+		.help(R"(The mode to output information in. Can be "human" or "kv1".)")
+		.choices("human", "kv1")
+		.default_value(infoOutputMode).store_into(infoOutputMode);
+
+	bool infoSkipResources;
+	infoCLI
+		.add_argument("--info-skip-resources")
+		.help("Do not print resource internals.")
+		.flag()
+		.store_into(infoSkipResources);
 
 	//endregion
 
@@ -2901,72 +2949,73 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					outputPath.append(::supportedImageFileFormatExtension(fileFormat));
 				}
 
-				// Extract all VTF image data
 				::ElapsedTime extractStopwatch;
 				std::vector<bool> extractionSuccessful;
-				if (extractAll) {
+				const std::filesystem::path outputPathFixupBase{outputPath};
+				if (extractAllImages) {
 					extractAllMips = extractAllFrames = extractAllFaces = extractAllSlices = true;
 				}
-				for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
-					std::filesystem::path outputPathFixupFrame{outputPath};
-					if (extractAllFrames && vtf.getFrameCount() > 1) {
-						outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
-					}
-					for (int face = extractAllFaces ? 0 : extractFace; face < (extractAllFaces ? vtf.getFaceCount() : extractFace + 1); face++) {
-						std::filesystem::path outputPathFixupFace = outputPathFixupFrame;
-						if (extractAllFaces && vtf.getFaceCount() > 1) {
-							outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
+				if (extractAllResources) {
+					extractThumbnail = extractParticleSheetResource = extractKeyValuesDataResource = extractAuthorInfoResource = extractHotspotDataResource = true;
+				}
+
+				// Extract image data
+				if (!extractSkipImage) {
+					for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
+						std::filesystem::path outputPathFixupFrame = outputPathFixupBase;
+						if (extractAllFrames && vtf.getFrameCount() > 1) {
+							outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
 						}
-						for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
-							std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
-							if (extractAllSlices && vtf.getDepth() > 1) {
-								outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
+						for (int face = extractAllFaces ? 0 : extractFace; face < (extractAllFaces ? vtf.getFaceCount() : extractFace + 1); face++) {
+							std::filesystem::path outputPathFixupFace = outputPathFixupFrame;
+							if (extractAllFaces && vtf.getFaceCount() > 1) {
+								outputPathFixupFace = outputPathFixupFace.parent_path() / (outputPathFixupFace.stem().string() + "_face" + sourcepp::string::padNumber(face, 1) + outputPathFixupFace.extension().string());
 							}
-							for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
-								std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
-								if (extractAllMips && vtf.getMipCount() > 1) {
-									outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
+							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
+								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
+								if (extractAllSlices && vtf.getDepth() > 1) {
+									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
 								}
-								bool shouldContinue;
-								checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
-								if (shouldContinue) {
-									continue;
-								}
+								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
+									std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
+									if (extractAllMips && vtf.getMipCount() > 1) {
+										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
+									}
+									bool shouldContinue;
+									checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
+									if (shouldContinue) {
+										continue;
+									}
 
-								// Convert image data
-								std::span<std::byte> currentData = vtf.getImageDataRaw(mip, frame, face, slice);
-								std::vector<std::byte> currentDataBacking;
-								if (imageFormat != vtfpp::VTF::FORMAT_UNCHANGED) {
-									currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, vtf.getFormat(), imageFormat, vtf.getWidth(mip), vtf.getHeight(mip));
-									currentData = currentDataBacking;
-								} else {
-									imageFormat = vtf.getFormat();
-								}
+									// Convert image data
+									std::span<std::byte> currentData = vtf.getImageDataRaw(mip, frame, face, slice);
+									std::vector<std::byte> currentDataBacking;
+									if (imageFormat != vtfpp::VTF::FORMAT_UNCHANGED) {
+										currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, vtf.getFormat(), imageFormat, vtf.getWidth(mip), vtf.getHeight(mip));
+										currentData = currentDataBacking;
+									} else {
+										imageFormat = vtf.getFormat();
+									}
 
-								// Decompress image data now so it is easier to work with
-								if (vtfpp::ImageFormatDetails::compressed(imageFormat)) {
-									currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, imageFormat, vtfpp::ImageFormatDetails::containerFormat(imageFormat), vtf.getWidth(mip), vtf.getHeight(mip));
-									currentData = currentDataBacking;
-									imageFormat = vtfpp::ImageFormatDetails::containerFormat(imageFormat);
-								}
+									// Decompress image data now so it is easier to work with
+									if (vtfpp::ImageFormatDetails::compressed(imageFormat)) {
+										currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, imageFormat, vtfpp::ImageFormatDetails::containerFormat(imageFormat), vtf.getWidth(mip), vtf.getHeight(mip));
+										currentData = currentDataBacking;
+										imageFormat = vtfpp::ImageFormatDetails::containerFormat(imageFormat);
+									}
 
-								// Extract image data to file
-								if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
-									extractionSuccessful.push_back(false);
-								} else {
-									extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
-								}
+									// Extract image data to file
+									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
+										extractionSuccessful.push_back(false);
+									} else {
+										extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
+									}
 
-								if (extractionSuccessful.back()) {
 									// Extract alpha channel
-									if (extractAlphaChannel) {
-										if (vtfpp::ImageFormatDetails::alpha(imageFormat) > 0) {
-											std::filesystem::path outputPathFixupAlpha = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_alpha" + outputPathFixupMip.extension().string());
-											checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
-											if (shouldContinue) {
-												continue;
-											}
-
+									if (extractionSuccessful.back() && extractAlphaChannel && vtfpp::ImageFormatDetails::alpha(imageFormat) > 0) {
+										std::filesystem::path outputPathFixupAlpha = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_alpha" + outputPathFixupMip.extension().string());
+										checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
+										if (!shouldContinue) {
 											// todo: pull this into sourcepp
 											switch (imageFormat) {
 												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
@@ -3003,6 +3052,56 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 								}
 							}
 						}
+					}
+				}
+
+				// Extract thumbnail resource
+				if (extractThumbnail && vtf.hasThumbnailData()) {
+					std::filesystem::path outputPathFixupThumb = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_thumb" + outputPathFixupBase.extension().string());
+					bool shouldContinue;
+					checkFileDoesntExist(outputPathFixupThumb.string(), shouldContinue);
+					if (!shouldContinue) {
+						extractionSuccessful.push_back( vtf.saveThumbnailToFile(outputPathFixupThumb, fileFormat));
+					}
+				}
+
+				// Extract particle sheet resource
+				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)))) {
+					std::filesystem::path outputPathFixupSheet = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".sht");
+					bool shouldContinue;
+					checkFileDoesntExist(outputPathFixupSheet.string(), shouldContinue);
+					if (!shouldContinue) {
+						extractionSuccessful.push_back( sourcepp::fs::writeFileBuffer(outputPathFixupSheet, rsrc->data));
+					}
+				}
+
+				// Extract keyvalues data resource
+				if (const vtfpp::Resource* rsrc; extractKeyValuesDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)))) {
+					std::filesystem::path outputPathFixupKeyValues = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".vdf");
+					bool shouldContinue;
+					checkFileDoesntExist(outputPathFixupKeyValues.string(), shouldContinue);
+					if (!shouldContinue) {
+						extractionSuccessful.push_back( sourcepp::fs::writeFileText(outputPathFixupKeyValues, rsrc->getDataAsKeyValuesData()));
+					}
+				}
+
+				// Extract author info resource
+				if (const vtfpp::Resource* rsrc; extractAuthorInfoResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)))) {
+					std::filesystem::path outputPathFixupAuthor = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_author.txt");
+					bool shouldContinue;
+					checkFileDoesntExist(outputPathFixupAuthor.string(), shouldContinue);
+					if (!shouldContinue) {
+						extractionSuccessful.push_back( sourcepp::fs::writeFileText(outputPathFixupAuthor, rsrc->getDataAsAuthorInfo()));
+					}
+				}
+
+				// Extract hotspot data resource
+				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)))) {
+					std::filesystem::path outputPathFixupHotspot = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".hot");
+					bool shouldContinue;
+					checkFileDoesntExist(outputPathFixupHotspot.string(), shouldContinue);
+					if (!shouldContinue) {
+						extractionSuccessful.push_back( sourcepp::fs::writeFileBuffer(outputPathFixupHotspot, rsrc->data));
 					}
 				}
 
