@@ -20,6 +20,8 @@ set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/utility/QMareOptions.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareComboBox.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareComboBox.h"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareFilesystemBox.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareFilesystemBox.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareFlagsWidget.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareFlagsWidget.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareMiddleClickTabWidget.cpp"

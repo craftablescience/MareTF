@@ -27,6 +27,7 @@
 #include "utility/QMareCLIWrapper.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
+#include "widgets/QMareFilesystemBox.h"
 #include "widgets/QMareFlagsWidget.h"
 #include "widgets/QMareSpinBox.h"
 
@@ -438,83 +439,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	/* ---------------------------- FILESYSTEM BEGIN ---------------------------- */
 
-	auto* filesystemGroup = new QGroupBox{tr("Filesystem"), this};
-	auto* filesystemLayout = new QFormLayout{filesystemGroup};
-	filesystemLayout->setFormAlignment(Qt::AlignHCenter);
-
-	/* ------------------------------- Input Path ------------------------------- */
-
-	auto* filesystemInputPathParent = new QWidget{filesystemGroup};
-	auto* filesystemInputPathLayout = new QHBoxLayout{filesystemInputPathParent};
-	filesystemInputPathLayout->setSpacing(4);
-	filesystemInputPathLayout->setContentsMargins(0, 0, 0, 0);
-
-	auto* filesystemInputPath = new QLineEdit{filesystemGroup};
-	filesystemInputPath->setText(QMareCLIWrapper::joinPaths(inputPaths));
-	filesystemInputPath->setMinimumWidth(200);
-	filesystemInputPath->setReadOnly(true);
-	filesystemInputPathLayout->addWidget(filesystemInputPath);
-
-	auto* filesystemInputPathSearch = new QPushButton{filesystemGroup};
-	filesystemInputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
-	filesystemInputPathLayout->addWidget(filesystemInputPathSearch);
-
-	filesystemLayout->addRow(tr("Input Path"), filesystemInputPathParent);
-
-	/* ------------------------------  Output Path ------------------------------ */
-
-	auto* filesystemOutputPathParent = new QWidget{filesystemGroup};
-	auto* filesystemOutputPathLayout = new QHBoxLayout{filesystemOutputPathParent};
-	filesystemOutputPathLayout->setSpacing(4);
-	filesystemOutputPathLayout->setContentsMargins(0, 0, 0, 0);
-
-	auto* filesystemOutputPath = new QLineEdit{filesystemGroup};
-	filesystemOutputPath->setPlaceholderText(tr("Leave empty for default"));
-	filesystemOutputPath->setMinimumWidth(200);
-	filesystemOutputPath->setReadOnly(true);
-	filesystemOutputPathLayout->addWidget(filesystemOutputPath);
-
-	auto* filesystemOutputPathSearch = new QPushButton{filesystemGroup};
-	filesystemOutputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
-	filesystemOutputPathLayout->addWidget(filesystemOutputPathSearch);
-
-	filesystemLayout->addRow(tr("Output Path"), filesystemOutputPathParent);
-
-	/* ------------------------------- Overwrite -------------------------------- */
-
-	auto* overwriteGroup = new QGroupBox{filesystemGroup};
-	auto* overwriteLayout = new QHBoxLayout{overwriteGroup};
-	overwriteLayout->setSpacing(24);
-	overwriteLayout->setAlignment(Qt::AlignHCenter);
-
-	auto* overwriteRadioGroup = new QButtonGroup{overwriteGroup};
-	overwriteRadioGroup->setExclusive(true);
-
-	auto* overwriteRadioYes = new QRadioButton{tr("Yes"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioYes);
-	overwriteLayout->addWidget(overwriteRadioYes);
-
-	auto* overwriteRadioAsk = new QRadioButton{tr("Ask"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioAsk);
-	overwriteLayout->addWidget(overwriteRadioAsk);
-
-	auto* overwriteRadioNo = new QRadioButton{tr("No"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioNo);
-	overwriteLayout->addWidget(overwriteRadioNo);
-
-	overwriteRadioAsk->setChecked(true);
-
-	filesystemLayout->addRow(tr("Overwrite"), overwriteGroup);
-
-	/* ----------------------------- Recurse/Watch ------------------------------ */
-
-	auto* recurseIntoSubdirsCheck = new QCheckBox{filesystemGroup};
-	recurseIntoSubdirsCheck->setChecked(createFromDir);
-	filesystemLayout->addRow(tr("Enter Subfolders"), recurseIntoSubdirsCheck);
-	filesystemLayout->setRowVisible(recurseIntoSubdirsCheck, createFromDir);
-
-	auto* watchFilesCheck = new QCheckBox{filesystemGroup};
-	filesystemLayout->addRow(tr("Watch For Changes"), watchFilesCheck);
+	auto* filesystemGroup = new QMareFilesystemBox{inputPaths, createFromDir, true, this};
 
 	/* ----------------------------- FILESYSTEM END ----------------------------- */
 
@@ -821,27 +746,27 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Set input path in "Filesystem" group when "Input Search" clicked
 
-	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [=, this] {
+	connect(filesystemGroup->filesystemInputPathSearch, &QPushButton::pressed, this, [=, this] {
 		if (
 			const auto paths = !createFromDir
 				? QFileDialog::getOpenFileNames(this, tr("Open Images"), QString{}, ::supportedImageFileFormatsForLoad().data())
 				: QStringList{QFileDialog::getExistingDirectory(this, tr("Open Folder"))};
 			!paths.isEmpty() && !paths[0].isEmpty()
 		) {
-			filesystemInputPath->setText(QMareCLIWrapper::joinPaths(paths));
+			filesystemGroup->filesystemInputPath->setText(QMareCLIWrapper::joinPaths(paths));
 		}
 	});
 
 	// Set output path in "Filesystem" group when "Output Search" clicked
 
-	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, &inputPaths, createFromDir, filesystemInputPath, filesystemOutputPath] {
+	connect(filesystemGroup->filesystemOutputPathSearch, &QPushButton::pressed, this, [this, &inputPaths, createFromDir, filesystemGroup] {
 		if (
 			const auto path = !createFromDir || inputPaths.size() > 1
-				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
+				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemGroup->filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
 				: QFileDialog::getExistingDirectory(this, tr("Save to Folder"));
 			!path.isEmpty()
 		) {
-			filesystemOutputPath->setText(path);
+			filesystemGroup->filesystemOutputPath->setText(path);
 		}
 	});
 
@@ -852,7 +777,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		// Input paths
 		if (
-			const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(filesystemInputPath->text());
+			const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(filesystemGroup->filesystemInputPath->text());
 			filesystemInputPathSplit.size() == 1
 		) {
 			cli->addArg(filesystemInputPathSplit[0]);
@@ -1020,19 +945,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
 		}
 
-		if (!filesystemOutputPath->text().isEmpty()) {
-			cli->addArgPair("--output", filesystemOutputPath->text());
-		}
-
-		cli->addFlag(overwriteRadioYes, "--yes");
-
-		cli->addFlag(overwriteRadioNo, "--no");
-
-		if (createFromDir) {
-			cli->addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
-		}
-
-		cli->addFlag(watchFilesCheck, "--watch");
+		filesystemGroup->addArguments(*cli);
 
 		return cli;
 	};
@@ -1064,10 +977,10 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (!createFromDir) {
 			QStringList outputPaths;
-			if (!filesystemOutputPath->text().isEmpty()) {
-				outputPaths.push_back(filesystemOutputPath->text());
+			if (!filesystemGroup->filesystemOutputPath->text().isEmpty()) {
+				outputPaths.push_back(filesystemGroup->filesystemOutputPath->text());
 			} else {
-				for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemInputPath->text())) {
+				for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemGroup->filesystemInputPath->text())) {
 					const auto platformEnum = static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt());
 					if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) == maretf::HDRIMode::SKYBOX) {
 						for (const auto& skyboxOutputPath : ::getOutputSkyboxPathsForInput(inputPath.toUtf8().constData(), platformEnum)) {
