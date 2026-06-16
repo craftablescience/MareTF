@@ -4,12 +4,14 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPainter>
 #include <QScreen>
 #include <QStyle>
 #include <QToolBar>
+#include <QToolButton>
 
 #include "Common.h"
 #include "Config.h"
@@ -31,7 +33,9 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	toolbarExpanderBegin->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	this->toolbar->addWidget(toolbarExpanderBegin);
 
-	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
+	auto* toolbarCreateAction = new QAction{QIcon{":/button_new.png"}, tr("&Create"), this};
+	toolbarCreateAction->setShortcut(Qt::CTRL | Qt::Key_N);
+	connect(toolbarCreateAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this)) {
 			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
 				if (!g_ManeWindow) {
@@ -48,12 +52,25 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
-	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	auto* toolbarCreateFromFolderAction = new QAction{QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), this};
+	toolbarCreateFromFolderAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
+	connect(toolbarCreateFromFolderAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
 			createTextureDialog->open();
 		}
 	});
+
+	auto* toolbarCreateButton = new QToolButton{this};
+	toolbarCreateButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+	toolbarCreateButton->setDefaultAction(toolbarCreateAction);
+
+	auto* toolbarCreateMenu = new QMenu{toolbarCreateButton};
+	toolbarCreateMenu->addActions({toolbarCreateAction, toolbarCreateFromFolderAction});
+	toolbarCreateButton->setMenu(toolbarCreateMenu);
+	toolbarCreateButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+	this->toolbar->addWidget(toolbarCreateButton);
 
 	this->toolbar->addSeparator();
 
