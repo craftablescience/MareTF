@@ -346,69 +346,68 @@ Optional arguments:
                                                beforehand. [nargs: 5] [may be repeated]
 
 "edit" mode (detailed usage):
-  --set-version X.Y                            Set the version. 
-  --set-format IMAGE_FORMAT                    Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information. Recommended to pair this with the recompute transparency flags argument. 
-  --set-size SIZE                              Set the largest mip's width and height. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format. 
-  --set-width WIDTH                            Set the largest mip's width. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format. 
-  --set-height HEIGHT                          Set the largest mip's height. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format. 
+  --set-version X.Y                            Set the version.
+  --set-format IMAGE_FORMAT                    Set the image format. Keep in mind converting to a lossy format like DXTn means irreversibly losing information. Recommended to pair this with the recompute transparency flags argument.
+  --set-size SIZE                              Set the largest mip's width and height. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format.
+  --set-width WIDTH                            Set the largest mip's width. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format.
+  --set-height HEIGHT                          Set the largest mip's height. Ignores power of two resize rule. Keep in mind this operation will result in information loss, especially if the texture is using a lossy format. Recommended to pair this with the recompute mips argument if the input texture is using a lossless format.
   --edit-filter                                Use this resize filter for all resizing operations that accept a filter parameter, including mipmap generation. [nargs=0..1] [default: "NICE"]
   --add-flag FLAG                              Flags to add. ENVMAP and NO_MIP flags are ignored. [may be repeated]
-  --add-flags-uint FLAGS                       Flags to add, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users. 
+  --add-flags-uint FLAGS                       Flags to add, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users.
   --remove-flag FLAG                           Flags to remove. ENVMAP and NO_MIP flags are ignored. [may be repeated]
-  --remove-flags-uint FLAGS                    Flags to remove, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users. 
-  --recompute-transparency-flags               Recomputes transparency flags based on the image format. 
+  --remove-flags-uint FLAGS                    Flags to remove, specified as an unsigned integer. ENVMAP and NO_MIP flags are ignored. This is for advanced users.
+  --recompute-transparency-flags               Recomputes transparency flags based on the image format.
   --add-flag-extra FLAG_EXTRA                  Extra flags to add. [may be repeated]
-  --add-flags-extra-uint FLAGS_EXTRA           Extra flags to add, specified as an unsigned integer. This is for advanced users. 
+  --add-flags-extra-uint FLAGS_EXTRA           Extra flags to add, specified as an unsigned integer. This is for advanced users.
   --remove-flag-extra FLAG_EXTRA               Extra flags to remove. [may be repeated]
-  --remove-flags-extra-uint FLAGS_EXTRA        Extra flags to remove, specified as an unsigned integer. This is for advanced users. 
-  --recompute-mips                             Recomputes mipmaps with the specified edit resize filter. 
-  --remove-mips                                Remove mipmaps. If recompute mips is specified, this argument is ignored. 
-  --recompute-thumbnail                        Recompute the thumbnail. 
-  --remove-thumbnail                           Remove the thumbnail. If recompute thumbnail is specified, this argument is ignored. 
-  --recompute-reflectivity                     Recompute the reflectivity vector. 
-  --set-platform PLATFORM                      Set the VTF platform. 
-  --set-compression-method COMPRESSION_METHOD  Set the CPU compression method. Deflate is supported on all Strata Source games for VTF v7.6. Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution. LZMA is supported for console VTFs. 
+  --remove-flags-extra-uint FLAGS_EXTRA        Extra flags to remove, specified as an unsigned integer. This is for advanced users.
+  --recompute-mips                             Recomputes mipmaps with the specified edit resize filter.
+  --remove-mips                                Remove mipmaps. If recompute mips is specified, this argument is ignored.
+  --recompute-thumbnail                        Recompute the thumbnail.
+  --remove-thumbnail                           Remove the thumbnail. If recompute thumbnail is specified, this argument is ignored.
+  --recompute-reflectivity                     Recompute the reflectivity vector.
+  --set-platform PLATFORM                      Set the VTF platform.
+  --set-compression-method COMPRESSION_METHOD  Set the CPU compression method. Deflate is supported on all Strata Source games for VTF v7.6. Zstd is supported on all Strata Source games for VTF v7.6 besides Portal: Revolution. LZMA is supported for console VTFs.
   --set-compression-level                      Set the CPU compression level, between 0.0 and 1.0. Higher levels will take longer to create the texture. If level is below 0.0, default compression level will be used. If level is above 1.0, it is assumed the user is setting the exact compression level for the algorithm in use manually (this is for backwards compatibility). Ignored if CPU compression is not in use. [nargs=0..1] [default: -1]
-  --set-start-frame FRAME_INDEX                Set the start frame. 
-  --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal point. 
+  --set-start-frame FRAME_INDEX                Set the start frame.
+  --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal point.
   --set-console-mip-scale                      Set the mip scale. Only has effect on console platforms. See --console-mip-scale for more information. [nargs=0..1] [default: 0]
-  --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should point to a valid particle sheet file. 
-  --remove-particle-sheet-resource             Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored. 
-  --set-crc-resource CRC                       Set the CRC resource. 
-  --remove-crc-resource                        Remove the CRC resource. If set CRC resource is specified, this argument is ignored. 
-  --set-lod-resource U.V[.U360.V360]           Set the LOD resource. U and V values should be separated by a period. U and V for console are optional. 
-  --remove-lod-resource                        Remove the LOD resource. If set LOD resource is specified, this argument is ignored. 
-  --set-ts0-resource COMBINED_FLAGS            Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags into one integer yourself. 
-  --remove-ts0-resource                        Remove the TS0 (extended flags) resource. If set TS0 resource is specified, this argument is ignored. 
-  --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data) resource. Path should point to a text file. 
-  --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource is specified, this argument is ignored. 
-  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info) resource. 
-  --remove-ath-resource                        Remove the nonstandard ATH (Author Info) resource. If set ATH resource is specified, this argument is ignored. 
-  --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should point to a valid HOT file. 
-  --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT resource is specified, this argument is ignored. 
+  --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should point to a valid particle sheet file.
+  --remove-particle-sheet-resource             Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored.
+  --set-crc-resource CRC                       Set the CRC resource.
+  --remove-crc-resource                        Remove the CRC resource. If set CRC resource is specified, this argument is ignored.
+  --set-lod-resource U.V[.U360.V360]           Set the LOD resource. U and V values should be separated by a period. U and V for console are optional.
+  --remove-lod-resource                        Remove the LOD resource. If set LOD resource is specified, this argument is ignored.
+  --set-ts0-resource COMBINED_FLAGS            Set the TS0 (extended flags) resource. You'll have to do the math to combine the flags into one integer yourself.
+  --remove-ts0-resource                        Remove the TS0 (extended flags) resource. If set TS0 resource is specified, this argument is ignored.
+  --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data) resource. Path should point to a text file.
+  --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data) resource. If set KVD resource is specified, this argument is ignored.
+  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info) resource.
+  --remove-ath-resource                        Remove the nonstandard ATH (Author Info) resource. If set ATH resource is specified, this argument is ignored.
+  --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should point to a valid HOT file.
+  --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT resource is specified, this argument is ignored.
   --add-hotspot-rect                           Adds a rect to the hotspot data resource. The 4 input values are in pixel coordinates, and should not have a decimal point or be less than zero. Flags should be separated by a comma with no spaces (or use NONE if no flags are present). The resource is added and initialized to default values if not present beforehand. [nargs: 5] [may be repeated]
 
 "extract" mode (detailed usage):
-  --extract-skip-image                         Do not extract image data. Useful if a different resource in the file is desired. 
+  --extract-skip-image                         Do not extract image data. Useful if a different resource in the file is desired.
   --extract-file-format                        Output file format. [nargs=0..1] [default: "DEFAULT"]
   --extract-image-format                       The image format to convert the texture data to before extracting. [nargs=0..1] [default: "UNCHANGED"]
-  --extract-alpha-channel                      If image has an alpha channel, extract the alpha and convert to a black-and-white image, where black is 0% alpha and white is 100% alpha. 
-  --extract-alpha-channel-as-red               When --extract-alpha-channel is specified, treat alpha as a red channel instead of greyscale. 
+  --extract-alpha-channel                      If image has an alpha channel, extract the alpha and convert to a black-and-white image, where black is 0% alpha and white is 100% alpha.
   --extract-mip                                Set the mip to extract. Overridden by --extract-all-mips. [nargs=0..1] [default: 0]
-  --extract-all-mips                           Extract all mips. Overridden by --extract-all-images. 
+  --extract-all-mips                           Extract all mips. Overridden by --extract-all-images.
   --extract-frame                              Set the frame to extract. Overridden by --extract-all-frames. [nargs=0..1] [default: 0]
-  --extract-all-frames                         Extract all frames. Overridden by --extract-all-images. 
+  --extract-all-frames                         Extract all frames. Overridden by --extract-all-images.
   --extract-face                               Set the face to extract. Overridden by --extract-all-faces. [nargs=0..1] [default: 0]
-  --extract-all-faces                          Extract all faces. Overridden by --extract-all-images. 
+  --extract-all-faces                          Extract all faces. Overridden by --extract-all-images.
   --extract-slices                             Set the slice to extract. Overridden by --extract-all-slices. [nargs=0..1] [default: 0]
-  --extract-all-slices                         Extract all slices. Overridden by --extract-all-images. 
-  --extract-all-images                         Extract all mips, frames, faces, and slices. 
-  --extract-thumbnail                          Extract thumbnail resource to disk if present. Overridden by --extract-all-resources. 
-  --extract-particle-sheet-resource            Extract particle sheet resource to disk if present. Overridden by --extract-all-resources. 
-  --extract-kvd-resource                       Extract the nonstandard KVD (KeyValues Data) resource to disk if present. Overridden by --extract-all-resources. 
-  --extract-ath-resource                       Extract the nonstandard ATH (Author Info) resource to disk if present. Overridden by --extract-all-resources. 
-  --extract-hotspot-data-resource              Extract the hotspot data resource to disk if present. Overridden by --extract-all-resources. 
-  --extract-all-resources                      Extract all resources to disk. 
+  --extract-all-slices                         Extract all slices. Overridden by --extract-all-images.
+  --extract-all-images                         Extract all mips, frames, faces, and slices.
+  --extract-thumbnail                          Extract thumbnail resource to disk if present. Overridden by --extract-all-resources.
+  --extract-particle-sheet-resource            Extract particle sheet resource to disk if present. Overridden by --extract-all-resources.
+  --extract-kvd-resource                       Extract the nonstandard KVD (KeyValues Data) resource to disk if present. Overridden by --extract-all-resources.
+  --extract-ath-resource                       Extract the nonstandard ATH (Author Info) resource to disk if present. Overridden by --extract-all-resources.
+  --extract-hotspot-data-resource              Extract the hotspot data resource to disk if present. Overridden by --extract-all-resources.
+  --extract-all-resources                      Extract all resources to disk.
 
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be

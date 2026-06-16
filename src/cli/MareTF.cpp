@@ -1292,13 +1292,6 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.flag()
 		.store_into(extractAlphaChannel);
 
-	bool extractAlphaChannelAsRed;
-	extractCLI
-		.add_argument("--extract-alpha-channel-as-red")
-		.help("When --extract-alpha-channel is specified, treat alpha as a red channel instead of greyscale.")
-		.flag()
-		.store_into(extractAlphaChannelAsRed);
-
 	int extractMip = 0;
 	extractCLI
 		.add_argument("--extract-mip")
@@ -1346,7 +1339,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 
 	int extractSlice = 0;
 	extractCLI
-		.add_argument("--extract-slices")
+		.add_argument("--extract-slice")
 		.metavar("SLICE")
 		.help("Set the slice to extract. Overridden by --extract-all-slices.")
 		.scan<'d', int>()
@@ -3020,7 +3013,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 											switch (imageFormat) {
 												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
 													case vtfpp::ImageFormat::format: \
-														extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), extractAlphaChannelAsRed ? vtfpp::ImageFormat::STRATA_R8 : vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat))); \
+														extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat))); \
 														break
 
 												MARETF_EXTRACT_ALPHA_CASE(RGBA8888, a);

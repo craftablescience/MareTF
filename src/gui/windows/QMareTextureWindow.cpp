@@ -32,6 +32,7 @@
 
 #include "dialogs/QMareCreateTextureDialog.h"
 #include "dialogs/QMareCreditsDialog.h"
+#include "dialogs/QMareExtractFromTextureDialog.h"
 #include "utility/QMareDiscordPresence.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
@@ -76,7 +77,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
-	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("C&reate from Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
 			createTextureDialog->open();
@@ -85,9 +86,25 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	fileMenu->addSeparator();
 
-	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
-		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
+	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
+		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Open Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
 			this->loadTexture(file);
+		}
+	});
+
+	fileMenu->addSeparator();
+
+	fileMenu->addAction(QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_alt.png" : ":/button_extract.png"}, tr("&Extract"), Qt::CTRL | Qt::Key_E, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromTextures(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	fileMenu->addAction(QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_multi_alt.png" : ":/button_extract_multi.png"}, tr("E&xtract from Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_E, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromDir(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
 		}
 	});
 
@@ -125,6 +142,13 @@ QMareTextureWindow::QMareTextureWindow() {
 	optionAllowMultipleAppInstancesAction->setCheckable(true);
 	optionAllowMultipleAppInstancesAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES));
 #endif
+
+	auto* optionTrypanophobiaModeAction = generalMenu->addAction(tr("Trypanophobia Mode"), [showRestartWarning] {
+		showRestartWarning();
+		QMareOptions::invert(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE);
+	});
+	optionTrypanophobiaModeAction->setCheckable(true);
+	optionTrypanophobiaModeAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE));
 
 	auto* workspaceMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_FileIcon), tr("&Workspace"));
 
@@ -243,7 +267,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Credi&ts"), Qt::Key_F1, [this] {
 		QMareCreditsDialog::showCredits(this);
 	});
 

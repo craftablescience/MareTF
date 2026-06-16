@@ -44,8 +44,16 @@ void QMareOptions::setupOptions(QSettings& options) {
 		options.setValue(BOOL_ENABLE_DISCORD_RICH_PRESENCE, true);
 	}
 
+	if (!options.contains(BOOL_ENABLE_TRYPANOPHOBIA_MODE)) {
+		options.setValue(BOOL_ENABLE_TRYPANOPHOBIA_MODE, false);
+	}
+
 	if (!options.contains(STR_DEFAULT_CREATE_DIALOG_DIR)) {
 		options.setValue(STR_DEFAULT_CREATE_DIALOG_DIR, QString{});
+	}
+
+	if (!options.contains(STR_DEFAULT_EXTRACT_DIALOG_DIR)) {
+		options.setValue(STR_DEFAULT_EXTRACT_DIALOG_DIR, QString{});
 	}
 
 	opts = &options;

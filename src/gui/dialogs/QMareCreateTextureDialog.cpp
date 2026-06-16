@@ -775,18 +775,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	const auto getCLI = [=, this] {
 		auto* cli = new QMareCLIWrapper{"create", this};
 
-		// Input paths
-		if (
-			const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(filesystemGroup->filesystemInputPath->text());
-			filesystemInputPathSplit.size() == 1
-		) {
-			cli->addArg(filesystemInputPathSplit[0]);
-		} else {
-			cli->addArg("--input");
-			for (const auto& path : filesystemInputPathSplit) {
-				cli->addArg(path);
-			}
-		}
+		filesystemGroup->addArguments(*cli);
 
 		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC) {
 			cli->addEnum<vtfpp::VTF::Platform>(platformCombo, "--platform");
@@ -944,8 +933,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 		if (resourcesKVDPathParent->isEnabled() && !resourcesKVDPath->text().isEmpty()) {
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
 		}
-
-		filesystemGroup->addArguments(*cli);
 
 		return cli;
 	};

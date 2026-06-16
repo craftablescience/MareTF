@@ -98,6 +98,18 @@ QMareFilesystemBox::QMareFilesystemBox(const QStringList& inputPaths, bool creat
 }
 
 void QMareFilesystemBox::addArguments(QMareCLIWrapper& cli) const {
+	if (
+		const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(this->filesystemInputPath->text());
+		filesystemInputPathSplit.size() == 1
+	) {
+		cli.addArg(filesystemInputPathSplit[0]);
+	} else {
+		cli.addArg("--input");
+		for (const auto& path : filesystemInputPathSplit) {
+			cli.addArg(path);
+		}
+	}
+
 	if (!this->filesystemOutputPath->text().isEmpty()) {
 		cli.addArgPair("--output", this->filesystemOutputPath->text());
 	}

@@ -18,6 +18,8 @@
 
 #include "dialogs/QMareCreateTextureDialog.h"
 #include "dialogs/QMareCreditsDialog.h"
+#include "dialogs/QMareExtractFromTextureDialog.h"
+#include "utility/QMareOptions.h"
 #include "QMareTextureWindow.h"
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
@@ -52,7 +54,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
-	auto* toolbarCreateFromFolderAction = new QAction{QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), this};
+	auto* toolbarCreateFromFolderAction = new QAction{QIcon{":/button_new_multi.png"}, tr("C&reate from Folder"), this};
 	toolbarCreateFromFolderAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
 	connect(toolbarCreateFromFolderAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
@@ -72,10 +74,8 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 
 	this->toolbar->addWidget(toolbarCreateButton);
 
-	this->toolbar->addSeparator();
-
-	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
-		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
 			if (!g_ManeWindow) {
 				g_ManeWindow = new QMareTextureWindow;
 			}
@@ -87,13 +87,42 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
+	auto* toolbarExtractAction = new QAction{QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_alt.png" : ":/button_extract.png"}, tr("&Extract"), this};
+	toolbarExtractAction->setShortcut(Qt::CTRL | Qt::Key_E);
+	connect(toolbarExtractAction, &QAction::triggered, this, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromTextures(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	auto* toolbarExtractFromFolderAction = new QAction{QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_multi_alt.png" : ":/button_extract_multi.png"}, tr("E&xtract from Folder"), this};
+	toolbarExtractFromFolderAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_E);
+	connect(toolbarExtractFromFolderAction, &QAction::triggered, this, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromDir(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	auto* toolbarExtractButton = new QToolButton{this};
+	toolbarExtractButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+	toolbarExtractButton->setDefaultAction(toolbarExtractAction);
+
+	auto* toolbarExtractMenu = new QMenu{toolbarExtractButton};
+	toolbarExtractMenu->addActions({toolbarExtractAction, toolbarExtractFromFolderAction});
+	toolbarExtractButton->setMenu(toolbarExtractMenu);
+	toolbarExtractButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+	this->toolbar->addWidget(toolbarExtractButton);
+
 	this->toolbar->addSeparator();
 
 	this->toolbar->addAction(QIcon{":/button_kofi.png"}, tr("&Donate"), [] {
 		QDesktopServices::openUrl({"https://ko-fi.com/craftablescience"});
 	});
 
-	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
+	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Credi&ts"), Qt::Key_F1, [this] {
 		QMareCreditsDialog::showCredits(this);
 	});
 
