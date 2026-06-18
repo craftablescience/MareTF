@@ -209,6 +209,7 @@ jobs:
           - AppImage
           - DEB
           - RPM
+          - TZST
     runs-on: ubuntu-22.04
     env:
       APPIMAGE_EXTRACT_AND_RUN: 1
@@ -218,8 +219,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Necessary Packages
-        run: sudo apt update && sudo apt install -y chrpath
+      - name: Install appimagetool
+        if: matrix.cpack_generator == 'AppImage'
+        run: |
+          wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          echo "$PWD" >> "$GITHUB_PATH"
+
+      - name: Install Latest CMake
+        uses: ssrobins/install-cmake@v1
 
       - name: Install Newer GCC
         uses: egor-tensin/setup-gcc@v2
@@ -245,50 +253,6 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t maretf -- -j$(nproc)
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j$(nproc)
           cmake --build . --config ${{matrix.build_type}} -t maretf_thumbnailer -- -j$(nproc)
-
-      - name: Fixup Binaries
-        run: |
-          chmod +x '${{env.BUILD_DIR}}/maretf_gui'
-
-          # runpath cleanup for the Qt binaries. These are (mostly) wrong, leading to crashes
-          for f in ${{env.BUILD_DIR}}/*.so*; do
-            echo "Fixing $f..."
-            chrpath -r '$ORIGIN' "$f"
-          done
-          for f in ${{env.BUILD_DIR}}/*/*.so*; do
-            echo "Fixing $f..."
-            chrpath -r '$ORIGIN/..' "$f"
-          done
-
-      - name: Upload Standalone [cpack_generator:DEB]
-        if: matrix.cpack_generator == 'DEB'
-        uses: actions/upload-artifact@v4
-        with:
-          name: 'MareTF-Linux-Standalone-gcc-${{matrix.build_type}}'
-          path: |
-            ${{env.BUILD_DIR}}/CREDITS
-            ${{env.BUILD_DIR}}/LICENSE
-            ${{env.BUILD_DIR}}/maretf
-            ${{env.BUILD_DIR}}/maretf_gui
-            ${{env.BUILD_DIR}}/maretf_thumbnailer
-            ${{env.BUILD_DIR}}/*.so*
-            ${{env.BUILD_DIR}}/egldeviceintegrations/*.so*
-            ${{env.BUILD_DIR}}/platforminputcontexts/*.so*
-            ${{env.BUILD_DIR}}/platforms/*.so*
-            ${{env.BUILD_DIR}}/platformthemes/*.so*
-            ${{env.BUILD_DIR}}/tls/*.so*
-            ${{env.BUILD_DIR}}/wayland-decoration-client/*.so*
-            ${{env.BUILD_DIR}}/wayland-graphics-integration-client/*.so*
-            ${{env.BUILD_DIR}}/wayland-shell-integration/*.so*
-            ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
-          retention-days: 7
-
-      - name: Download appimagetool
-        if: matrix.cpack_generator == 'AppImage'
-        run: |
-          wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
-          chmod +x appimagetool
-          echo "$PWD" >> "$GITHUB_PATH"
 
       - name: Create Installer
         working-directory: ${{env.BUILD_DIR}}
