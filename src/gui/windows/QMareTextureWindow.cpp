@@ -242,7 +242,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		QMareDiscordPresence::setState("v" PROJECT_VERSION_PRETTY);
 		QMareDiscordPresence::setLargeImage("icon");
 		QMareDiscordPresence::setLargeImageText(PROJECT_TITLE);
-		QMareDiscordPresence::setTopButton({"View on GitHub", PROJECT_HOMEPAGE_URL});
+		QMareDiscordPresence::setTopButton({"View on GitHub", PROJECT_GITHUB_URL});
 	};
 	auto* discordEnableAction = discordMenu->addAction(tr("Enable Rich Presence"), [setupDiscordRichPresence] {
 		QMareOptions::invert(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE);
@@ -274,11 +274,11 @@ QMareTextureWindow::QMareTextureWindow() {
 	helpMenu->addSeparator();
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [] {
-		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+		QDesktopServices::openUrl({PROJECT_GITHUB_URL "/issues/new"});
 	});
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Request a &Feature"), [] {
-		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+		QDesktopServices::openUrl({PROJECT_GITHUB_URL "/issues/new"});
 	});
 
 	// Texture tabs ---------------------------------------

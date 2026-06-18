@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 project(maretf
         DESCRIPTION "A utility to create, edit, and display every type of VTF file ever made."
         VERSION 0.12.0
-        HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
+        HOMEPAGE_URL "https://maretf.me")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -16,6 +16,7 @@ include(CS_All)
 set(PROJECT_NAME_PRETTY "MareTF" CACHE STRING "" FORCE)
 cs_version_pretty() # PROJECT_VERSION_PRETTY
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
+set(PROJECT_GITHUB_URL "https://github.com/craftablescience/MareTF" CACHE STRING "" FORCE)
 
 # options
 option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
