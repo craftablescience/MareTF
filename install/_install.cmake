@@ -53,40 +53,69 @@ if(WIN32)
                 DESTINATION tls)
     endif()
 elseif(UNIX)
+    if((CPACK_GENERATOR STREQUAL "DEB") OR (CPACK_GENERATOR STREQUAL "RPM"))
+        set(MARETF_SYSTEM_INSTALL ON CACHE BOOL "" FORCE)
+    else()
+        set(MARETF_SYSTEM_INSTALL OFF CACHE BOOL "" FORCE)
+    endif()
+
     install(FILES
             "${CMAKE_CURRENT_SOURCE_DIR}/CREDITS"
             "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
             DESTINATION "share/licenses/${PROJECT_NAME}")
 
     if(MARETF_BUILD_CLI)
-        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+        if(MARETF_SYSTEM_INSTALL)
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+        elseif(CPACK_GENERATOR STREQUAL "AppImage")
+            # Workaround because AppImage is making a "maretf" symlink to the licenses folder(???)
+            install(FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
+                    DESTINATION .
+                    RENAME "maretf_cli")
+        else()
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
+        endif()
     endif()
 
     if(MARETF_BUILD_GUI)
-        install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION "bin")
+        if(MARETF_SYSTEM_INSTALL)
+            install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION "bin")
+        else()
+            install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
+        endif()
 
-        # Desktop file and program icon
-        if((CPACK_GENERATOR STREQUAL "DEB") OR (CPACK_GENERATOR STREQUAL "RPM"))
+        # Desktop file
+        if(MARETF_SYSTEM_INSTALL)
             configure_file(
-                    "${CMAKE_CURRENT_LIST_DIR}/linux/desktop_sys.in"
+                    "${CMAKE_CURRENT_LIST_DIR}/linux/desktop_system.in"
                     "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop")
-            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                    DESTINATION "share/icons/hicolor/512x512/apps"
-                    RENAME "${PROJECT_NAME}.png")
         else()
             configure_file(
                     "${CMAKE_CURRENT_LIST_DIR}/linux/desktop.in"
                     "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop")
-            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                    DESTINATION "."
-                    RENAME "${PROJECT_NAME}.png")
         endif()
         install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/${PROJECT_NAME}.desktop"
                 DESTINATION "share/applications")
+
+        # Program icon
+        if(CPACK_GENERATOR STREQUAL "AppImage")
+            # Another AppImage hack hooray
+            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
+                    DESTINATION .
+                    RENAME "${PROJECT_NAME}.png")
+        else()
+            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
+                    DESTINATION "share/icons/hicolor/512x512/apps"
+                    RENAME "${PROJECT_NAME}.png")
+        endif()
     endif()
 
     if(MARETF_BUILD_THUMBNAILER)
-        install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION "bin")
+        if(MARETF_SYSTEM_INSTALL)
+            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION "bin")
+        else()
+            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION .)
+        endif()
 
         # Thumbnailer file
         configure_file(
@@ -97,7 +126,18 @@ elseif(UNIX)
     endif()
 
     if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
-        # Use system Qt, no install rules
+        if(MARETF_SYSTEM_INSTALL)
+            # Use system Qt, no install rules
+        elseif(DEFINED QT_BASEDIR)
+            # Install Qt libraries and plugins
+            install(DIRECTORY "${CMAKE_BINARY_DIR}/lib" "${CMAKE_BINARY_DIR}/plugins"
+                    DESTINATION .
+                    FILES_MATCHING PATTERN "*.so*")
+
+            # Change RPATH to target lib folder
+            set_target_properties(${PROJECT_NAME}_gui PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
+            set_target_properties(${PROJECT_NAME}_thumbnailer PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
+        endif()
 
         # MIME type info
         configure_file(
@@ -151,6 +191,8 @@ if(WIN32)
             set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait 'regsvr32 /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
             set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "ExecWait 'regsvr32 /u /s \\\"$INSTDIR\\\\${PROJECT_NAME}_thumbnailer.dll\\\"'")
         endif()
+    elseif(CPACK_GENERATOR MATCHES "(7Z.*)|(STGZ|TAR|TBZ2|TGZ|TXZ|TZST|TZ)|(ZIP.*)")
+        # Supported :3
     else()
         message(WARNING "CPACK_GENERATOR is unset, or set to an unrecognized generator.")
     endif()
@@ -175,6 +217,8 @@ else()
         else()
             set(CPACK_RPM_COMPRESSION_TYPE "zstd")
         endif()
+    elseif(CPACK_GENERATOR MATCHES "(7Z.*)|(STGZ|TAR|TBZ2|TGZ|TXZ|TZST|TZ)|(ZIP.*)")
+        # Supported :3
     else()
         message(WARNING "CPACK_GENERATOR is unset, or set to an unrecognized generator.")
     endif()
