@@ -97,7 +97,7 @@ elseif(UNIX)
     endif()
 
     if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
-        # Use system Qt - no install rules
+        # Use system Qt, no install rules
 
         # MIME type info
         configure_file(
