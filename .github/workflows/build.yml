@@ -206,9 +206,12 @@ jobs:
           - Debug
           - Release
         cpack_generator:
+          - AppImage
           - DEB
           - RPM
     runs-on: ubuntu-22.04
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: 1
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
@@ -279,6 +282,13 @@ jobs:
             ${{env.BUILD_DIR}}/wayland-shell-integration/*.so*
             ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
           retention-days: 7
+
+      - name: Download appimagetool
+        if: matrix.cpack_generator == 'AppImage'
+        run: |
+          wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          echo "$PWD" >> "$GITHUB_PATH"
 
       - name: Create Installer
         working-directory: ${{env.BUILD_DIR}}
