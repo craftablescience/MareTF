@@ -1174,7 +1174,7 @@ void QMareTextureWindow::dropEvent(QDropEvent* event) {
 	QStringList texturesToCreate;
 	for (const auto& url : event->mimeData()->urls()) {
 		if (::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())) {
-			texturesToCreate.append(url.fileName());
+			texturesToCreate.append(url.toLocalFile());
 		} else {
 			this->loadTexture(url.toLocalFile());
 		}
