@@ -261,7 +261,7 @@ jobs:
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-gcc-${{matrix.build_type}}'
+          name: 'MareTF-Linux-${{matrix.cpack_generator}}-gcc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/MareTF-*-Linux.*
           retention-days: 7
