@@ -152,7 +152,7 @@ void QMareTextureWidget::reloadCurrentTexture() {
 			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, formatQt} : QImage{};
 
 			this->textureCurrentData = ::drawCubemapNet(this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), xp, xn, yp, yn, zp, zn, sm);
-			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width * 4, height * 3, QImage::Format_ARGB32};
+			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width * 4, height * 3, formatQt = QImage::Format_ARGB32};
 		} else {
 			this->textureCurrentData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
 			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width, height, formatQt};
@@ -173,9 +173,9 @@ void QMareTextureWidget::reloadCurrentTexture() {
 						}
 					}
 				};
-				if (this->a) {
+				if (formatQt == QImage::Format_ARGB32_Premultiplied || formatQt == QImage::Format_ARGB32) {
 					processScanLine.operator()<vtfpp::ImagePixel::BGRA8888>();
-				} else {
+				} else /*if (formatQt == QImage::Format_RGB888)*/ {
 					processScanLine.operator()<vtfpp::ImagePixel::RGB888>();
 				}
 			}
