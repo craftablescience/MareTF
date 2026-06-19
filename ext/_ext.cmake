@@ -64,7 +64,7 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         qt_add_resources(${TARGET} "${TARGET}_qt_translations" BASE "${QT_TRANSLATIONS_DIR}" PREFIX "/i18n" FILES ${QT_I18N_QM_FILES})
         if(EMSCRIPTEN)
             # todo: -gN and -gsource-map should be debug only
-            target_compile_options(${PROJECT_NAME}_gui PRIVATE
+            target_compile_options(${TARGET} PRIVATE
                     -fexceptions
                     -fno-stack-protector
                     -fno-sanitize=all
@@ -80,6 +80,11 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
                     -sASYNCIFY_IMPORTS=[QEventLoop::exec,QDialog::exec,QMessageBox::exec]
                     -sASYNCIFY_STACK_SIZE=65536
                     -sNO_DISABLE_EXCEPTION_CATCHING=1)
+        endif()
+
+        # Change RPATH to target lib folder when shipping Qt
+        if(NOT MARETF_SYSTEM_INSTALL AND DEFINED QT_BASEDIR)
+            set_target_properties(${TARGET} PROPERTIES BUILD_RPATH "$ORIGIN/lib" INSTALL_RPATH "$ORIGIN/lib")
         endif()
     endfunction()
 

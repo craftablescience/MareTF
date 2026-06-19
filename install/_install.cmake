@@ -53,12 +53,6 @@ if(WIN32)
                 DESTINATION tls)
     endif()
 elseif(UNIX)
-    if((CPACK_GENERATOR STREQUAL "DEB") OR (CPACK_GENERATOR STREQUAL "RPM"))
-        set(MARETF_SYSTEM_INSTALL ON CACHE BOOL "" FORCE)
-    else()
-        set(MARETF_SYSTEM_INSTALL OFF CACHE BOOL "" FORCE)
-    endif()
-
     install(FILES
             "${CMAKE_CURRENT_SOURCE_DIR}/CREDITS"
             "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
@@ -133,10 +127,6 @@ elseif(UNIX)
             install(DIRECTORY "${CMAKE_BINARY_DIR}/lib" "${CMAKE_BINARY_DIR}/plugins"
                     DESTINATION .
                     FILES_MATCHING PATTERN "*.so*")
-
-            # Change RPATH to target lib folder
-            set_target_properties(${PROJECT_NAME}_gui PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
-            set_target_properties(${PROJECT_NAME}_thumbnailer PROPERTIES INSTALL_RPATH "$ORIGIN/lib")
         endif()
 
         # MIME type info

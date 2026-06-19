@@ -32,6 +32,13 @@ cs_setup_vs_defaults(STARTUP_PROJECT "${PROJECT_NAME}")
 option(MARETF_USE_LTO "Compile ${PROJECT_NAME_PRETTY} with LTO/IPO" OFF)
 cs_configure_defaults(MARETF_USE_LTO)
 
+# "system" cpack generators use system-provided Qt
+if(DEFINED CPACK_GENERATOR AND ((CPACK_GENERATOR STREQUAL "DEB") OR (CPACK_GENERATOR STREQUAL "RPM")))
+    set(MARETF_SYSTEM_INSTALL ON CACHE BOOL "" FORCE)
+else()
+    set(MARETF_SYSTEM_INSTALL OFF CACHE BOOL "" FORCE)
+endif()
+
 # external libraries
 cs_include_directory(ext)
 
