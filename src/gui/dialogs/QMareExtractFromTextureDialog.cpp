@@ -66,15 +66,74 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 		extractImageFormatCombo->addItem(formatName.data(), static_cast<int>(format));
 	}
 	extractFileFormatCombo->setCurrentIndex(0); // UNCHANGED
-	extractImageDataLayout->addRow(tr("Pre-extraction Image Format Conversion"), extractImageFormatCombo);
+	extractImageDataLayout->addRow(tr("Pre-extraction Conversion"), extractImageFormatCombo);
 
 	// Alpha
 	auto* extractAlphaCheck = new QCheckBox{extractImageDataGroup};
 	extractImageDataLayout->addRow(tr("Alpha to Separate Image"), extractAlphaCheck);
 
+	// Images
+	auto* extractImageParticularGroup = new QGroupBox{extractImageDataGroup};
+	auto* extractImageParticularLayout = new QFormLayout{extractImageParticularGroup};
+	extractImageParticularLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* extractAllImagesCheck = new QCheckBox{extractImageParticularGroup};
+	extractImageParticularLayout->addRow(tr("Every Image"), extractAllImagesCheck);
+
+	auto* extractAllMipsCheck = new QCheckBox{extractImageParticularGroup};
+	extractImageParticularLayout->addRow(tr("Every Mip"), extractAllMipsCheck);
+
+	auto* extractAllFramesCheck = new QCheckBox{extractImageParticularGroup};
+	extractImageParticularLayout->addRow(tr("Every Frame"), extractAllFramesCheck);
+
+	auto* extractAllFacesCheck = new QCheckBox{extractImageParticularGroup};
+	extractImageParticularLayout->addRow(tr("Every Face"), extractAllFacesCheck);
+
+	auto* extractAllSlicesCheck = new QCheckBox{extractImageParticularGroup};
+	extractImageParticularLayout->addRow(tr("Every Slice"), extractAllSlicesCheck);
+
+	extractImageDataLayout->addRow("Images", extractImageParticularGroup);
+
 	/* ----------------------------- IMAGE DATA END ----------------------------- */
 
 	extractTabLayout->addRow(extractImageDataCheck, extractImageDataGroup);
+
+	/* --------------------------- RESOURCE DATA BEGIN -------------------------- */
+
+	auto* extractResourcesCheck = new QCheckBox{tr("Resources"), extractTab};
+	extractResourcesCheck->setLayoutDirection(Qt::RightToLeft);
+
+	auto* extractResourcesGroup = new QGroupBox{extractTab};
+	auto* extractResourcesLayout = new QFormLayout{extractResourcesGroup};
+	extractResourcesLayout->setFormAlignment(Qt::AlignHCenter);
+
+	// All
+	auto* extractAllResourcesCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("Every Resource"), extractAllResourcesCheck);
+
+	// Thumbnail
+	auto* extractThumbnailCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("Thumbnail"), extractThumbnailCheck);
+
+	// Particle sheet
+	auto* extractParticleSheetCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("Particle Sheet"), extractParticleSheetCheck);
+
+	// KeyValues data
+	auto* extractKVDCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("KeyValues Data"), extractKVDCheck);
+
+	// Author info
+	auto* extractATHCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("Author Info"), extractATHCheck);
+
+	// Hotspot data
+	auto* extractHotspotDataCheck = new QCheckBox{extractResourcesGroup};
+	extractResourcesLayout->addRow(tr("Hotspot Data"), extractHotspotDataCheck);
+
+	/* ---------------------------- RESOURCE DATA END --------------------------- */
+
+	extractTabLayout->addRow(extractResourcesCheck, extractResourcesGroup);
 
 	/* ---------------------------- FILESYSTEM BEGIN ---------------------------- */
 
@@ -98,6 +157,70 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 	layout->addWidget(dialogButtons, Qt::AlignBottom | Qt::AlignRight);
 
 	/* ------------------------------ LOGIC BEGIN ------------------------------- */
+
+	// Disable/enable Image Data group when toggled
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(extractImageDataCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
+		extractImageDataGroup->setDisabled(state != Qt::Checked);
+	});
+	extractImageDataCheck->checkStateChanged(extractImageDataCheck->checkState());
+#else
+	connect(extractImageDataCheck, &QCheckBox::stateChanged, this, [=](bool state) {
+		extractImageDataGroup->setDisabled(!state);
+	});
+	extractImageDataCheck->stateChanged(extractImageDataCheck->isChecked());
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(extractAllImagesCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
+		extractImageParticularLayout->setRowVisible(extractAllMipsCheck,   state != Qt::Checked);
+		extractImageParticularLayout->setRowVisible(extractAllFramesCheck, state != Qt::Checked);
+		extractImageParticularLayout->setRowVisible(extractAllFacesCheck,  state != Qt::Checked);
+		extractImageParticularLayout->setRowVisible(extractAllSlicesCheck, state != Qt::Checked);
+	});
+	extractAllImagesCheck->checkStateChanged(extractAllImagesCheck->checkState());
+#else
+	connect(extractAllImagesCheck, &QCheckBox::stateChanged, this, [=](bool state) {
+		extractImageParticularLayout->setRowVisible(extractAllMipsCheck,   !state);
+		extractImageParticularLayout->setRowVisible(extractAllFramesCheck, !state);
+		extractImageParticularLayout->setRowVisible(extractAllFacesCheck,  !state);
+		extractImageParticularLayout->setRowVisible(extractAllSlicesCheck, !state);
+	});
+	extractAllImagesCheck->stateChanged(extractAllImagesCheck->isChecked());
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(extractResourcesCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
+		extractResourcesGroup->setDisabled(state != Qt::Checked);
+	});
+	extractResourcesCheck->checkStateChanged(extractResourcesCheck->checkState());
+#else
+	connect(extractResourcesCheck, &QCheckBox::stateChanged, this, [=](bool state) {
+		extractResourcesGroup->setDisabled(!state);
+	});
+	extractResourcesCheck->stateChanged(extractResourcesCheck->isChecked());
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(extractAllResourcesCheck, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) {
+		extractResourcesLayout->setRowVisible(extractThumbnailCheck,     state != Qt::Checked);
+		extractResourcesLayout->setRowVisible(extractParticleSheetCheck, state != Qt::Checked);
+		extractResourcesLayout->setRowVisible(extractKVDCheck,           state != Qt::Checked);
+		extractResourcesLayout->setRowVisible(extractATHCheck,           state != Qt::Checked);
+		extractResourcesLayout->setRowVisible(extractATHCheck,           state != Qt::Checked);
+		extractResourcesLayout->setRowVisible(extractHotspotDataCheck,   state != Qt::Checked);
+	});
+#else
+	connect(extractAllResourcesCheck, &QCheckBox::stateChanged, this, [=](bool state) {
+		extractResourcesLayout->setRowVisible(extractThumbnailCheck,     !state);
+		extractResourcesLayout->setRowVisible(extractParticleSheetCheck, !state);
+		extractResourcesLayout->setRowVisible(extractKVDCheck,           !state);
+		extractResourcesLayout->setRowVisible(extractATHCheck,           !state);
+		extractResourcesLayout->setRowVisible(extractATHCheck,           !state);
+		extractResourcesLayout->setRowVisible(extractHotspotDataCheck,   !state);
+	});
+#endif
 
 	// Set input path in "Filesystem" group when "Input Search" clicked
 
@@ -139,25 +262,35 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 
 			cli->addFlag(extractAlphaCheck, "--extract-alpha-channel");
 
-			// todo: bind these up
-			// --extract-mip
-			// --extract-all-mips
-			// --extract-frame
-			// --extract-all-frames
-			// --extract-face
-			// --extract-all-faces
-			// --extract-slice
-			// --extract-all-slices
-			// --extract-all-images
-			// --extract-thumbnail
-			// --extract-particle-sheet-resource
-			// --extract-kvd-resource
-			// --extract-ath-resource
-			// --extract-hotspot-data-resource
-			// --extract-all-resources
+			if (extractAllImagesCheck->isChecked()) {
+				cli->addArg("--extract-all-images");
+			} else {
+				cli->addFlag(extractAllMipsCheck, "--extract-all-mips");
 
+				cli->addFlag(extractAllFramesCheck, "--extract-all-frames");
+
+				cli->addFlag(extractAllFacesCheck, "--extract-all-faces");
+
+				cli->addFlag(extractAllSlicesCheck, "--extract-all-slices");
+			}
 		} else {
 			cli->addArg("--extract-skip-image");
+		}
+
+		if (extractResourcesCheck->isChecked()) {
+			if (extractAllResourcesCheck->isChecked()) {
+				cli->addArg("--extract-all-resources");
+			} else {
+				cli->addFlag(extractThumbnailCheck, "--extract-thumbnail");
+
+				cli->addFlag(extractParticleSheetCheck, "--extract-particle-sheet-resource");
+
+				cli->addFlag(extractKVDCheck, "--extract-kvd-resource");
+
+				cli->addFlag(extractATHCheck, "--extract-ath-resource");
+
+				cli->addFlag(extractHotspotDataCheck, "--extract-hotspot-data-resource");
+			}
 		}
 
 		return cli;
