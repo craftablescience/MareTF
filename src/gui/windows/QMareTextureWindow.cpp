@@ -87,8 +87,11 @@ QMareTextureWindow::QMareTextureWindow() {
 	fileMenu->addSeparator();
 
 	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
-		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Open Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
-			this->loadTexture(file);
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR), QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+			QMareOptions::set(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QFileInfo{files.last()}.canonicalPath());
+			for (const auto& file : files) {
+				this->loadTexture(file);
+			}
 		}
 	});
 

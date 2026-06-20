@@ -52,6 +52,10 @@ void QMareOptions::setupOptions(QSettings& options) {
 		options.setValue(STR_DEFAULT_CREATE_DIALOG_DIR, QString{});
 	}
 
+	if (!options.contains(STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR)) {
+		options.setValue(STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QString{});
+	}
+
 	if (!options.contains(STR_DEFAULT_EXTRACT_DIALOG_DIR)) {
 		options.setValue(STR_DEFAULT_EXTRACT_DIALOG_DIR, QString{});
 	}

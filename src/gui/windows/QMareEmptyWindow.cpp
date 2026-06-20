@@ -75,7 +75,8 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->toolbar->addWidget(toolbarCreateButton);
 
 	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
-		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR), QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+			QMareOptions::set(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QFileInfo{files.last()}.canonicalPath());
 			if (!g_ManeWindow) {
 				g_ManeWindow = new QMareTextureWindow;
 			}
