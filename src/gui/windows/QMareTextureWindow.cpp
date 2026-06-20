@@ -324,7 +324,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change red
 	connect(this->previewR, &QPushButton::clicked, this, [this](bool checked) {
-		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
 			const bool enableOthers = !checked && !this->previewG->isChecked() && !this->previewB->isChecked();
 			this->previewR->setChecked(true);
 			this->previewG->setChecked(enableOthers);
@@ -341,7 +341,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change green
 	connect(this->previewG, &QPushButton::clicked, this, [this](bool checked) {
-		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
 			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewB->isChecked();
 			this->previewR->setChecked(enableOthers);
 			this->previewG->setChecked(true);
@@ -358,7 +358,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change blue
 	connect(this->previewB, &QPushButton::clicked, this, [this](bool checked) {
-		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
 			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked();
 			this->previewR->setChecked(enableOthers);
 			this->previewG->setChecked(enableOthers);
@@ -374,20 +374,30 @@ QMareTextureWindow::QMareTextureWindow() {
 	previewChannelsLayout->addWidget(this->previewA, 1, 0);
 
 	// Change alpha
-	connect(this->previewA, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewA, &QPushButton::clicked, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setA(checked);
+			if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
+				const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked() && !this->previewB->isChecked();
+				this->previewR->setChecked(enableOthers);
+				this->previewG->setChecked(enableOthers);
+				this->previewB->setChecked(enableOthers);
+				activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
+				this->previewAMask->setChecked(enableOthers);
+				activeTexture->setAMask(this->previewAMask->isChecked());
+				this->previewA->setChecked(true);
+			}
+			activeTexture->setA(this->previewA->isChecked());
 		}
 	});
 
-	this->previewBackground = new QPushButton{tr("Backdrop"), previewChannelsParent};
-	this->previewBackground->setCheckable(true);
-	previewChannelsLayout->addWidget(this->previewBackground, 1, 1);
+	this->previewAMask = new QPushButton{tr("Mask"), previewChannelsParent};
+	this->previewAMask->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewAMask, 1, 1);
 
 	// Change background
-	connect(this->previewBackground, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewAMask, &QPushButton::clicked, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setBackground(checked);
+			activeTexture->setAMask(checked);
 		}
 	});
 
@@ -396,7 +406,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	previewChannelsLayout->addWidget(this->previewTiled, 1, 2);
 
 	// Change tiled
-	connect(this->previewTiled, &QPushButton::toggled, this, [this](bool checked) {
+	connect(this->previewTiled, &QPushButton::clicked, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setTiled(checked);
 		}
@@ -869,7 +879,7 @@ void QMareTextureWindow::regenerateDetails() {
 		this->previewG->setChecked(true);
 		this->previewB->setChecked(true);
 		this->previewA->setChecked(true);
-		this->previewBackground->setChecked(true);
+		this->previewAMask->setChecked(true);
 		this->previewTiled->setChecked(false);
 		this->previewCurrentMip->setValue(0);
 
@@ -975,7 +985,7 @@ void QMareTextureWindow::regenerateDetails() {
 	this->previewG->setChecked(activeTexture->useG());
 	this->previewB->setChecked(activeTexture->useB());
 	this->previewA->setChecked(activeTexture->useA());
-	this->previewBackground->setChecked(activeTexture->useBackground());
+	this->previewAMask->setChecked(activeTexture->useAMask());
 	this->previewTiled->setChecked(activeTexture->useTiled());
 	this->previewCurrentMip->setRange(0, vtf.getMipCount() - 1);
 	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());

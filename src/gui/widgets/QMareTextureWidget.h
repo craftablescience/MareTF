@@ -58,9 +58,9 @@ public:
 
 	void setA(bool newA);
 
-	[[nodiscard]] bool useBackground() const;
+	[[nodiscard]] bool useAMask() const;
 
-	void setBackground(bool newBackground);
+	void setAMask(bool newAMask);
 
 	[[nodiscard]] bool useTiled() const;
 
@@ -99,7 +99,7 @@ protected:
 	bool g = true;
 	bool b = true;
 	bool a = true;
-	bool background = true;
+	bool aMask = true;
 	bool tiled = false;
 	int cubemapMode = 0;
 

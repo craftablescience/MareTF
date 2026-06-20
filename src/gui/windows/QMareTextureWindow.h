@@ -48,7 +48,7 @@ protected:
 	QPushButton* previewG;
 	QPushButton* previewB;
 	QPushButton* previewA;
-	QPushButton* previewBackground;
+	QPushButton* previewAMask;
 	QPushButton* previewTiled;
 
 	QGroupBox* previewAnimationGroup;
