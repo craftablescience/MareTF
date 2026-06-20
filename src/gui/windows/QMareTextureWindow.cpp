@@ -401,7 +401,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
-	this->previewTiled = new QPushButton{tr("Tiled"), previewChannelsParent};
+	this->previewTiled = new QPushButton{tr("Tile"), previewChannelsParent};
 	this->previewTiled->setCheckable(true);
 	previewChannelsLayout->addWidget(this->previewTiled, 1, 2);
 
