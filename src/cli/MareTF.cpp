@@ -2035,9 +2035,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 						tferr << "Failed to write to " << BOLD << outputPathOverride << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
-					if (outputPathOverride.empty()) {
-						tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
-					}
+					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 					return EXIT_SUCCESS;
 				};
 
