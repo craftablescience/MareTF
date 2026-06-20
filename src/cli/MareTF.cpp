@@ -244,6 +244,42 @@ template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 	return *this;
 }
 
+[[nodiscard]] std::string encodeBase64(std::span<const std::byte> input) {
+	static constexpr auto encodeBlock = [](std::byte a, std::byte b, std::byte c) -> std::array<char, 4> {
+		static constexpr std::string_view B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+		const auto bits = static_cast<uint32_t>(a) << 16 | static_cast<uint32_t>(b) << 8 | static_cast<uint32_t>(c) << 0;
+		return {
+			B64_CHARS[bits >> 18 & 0b111111],
+			B64_CHARS[bits >> 12 & 0b111111],
+			B64_CHARS[bits >>  6 & 0b111111],
+			B64_CHARS[bits >>  0 & 0b111111],
+		};
+	};
+
+    std::string output;
+    output.reserve((input.size() / 3 + 2) * 4);
+
+    for (uint64_t i = 0; i < input.size() / 3; i++) {
+        std::ranges::copy(encodeBlock(input[i*3+0], input[i*3+1], input[i*3+2]), std::back_inserter(output));
+    }
+    if (input.size() % 3 == 2) {
+        const auto encodedChars = encodeBlock(input.last(2)[0], input.last(2)[1], static_cast<std::byte>(0));
+        output.push_back(encodedChars[0]);
+        output.push_back(encodedChars[1]);
+        output.push_back(encodedChars[2]);
+        output.push_back('=');
+    } else if (input.size() % 3 == 1) {
+        const auto encodedChars = encodeBlock(input.back(), std::byte{0}, std::byte{0});
+    	output.push_back(encodedChars[0]);
+    	output.push_back(encodedChars[1]);
+    	output.push_back('=');
+    	output.push_back('=');
+    }
+
+    return output;
+}
+
 #ifdef MARETF_CLI
 #define MARETF_RETURN(code) return code
 #else
@@ -1400,6 +1436,13 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 		.help("Extract all resources to disk.")
 		.flag()
 		.store_into(extractAllResources);
+
+	bool extractStdOut;
+	extractCLI
+		.add_argument("--extract-stdout")
+		.help("When extracting an image or resource, print the name and base64-encoded contents to console instead of writing a file.")
+		.flag()
+		.store_into(extractStdOut);
 
 	//endregion
 
@@ -2975,9 +3018,13 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
 									}
 									bool shouldContinue;
-									checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
-									if (shouldContinue) {
-										continue;
+									if (!extractStdOut) {
+										checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
+										if (shouldContinue) {
+											continue;
+										}
+									} else {
+										shouldContinue = false;
 									}
 
 									// Convert image data
@@ -3000,6 +3047,9 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 									// Extract image data to file
 									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
 										extractionSuccessful.push_back(false);
+									} else if (extractStdOut) {
+										tfout << '"' << BOLD << outputPathFixupMip.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl;
+										extractionSuccessful.push_back(true);
 									} else {
 										extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
 									}
@@ -3007,13 +3057,23 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 									// Extract alpha channel
 									if (extractionSuccessful.back() && extractAlphaChannel && vtfpp::ImageFormatDetails::alpha(imageFormat) > 0) {
 										std::filesystem::path outputPathFixupAlpha = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_alpha" + outputPathFixupMip.extension().string());
-										checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
+										if (!extractStdOut) {
+											checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
+										} else {
+											shouldContinue = false;
+										}
 										if (!shouldContinue) {
-											// todo: pull this into sourcepp
+											std::vector<std::byte> fileData;
 											switch (imageFormat) {
 												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
 													case vtfpp::ImageFormat::format: \
-														extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat))); \
+														fileData = vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); \
+														if (extractStdOut) { \
+															tfout << '"' << BOLD << outputPathFixupAlpha.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl; \
+															extractionSuccessful.push_back(true); \
+														} else { \
+															extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, fileData)); \
+														} \
 														break
 
 												MARETF_EXTRACT_ALPHA_CASE(RGBA8888, a);
@@ -3051,54 +3111,81 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				// Extract thumbnail resource
 				if (extractThumbnail && vtf.hasThumbnailData()) {
 					std::filesystem::path outputPathFixupThumb = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_thumb" + outputPathFixupBase.extension().string());
-					bool shouldContinue;
-					checkFileDoesntExist(outputPathFixupThumb.string(), shouldContinue);
-					if (!shouldContinue) {
-						extractionSuccessful.push_back( vtf.saveThumbnailToFile(outputPathFixupThumb, fileFormat));
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupThumb.filename().string() << END << '"' << ' ' << ::encodeBase64(vtfpp::ImageConversion::convertImageDataToFile(vtf.getThumbnailDataRaw(), vtf.getThumbnailFormat(), vtf.getThumbnailWidth(), vtf.getThumbnailHeight(), fileFormat)) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupThumb.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(vtf.saveThumbnailToFile(outputPathFixupThumb, fileFormat));
+						}
 					}
 				}
 
 				// Extract particle sheet resource
 				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)))) {
 					std::filesystem::path outputPathFixupSheet = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".sht");
-					bool shouldContinue;
-					checkFileDoesntExist(outputPathFixupSheet.string(), shouldContinue);
-					if (!shouldContinue) {
-						extractionSuccessful.push_back( sourcepp::fs::writeFileBuffer(outputPathFixupSheet, rsrc->data));
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupSheet.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsParticleSheet().bake()) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupSheet.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupSheet, rsrc->getDataAsParticleSheet().bake()));
+						}
 					}
 				}
 
 				// Extract keyvalues data resource
 				if (const vtfpp::Resource* rsrc; extractKeyValuesDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)))) {
 					std::filesystem::path outputPathFixupKeyValues = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".vdf");
-					bool shouldContinue;
-					checkFileDoesntExist(outputPathFixupKeyValues.string(), shouldContinue);
-					if (!shouldContinue) {
-						extractionSuccessful.push_back( sourcepp::fs::writeFileText(outputPathFixupKeyValues, rsrc->getDataAsKeyValuesData()));
+					const auto kvd = rsrc->getDataAsKeyValuesData();
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupKeyValues.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(kvd.data()), kvd.size()}) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupKeyValues.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileText(outputPathFixupKeyValues, kvd));
+						}
 					}
 				}
 
 				// Extract author info resource
 				if (const vtfpp::Resource* rsrc; extractAuthorInfoResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)))) {
 					std::filesystem::path outputPathFixupAuthor = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_author.txt");
-					bool shouldContinue;
-					checkFileDoesntExist(outputPathFixupAuthor.string(), shouldContinue);
-					if (!shouldContinue) {
-						extractionSuccessful.push_back( sourcepp::fs::writeFileText(outputPathFixupAuthor, rsrc->getDataAsAuthorInfo()));
+					const auto authorInfo = rsrc->getDataAsAuthorInfo();
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupAuthor.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(authorInfo.data()), authorInfo.size()}) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupAuthor.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileText(outputPathFixupAuthor, authorInfo));
+						}
 					}
 				}
 
 				// Extract hotspot data resource
 				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)))) {
 					std::filesystem::path outputPathFixupHotspot = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".hot");
-					bool shouldContinue;
-					checkFileDoesntExist(outputPathFixupHotspot.string(), shouldContinue);
-					if (!shouldContinue) {
-						extractionSuccessful.push_back( sourcepp::fs::writeFileBuffer(outputPathFixupHotspot, rsrc->data));
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupHotspot.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsHotspotData().bake()) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupHotspot.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupHotspot, rsrc->getDataAsHotspotData().bake()));
+						}
 					}
 				}
 
-				// Extract VTF
+				// Aggregate stats
 				if (int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0); successCount < extractionSuccessful.size()) {
 					tferr << "Failed to save " << CYAN << (extractionSuccessful.size() - successCount) << END << " of " << CYAN << extractionSuccessful.size() << END << " files." << tfendl;
 					return EXIT_FAILURE;
