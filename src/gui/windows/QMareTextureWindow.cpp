@@ -314,77 +314,95 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewGeneralLayout = new QFormLayout{this->previewGeneralGroup};
 	previewGeneralLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* rgbaParent = new QWidget{previewWidget};
-	auto* rgbaLayout = new QHBoxLayout{rgbaParent};
-	rgbaLayout->setContentsMargins(0, 0, 0, 0);
+	auto* previewChannelsParent = new QWidget{previewWidget};
+	auto* previewChannelsLayout = new QGridLayout{previewChannelsParent};
+	previewChannelsLayout->setContentsMargins(0, 0, 0, 0);
 
-	this->previewR = new QCheckBox{tr("R"), rgbaParent};
-	rgbaLayout->addWidget(this->previewR);
+	this->previewR = new QPushButton{"R", previewChannelsParent};
+	this->previewR->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewR, 0, 0);
 
 	// Change red
-	connect(this->previewR, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewR, &QPushButton::clicked, this, [this](bool checked) {
+		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+			const bool enableOthers = !checked && !this->previewG->isChecked() && !this->previewB->isChecked();
+			this->previewR->setChecked(true);
+			this->previewG->setChecked(enableOthers);
+			this->previewB->setChecked(enableOthers);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setR(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewG = new QCheckBox{tr("G"), rgbaParent};
-	rgbaLayout->addWidget(this->previewG);
+	this->previewG = new QPushButton{tr("G"), previewChannelsParent};
+	this->previewG->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewG, 0, 1);
 
 	// Change green
-	connect(this->previewG, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewG, &QPushButton::clicked, this, [this](bool checked) {
+		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewB->isChecked();
+			this->previewR->setChecked(enableOthers);
+			this->previewG->setChecked(true);
+			this->previewB->setChecked(enableOthers);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setG(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewB = new QCheckBox{tr("B"), rgbaParent};
-	rgbaLayout->addWidget(this->previewB);
+	this->previewB = new QPushButton{tr("B"), previewChannelsParent};
+	this->previewB->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewB, 0, 2);
 
 	// Change blue
-	connect(this->previewB, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewB, &QPushButton::clicked, this, [this](bool checked) {
+		if (!(QGuiApplication::keyboardModifiers() & Qt::ShiftModifier)) {
+			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked();
+			this->previewR->setChecked(enableOthers);
+			this->previewG->setChecked(enableOthers);
+			this->previewB->setChecked(true);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setB(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewA = new QCheckBox{tr("A"), rgbaParent};
-	rgbaLayout->addWidget(this->previewA);
+	this->previewA = new QPushButton{tr("Alpha"), previewChannelsParent};
+	this->previewA->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewA, 1, 0);
 
 	// Change alpha
-	connect(this->previewA, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewA, &QPushButton::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setA(checked);
 		}
 	});
 
-	previewGeneralLayout->addRow(tr("Channels"), rgbaParent);
-
-	auto* previewExtrasParent = new QWidget{previewWidget};
-	auto* previewExtrasLayout = new QHBoxLayout{previewExtrasParent};
-	previewExtrasLayout->setContentsMargins(0, 0, 0, 0);
-
-	this->previewBackground = new QCheckBox{tr("Background"), previewExtrasParent};
-	previewExtrasLayout->addWidget(this->previewBackground);
+	this->previewBackground = new QPushButton{tr("Backdrop"), previewChannelsParent};
+	this->previewBackground->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewBackground, 1, 1);
 
 	// Change background
-	connect(this->previewBackground, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewBackground, &QPushButton::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setBackground(checked);
 		}
 	});
 
-	this->previewTiled = new QCheckBox{tr("Tiled"), previewExtrasParent};
-	previewExtrasLayout->addWidget(this->previewTiled);
+	this->previewTiled = new QPushButton{tr("Tiled"), previewChannelsParent};
+	this->previewTiled->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewTiled, 1, 2);
 
 	// Change tiled
-	connect(this->previewTiled, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewTiled, &QPushButton::toggled, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setTiled(checked);
 		}
 	});
 
-	previewGeneralLayout->addWidget(previewExtrasParent);
+	previewGeneralLayout->addRow(tr("Channels"), previewChannelsParent);
 
 	this->previewCurrentMip = new QMareSpinBox{previewWidget};
 	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);

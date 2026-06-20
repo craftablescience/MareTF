@@ -48,15 +48,11 @@ public:
 
 	[[nodiscard]] bool useR() const;
 
-	void setR(bool newR);
-
 	[[nodiscard]] bool useG() const;
-
-	void setG(bool newG);
 
 	[[nodiscard]] bool useB() const;
 
-	void setB(bool newB);
+	void setRGB(bool newR, bool newG, bool newB);
 
 	[[nodiscard]] bool useA() const;
 

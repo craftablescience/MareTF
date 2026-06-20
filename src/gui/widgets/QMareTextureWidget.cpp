@@ -268,25 +268,17 @@ bool QMareTextureWidget::useR() const {
 	return this->r;
 }
 
-void QMareTextureWidget::setR(bool newR) {
-	this->r = newR;
-	this->reloadCurrentTexture();
-}
-
 bool QMareTextureWidget::useG() const {
 	return this->g;
-}
-
-void QMareTextureWidget::setG(bool newG) {
-	this->g = newG;
-	this->reloadCurrentTexture();
 }
 
 bool QMareTextureWidget::useB() const {
 	return this->b;
 }
 
-void QMareTextureWidget::setB(bool newB) {
+void QMareTextureWidget::setRGB(bool newR, bool newG, bool newB) {
+	this->r = newR;
+	this->g = newG;
 	this->b = newB;
 	this->reloadCurrentTexture();
 }

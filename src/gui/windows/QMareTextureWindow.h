@@ -44,12 +44,12 @@ protected:
 
 	QGroupBox* previewGeneralGroup;
 	QMareSpinBox* previewCurrentMip;
-	QCheckBox* previewR;
-	QCheckBox* previewG;
-	QCheckBox* previewB;
-	QCheckBox* previewA;
-	QCheckBox* previewBackground;
-	QCheckBox* previewTiled;
+	QPushButton* previewR;
+	QPushButton* previewG;
+	QPushButton* previewB;
+	QPushButton* previewA;
+	QPushButton* previewBackground;
+	QPushButton* previewTiled;
 
 	QGroupBox* previewAnimationGroup;
 	QMareSpinBox* previewCurrentFrame;
