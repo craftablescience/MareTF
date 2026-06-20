@@ -10,6 +10,8 @@ class QMareMiddleClickTabWidget : public QTabWidget {
 public:
 	using QTabWidget::QTabWidget;
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 11, 0)
 protected:
 	void mouseReleaseEvent(QMouseEvent* event) override;
+#endif
 };
