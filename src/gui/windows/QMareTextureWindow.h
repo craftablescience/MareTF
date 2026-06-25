@@ -14,10 +14,13 @@ class QTimer;
 class QMareComboBox;
 class QMareDoubleSpinBox;
 class QMareFlagsWidget;
+class QMareFlagsExtraWidget;
 class QMareMiddleClickTabWidget;
 class QMareSpinBox;
 
 class QMareTextureWindow : public QMainWindow {
+	friend class QMareEmptyWindow;
+
 	Q_OBJECT;
 
 public:
@@ -31,17 +34,22 @@ signals:
 	void themeUpdated();
 
 protected:
+	void dragEnterEvent(QDragEnterEvent* event) override;
+
+	void dropEvent(QDropEvent* event) override;
+
 	QMareMiddleClickTabWidget* textureTabs;
 
 	QDockWidget* previewDock;
 
 	QGroupBox* previewGeneralGroup;
 	QMareSpinBox* previewCurrentMip;
-	QCheckBox* previewR;
-	QCheckBox* previewG;
-	QCheckBox* previewB;
-	QCheckBox* previewA;
-	QCheckBox* previewBackground;
+	QPushButton* previewR;
+	QPushButton* previewG;
+	QPushButton* previewB;
+	QPushButton* previewA;
+	QPushButton* previewAMask;
+	QPushButton* previewTiled;
 
 	QGroupBox* previewAnimationGroup;
 	QMareSpinBox* previewCurrentFrame;
@@ -62,6 +70,8 @@ protected:
 	QMareComboBox* detailsPlatform;
 	QMareComboBox* detailsVersion;
 	QMareComboBox* detailsFormat;
+	QLabel* detailsFileSizeLabel;
+	QMareDoubleSpinBox* detailsFileSize;
 
 	QGroupBox* detailsDimsGroup;
 	QMareSpinBox* detailsWidth;
@@ -118,6 +128,9 @@ protected:
 
 	QGroupBox* resAuthorInfoGroup;
 	QLineEdit* resAuthorInfoData;
+
+	QGroupBox* resSourcePPFlagsGroup;
+	QMareFlagsExtraWidget* resSourcePPFlagsList;
 
 	QDockWidget* flagsDock;
 

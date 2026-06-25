@@ -18,6 +18,8 @@
 
 #include "Common.h"
 
+#include "utility/QMareOptions.h"
+
 namespace {
 
 [[nodiscard]] std::vector<std::byte> drawCubemapNet(uint16_t faceWidth, uint16_t faceHeight, const QImage& xp, const QImage& xn, const QImage& yp, const QImage& yn, const QImage& zp, const QImage& zn, const QImage& sm) {
@@ -125,8 +127,13 @@ void QMareTextureWidget::reloadCurrentTexture() {
 		vtfpp::ImageFormat format;
 		QImage::Format formatQt;
 		if (this->a) {
-			format = vtfpp::ImageFormat::BGRA8888;
-			formatQt = vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied;
+			if (!this->r && !this->g && !this->b && !this->aMask) {
+				format = vtfpp::ImageFormat::A8;
+				formatQt = QImage::Format_Grayscale8;
+			} else {
+				format = vtfpp::ImageFormat::BGRA8888;
+				formatQt = vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat()) ? QImage::Format_ARGB32 : QImage::Format_ARGB32_Premultiplied;
+			}
 		} else {
 			format = vtfpp::ImageFormat::RGB888;
 			formatQt = QImage::Format_RGB888;
@@ -152,12 +159,12 @@ void QMareTextureWidget::reloadCurrentTexture() {
 			const auto sm = !smData.empty() ? QImage{reinterpret_cast<const uchar*>(smData.data()), width, height, formatQt} : QImage{};
 
 			this->textureCurrentData = ::drawCubemapNet(this->vtf.getWidth(this->currentMip), this->vtf.getHeight(this->currentMip), xp, xn, yp, yn, zp, zn, sm);
-			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width * 4, height * 3, QImage::Format_ARGB32};
+			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width * 4, height * 3, formatQt = QImage::Format_ARGB32};
 		} else {
 			this->textureCurrentData = this->vtf.getImageDataAs(format, this->currentMip, this->currentFrame, this->currentFace, this->currentDepth);
 			this->textureCurrent = {reinterpret_cast<const uchar*>(this->textureCurrentData.data()), width, height, formatQt};
 		}
-		if (!this->r || !this->g || !this->b) {
+		if ((!this->r && vtfpp::ImageFormatDetails::red(format) > 0) || (!this->g && vtfpp::ImageFormatDetails::green(format) > 0) || (!this->b && vtfpp::ImageFormatDetails::blue(format) > 0)) {
 			for (int y = 0; y < this->textureCurrent.height(); y++) {
 				const auto processScanLine = [this, scanLineRaw = this->textureCurrent.scanLine(y)]<vtfpp::ImagePixel::PixelType P> {
 					auto* scanLine = reinterpret_cast<P*>(scanLineRaw);
@@ -173,9 +180,9 @@ void QMareTextureWidget::reloadCurrentTexture() {
 						}
 					}
 				};
-				if (this->a) {
+				if (formatQt == QImage::Format_ARGB32_Premultiplied || formatQt == QImage::Format_ARGB32) {
 					processScanLine.operator()<vtfpp::ImagePixel::BGRA8888>();
-				} else {
+				} else /*if (formatQt == QImage::Format_RGB888)*/ {
 					processScanLine.operator()<vtfpp::ImagePixel::RGB888>();
 				}
 			}
@@ -207,7 +214,7 @@ QIcon QMareTextureWidget::getIcon() const {
 	if (this->textureCurrent.isNull()) {
 		return {};
 	}
-	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio)};
+	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS) ? Qt::SmoothTransformation : Qt::FastTransformation)};
 }
 
 QString QMareTextureWidget::getPath() const {
@@ -268,25 +275,17 @@ bool QMareTextureWidget::useR() const {
 	return this->r;
 }
 
-void QMareTextureWidget::setR(bool newR) {
-	this->r = newR;
-	this->reloadCurrentTexture();
-}
-
 bool QMareTextureWidget::useG() const {
 	return this->g;
-}
-
-void QMareTextureWidget::setG(bool newG) {
-	this->g = newG;
-	this->reloadCurrentTexture();
 }
 
 bool QMareTextureWidget::useB() const {
 	return this->b;
 }
 
-void QMareTextureWidget::setB(bool newB) {
+void QMareTextureWidget::setRGB(bool newR, bool newG, bool newB) {
+	this->r = newR;
+	this->g = newG;
 	this->b = newB;
 	this->reloadCurrentTexture();
 }
@@ -300,12 +299,21 @@ void QMareTextureWidget::setA(bool newA) {
 	this->reloadCurrentTexture();
 }
 
-bool QMareTextureWidget::useBackground() const {
-	return this->background;
+bool QMareTextureWidget::useAMask() const {
+	return this->aMask;
 }
 
-void QMareTextureWidget::setBackground(bool newBackground) {
-	this->background = newBackground;
+void QMareTextureWidget::setAMask(bool newAMask) {
+	this->aMask = newAMask;
+	this->reloadCurrentTexture();
+}
+
+bool QMareTextureWidget::useTiled() const {
+	return this->tiled;
+}
+
+void QMareTextureWidget::setTiled(bool newTiled) {
+	this->tiled = newTiled;
 	this->reloadCurrentTexture();
 }
 
@@ -383,7 +391,7 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 	const auto aspectRatio = static_cast<double>(this->textureCurrent.width()) / this->textureCurrent.height();
 
 	int actualWidth, actualHeight;
-	if (aspectRatio > 1.0) {
+	if (aspectRatio > 1) {
 		actualWidth = static_cast<int>(availableWidth);
 		actualHeight = static_cast<int>(availableWidth / aspectRatio);
 		if (actualHeight > availableHeight) {
@@ -406,23 +414,92 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 		static_cast<int>(static_cast<float>(actualHeight) * this->textureZoom),
 	};
 
-	QPainter painter{this};
-	painter.fillRect(0, 0, this->width(), this->height(), {20, 22, 24});
+	static constexpr QColor BACKGROUND_COLOR{20, 22, 24};
 
-	if (this->useBackground() && this->useA() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
-		static constexpr auto SQUARE_SIZE = 32;
-		for (int x = targetRect.left(), i = 0; x < targetRect.left() + targetRect.width(); x += SQUARE_SIZE, i++) {
-			for (int y = targetRect.top(), j = 0; y < targetRect.top() + targetRect.height(); y += SQUARE_SIZE, j++) {
-				if ((i + j) % 2 == 0) {
-					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {214, 214, 214});
-				} else {
-					painter.fillRect(x, y, qMin(SQUARE_SIZE, targetRect.left() + targetRect.width() - x), qMin(SQUARE_SIZE, targetRect.top() + targetRect.height() - y), {242, 242, 242});
+	QPainter painter{this};
+	painter.fillRect(0, 0, this->width(), this->height(), BACKGROUND_COLOR);
+
+	if (this->useA() && vtfpp::ImageFormatDetails::decompressedAlpha(this->vtf.getFormat())) {
+		const QRect backgroundRect = this->rect().intersected(this->tiled ? targetRect.adjusted(-targetRect.width(), -targetRect.height(), targetRect.width(), targetRect.height()) : targetRect);
+		if (this->useAMask()) {
+			static constexpr auto SQUARE_SIZE = 32;
+			for (int x = backgroundRect.left() / SQUARE_SIZE * SQUARE_SIZE; x < backgroundRect.right(); x += SQUARE_SIZE) {
+				for (int y = backgroundRect.top() / SQUARE_SIZE * SQUARE_SIZE; y < backgroundRect.bottom(); y += SQUARE_SIZE) {
+					if ((x / SQUARE_SIZE + y / SQUARE_SIZE) % 2 == 0) {
+						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {214, 214, 214});
+					} else {
+						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {242, 242, 242});
+					}
 				}
 			}
+		} else {
+			painter.fillRect(backgroundRect, Qt::black);
 		}
 	}
 
-	painter.drawImage(targetRect, this->textureCurrent, QRect{0, 0, this->textureCurrent.width(), this->textureCurrent.height()});
+	const QRect srcRect{0, 0, this->textureCurrent.width(), this->textureCurrent.height()};
+	painter.drawImage(targetRect, this->textureCurrent, srcRect);
+
+	// Tiles
+	if (this->tiled) {
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), -targetRect.height(), -targetRect.width(), -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(0,                   -targetRect.height(), 0,                   -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  -targetRect.height(), targetRect.width(),  -targetRect.height()), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  0,                    targetRect.width(),  0                   ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(targetRect.width(),  targetRect.height(),  targetRect.width(),  targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(0,                   targetRect.height(),  0,                   targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), targetRect.height(),  -targetRect.width(), targetRect.height() ), this->textureCurrent, srcRect);
+		painter.drawImage(targetRect.adjusted(-targetRect.width(), 0,                    -targetRect.width(), 0                   ), this->textureCurrent, srcRect);
+	}
+
+	// Minimap
+	if (const auto minimapScaleChoice = QMareOptions::get<int>(QMareOptions::INT_MINIMAP_SCALE); minimapScaleChoice != 0 && !this->geometry().contains(targetRect)) {
+		static constexpr auto MINIMAP_SCALE_FACTOR_SMALL = 8;
+		static constexpr auto MINIMAP_SCALE_FACTOR_MEDIUM = 5.5;
+		static constexpr auto MINIMAP_SCALE_FACTOR_LARGE = 4;
+		static constexpr auto MINIMAP_MARGIN = 8;
+		static constexpr auto MINIMAP_PADDING = 4;
+		static constexpr auto MINIMAP_OVERLAY_BORDER_SIZE = 2;
+
+		auto minimapBackgroundColor = BACKGROUND_COLOR.darker();
+		minimapBackgroundColor.setAlpha(0xA0);
+		auto minimapOverlayBorderColor = this->palette().color(QPalette::Highlight);
+		minimapOverlayBorderColor.setAlpha(0xC0);
+		auto minimapOverlayFillColor = this->palette().color(QPalette::Highlight);
+		minimapOverlayFillColor.setAlpha(0x60);
+
+		const auto referenceDim = static_cast<int>(qMin(this->rect().width(), this->rect().height()) / (
+			minimapScaleChoice == -1
+				? MINIMAP_SCALE_FACTOR_SMALL
+				: minimapScaleChoice == -2
+					? MINIMAP_SCALE_FACTOR_MEDIUM
+					: minimapScaleChoice == -3
+						? MINIMAP_SCALE_FACTOR_LARGE
+						: minimapScaleChoice
+		));
+
+		QRect minimapTargetRect;
+		if (aspectRatio > 1) {
+			minimapTargetRect = QRect{this->rect().right() - referenceDim - MINIMAP_MARGIN, this->rect().top() + MINIMAP_MARGIN, referenceDim, static_cast<int>(static_cast<float>(referenceDim) / aspectRatio)};
+		} else {
+			const auto minimapWidth = static_cast<int>(static_cast<float>(referenceDim) * aspectRatio);
+			minimapTargetRect = QRect{this->rect().right() - minimapWidth - MINIMAP_MARGIN, this->rect().top() + MINIMAP_MARGIN, minimapWidth, referenceDim};
+		}
+		const auto minimapViewportScaleX = static_cast<float>(minimapTargetRect.width()) / (static_cast<float>(actualWidth) * this->textureZoom);
+		const auto minimapViewportScaleY = static_cast<float>(minimapTargetRect.height()) / (static_cast<float>(actualHeight) * this->textureZoom);
+
+		painter.fillRect(minimapTargetRect.adjusted(-MINIMAP_PADDING, -MINIMAP_PADDING, MINIMAP_PADDING, MINIMAP_PADDING), minimapBackgroundColor);
+		painter.drawImage(minimapTargetRect, this->textureCurrent.scaled(minimapTargetRect.width(), minimapTargetRect.height(), Qt::IgnoreAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP) ? Qt::SmoothTransformation : Qt::FastTransformation), {0, 0, minimapTargetRect.width(), minimapTargetRect.height()});
+
+		painter.setPen({minimapOverlayBorderColor, MINIMAP_OVERLAY_BORDER_SIZE});
+		painter.setBrush({minimapOverlayFillColor});
+		painter.drawRect(QRect{
+			minimapTargetRect.left() + static_cast<int>(static_cast<float>(this->rect().left() - targetRect.left()) * minimapViewportScaleX),
+			minimapTargetRect.top() + static_cast<int>(static_cast<float>(this->rect().top() - targetRect.top()) * minimapViewportScaleY),
+			static_cast<int>(static_cast<float>(this->rect().width()) * minimapViewportScaleX),
+			static_cast<int>(static_cast<float>(this->rect().height()) * minimapViewportScaleY)
+		});
+	}
 }
 
 void QMareTextureWidget::resizeEvent(QResizeEvent* e) {

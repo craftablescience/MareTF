@@ -64,7 +64,7 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
         qt_add_resources(${TARGET} "${TARGET}_qt_translations" BASE "${QT_TRANSLATIONS_DIR}" PREFIX "/i18n" FILES ${QT_I18N_QM_FILES})
         if(EMSCRIPTEN)
             # todo: -gN and -gsource-map should be debug only
-            target_compile_options(${PROJECT_NAME}_gui PRIVATE
+            target_compile_options(${TARGET} PRIVATE
                     -fexceptions
                     -fno-stack-protector
                     -fno-sanitize=all
@@ -81,32 +81,53 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
                     -sASYNCIFY_STACK_SIZE=65536
                     -sNO_DISABLE_EXCEPTION_CATCHING=1)
         endif()
+
+        # Change RPATH to target lib folder when shipping Qt
+        if(NOT MARETF_SYSTEM_INSTALL AND DEFINED QT_BASEDIR)
+            set_target_properties(${TARGET} PROPERTIES BUILD_RPATH "$ORIGIN/lib" INSTALL_RPATH "$ORIGIN/lib")
+        endif()
     endfunction()
 
     # Copy these in
+    list(APPEND QT_REQUIRED_ROOT_LIBS
+            # Core
+            "Core" "Gui" "Widgets" "Network"
+            # Needed by plugins
+            "DBus" "EglFSDeviceIntegration" "EglFsKmsSupport" "EglFsKmsGbmSupport" "WaylandClient" "WaylandEglClientHwIntegration" "WlShellIntegration" "XcbQpa")
+    list(APPEND QT_REQUIRED_PLUGIN_DIRS
+            "egldeviceintegrations" "networkinformation" "platforminputcontexts" "platforms" "platformthemes" "styles" "tls"
+            "wayland-decoration-client" "wayland-graphics-integration-client" "wayland-shell-integration" "xcbglintegrations")
+
     if(WIN32)
         if(CMAKE_BUILD_TYPE MATCHES Debug)
             set(QT_LIB_SUFFIX "d" CACHE STRING "" FORCE)
         else()
             set(QT_LIB_SUFFIX "" CACHE STRING "" FORCE)
         endif()
-        configure_file("${QT_BASEDIR}/bin/Qt6Core${QT_LIB_SUFFIX}.dll"                "${CMAKE_BINARY_DIR}/Qt6Core${QT_LIB_SUFFIX}.dll"            COPYONLY)
-        configure_file("${QT_BASEDIR}/bin/Qt6Gui${QT_LIB_SUFFIX}.dll"                 "${CMAKE_BINARY_DIR}/Qt6Gui${QT_LIB_SUFFIX}.dll"             COPYONLY)
-        configure_file("${QT_BASEDIR}/bin/Qt6Widgets${QT_LIB_SUFFIX}.dll"             "${CMAKE_BINARY_DIR}/Qt6Widgets${QT_LIB_SUFFIX}.dll"         COPYONLY)
-        configure_file("${QT_BASEDIR}/bin/Qt6Network${QT_LIB_SUFFIX}.dll"             "${CMAKE_BINARY_DIR}/Qt6Network${QT_LIB_SUFFIX}.dll"         COPYONLY)
-        configure_file("${QT_BASEDIR}/plugins/platforms/qwindows${QT_LIB_SUFFIX}.dll" "${CMAKE_BINARY_DIR}/platforms/qwindows${QT_LIB_SUFFIX}.dll" COPYONLY)
-        if(EXISTS "${QT_BASEDIR}/plugins/styles/qmodernwindowsstyle${QT_LIB_SUFFIX}.dll")
-            configure_file("${QT_BASEDIR}/plugins/styles/qmodernwindowsstyle${QT_LIB_SUFFIX}.dll" "${CMAKE_BINARY_DIR}/styles/qmodernwindowsstyle${QT_LIB_SUFFIX}.dll" COPYONLY)
-        else()
-            configure_file("${QT_BASEDIR}/plugins/styles/qwindowsvistastyle${QT_LIB_SUFFIX}.dll" "${CMAKE_BINARY_DIR}/styles/qwindowsvistastyle${QT_LIB_SUFFIX}.dll" COPYONLY)
-        endif()
-        configure_file("${QT_BASEDIR}/plugins/tls/qcertonlybackend${QT_LIB_SUFFIX}.dll" "${CMAKE_BINARY_DIR}/tls/qcertonlybackend${QT_LIB_SUFFIX}.dll" COPYONLY)
-        configure_file("${QT_BASEDIR}/plugins/tls/qschannelbackend${QT_LIB_SUFFIX}.dll" "${CMAKE_BINARY_DIR}/tls/qschannelbackend${QT_LIB_SUFFIX}.dll" COPYONLY)
+
+        foreach(QT_REQUIRED_ROOT_LIB ${QT_REQUIRED_ROOT_LIBS})
+            if(EXISTS "${QT_BASEDIR}/bin/Qt6${QT_REQUIRED_ROOT_LIB}${QT_LIB_SUFFIX}.dll")
+                file(COPY "${QT_BASEDIR}/bin/Qt6${QT_REQUIRED_ROOT_LIB}${QT_LIB_SUFFIX}.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+            endif()
+        endforeach()
+
+        foreach(QT_REQUIRED_PLUGIN_DIR ${QT_REQUIRED_PLUGIN_DIRS})
+            if(EXISTS "${QT_BASEDIR}/plugins/${QT_REQUIRED_PLUGIN_DIR}")
+                file(COPY "${QT_BASEDIR}/plugins/${QT_REQUIRED_PLUGIN_DIR}" DESTINATION "${CMAKE_BINARY_DIR}")
+            endif()
+        endforeach()
     elseif(UNIX AND DEFINED QT_BASEDIR)
-        configure_file("${QT_BASEDIR}/lib/libQt6Core.so.6"    "${CMAKE_BINARY_DIR}/libQt6Core.so.6"    COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6Gui.so.6"     "${CMAKE_BINARY_DIR}/libQt6Gui.so.6"     COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6Widgets.so.6" "${CMAKE_BINARY_DIR}/libQt6Widgets.so.6" COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6Network.so.6" "${CMAKE_BINARY_DIR}/libQt6Network.so.6" COPYONLY)
+        foreach(QT_REQUIRED_ROOT_LIB ${QT_REQUIRED_ROOT_LIBS})
+            if(EXISTS "${QT_BASEDIR}/lib/libQt6${QT_REQUIRED_ROOT_LIB}.so")
+                file(COPY "${QT_BASEDIR}/lib/libQt6${QT_REQUIRED_ROOT_LIB}.so" DESTINATION "${CMAKE_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
+            endif()
+        endforeach()
+
+        foreach(QT_REQUIRED_PLUGIN_DIR ${QT_REQUIRED_PLUGIN_DIRS})
+            if(EXISTS "${QT_BASEDIR}/plugins/${QT_REQUIRED_PLUGIN_DIR}")
+                file(COPY "${QT_BASEDIR}/plugins/${QT_REQUIRED_PLUGIN_DIR}" DESTINATION "${CMAKE_BINARY_DIR}/plugins")
+            endif()
+        endforeach()
 
         # These end in a lot of different numbers depending on the Qt version
         function(copy_latest_icu_lib NAME)
@@ -116,42 +137,13 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
                 list(REVERSE QT_ICU_LIBS)
                 list(GET QT_ICU_LIBS 0 QT_ICU_LIB)
                 cmake_path(GET QT_ICU_LIB FILENAME QT_ICU_LIB_FILENAME)
-                configure_file("${QT_ICU_LIB}" "${CMAKE_BINARY_DIR}/${QT_ICU_LIB_FILENAME}" COPYONLY)
-            else()
-                message(FATAL_ERROR "Failed to find a valid copy of libicu${NAME}!")
+                file(COPY "${QT_ICU_LIB}" DESTINATION "${CMAKE_BINARY_DIR}/lib" FOLLOW_SYMLINK_CHAIN)
             endif()
         endfunction()
         copy_latest_icu_lib("data")
         copy_latest_icu_lib("i18n")
+        copy_latest_icu_lib("io")
+        copy_latest_icu_lib("tu")
         copy_latest_icu_lib("uc")
-
-        # Required by plugins
-        configure_file("${QT_BASEDIR}/lib/libQt6DBus.so.6"                          "${CMAKE_BINARY_DIR}/libQt6DBus.so.6"                          COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6EglFSDeviceIntegration.so.6"        "${CMAKE_BINARY_DIR}/libQt6EglFSDeviceIntegration.so.6"        COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6EglFsKmsSupport.so.6"               "${CMAKE_BINARY_DIR}/libQt6EglFsKmsSupport.so.6"               COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6WaylandClient.so.6"                 "${CMAKE_BINARY_DIR}/libQt6WaylandClient.so.6"                 COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6WaylandEglClientHwIntegration.so.6" "${CMAKE_BINARY_DIR}/libQt6WaylandEglClientHwIntegration.so.6" COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6WlShellIntegration.so.6"            "${CMAKE_BINARY_DIR}/libQt6WlShellIntegration.so.6"            COPYONLY)
-        configure_file("${QT_BASEDIR}/lib/libQt6XcbQpa.so.6"                        "${CMAKE_BINARY_DIR}/libQt6XcbQpa.so.6"                        COPYONLY)
-
-        # Copy all this stuff wholesale, who knows if we need it now or later
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_EGLDEVICEINTEGRATIONS               "${QT_BASEDIR}/plugins/egldeviceintegrations/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_PLATFORMINPUTCONTEXTS               "${QT_BASEDIR}/plugins/platforminputcontexts/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_PLATFORMS                           "${QT_BASEDIR}/plugins/platforms/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_PLATFORMTHEMES                      "${QT_BASEDIR}/plugins/platformthemes/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_TLS                                 "${QT_BASEDIR}/plugins/tls/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_WAYLANDDECORATIONCLIENT             "${QT_BASEDIR}/plugins/wayland-decoration-client/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_WAYLANDGRAPHICSINTEGRATIONCLIENT    "${QT_BASEDIR}/plugins/wayland-graphics-integration-client/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_WAYLANDSHELLINTEGRATION             "${QT_BASEDIR}/plugins/wayland-shell-integration/*.so*")
-        file(GLOB ${PROJECT_NAME}_QT_PLUGINS_XCBGLINTEGRATIONS                   "${QT_BASEDIR}/plugins/xcbglintegrations/*.so*")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_EGLDEVICEINTEGRATIONS}            DESTINATION "${CMAKE_BINARY_DIR}/egldeviceintegrations")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_PLATFORMINPUTCONTEXTS}            DESTINATION "${CMAKE_BINARY_DIR}/platforminputcontexts")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_PLATFORMS}                        DESTINATION "${CMAKE_BINARY_DIR}/platforms")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_PLATFORMTHEMES}                   DESTINATION "${CMAKE_BINARY_DIR}/platformthemes")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_TLS}                              DESTINATION "${CMAKE_BINARY_DIR}/tls")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_WAYLANDDECORATIONCLIENT}          DESTINATION "${CMAKE_BINARY_DIR}/wayland-decoration-client")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_WAYLANDGRAPHICSINTEGRATIONCLIENT} DESTINATION "${CMAKE_BINARY_DIR}/wayland-graphics-integration-client")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_WAYLANDSHELLINTEGRATION}          DESTINATION "${CMAKE_BINARY_DIR}/wayland-shell-integration")
-        file(COPY ${${PROJECT_NAME}_QT_PLUGINS_XCBGLINTEGRATIONS}                DESTINATION "${CMAKE_BINARY_DIR}/xcbglintegrations")
     endif()
 endif()

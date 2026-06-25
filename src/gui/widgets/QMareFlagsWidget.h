@@ -13,3 +13,14 @@ public:
 
 	[[nodiscard]] uint32_t getFlags() const;
 };
+
+class QMareFlagsExtraWidget : public QListWidget {
+	Q_OBJECT;
+
+public:
+	explicit QMareFlagsExtraWidget(QWidget* parent = nullptr);
+
+	void repopulateFlagList(uint32_t flags);
+
+	[[nodiscard]] uint32_t getFlags() const;
+};

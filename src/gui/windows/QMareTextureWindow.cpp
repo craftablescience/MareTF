@@ -16,6 +16,7 @@
 #include <QLineEdit>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -31,6 +32,7 @@
 
 #include "dialogs/QMareCreateTextureDialog.h"
 #include "dialogs/QMareCreditsDialog.h"
+#include "dialogs/QMareExtractFromTextureDialog.h"
 #include "utility/QMareDiscordPresence.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
@@ -75,7 +77,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
-	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	fileMenu->addAction(QIcon{":/button_new_multi.png"}, tr("C&reate from Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
 			createTextureDialog->open();
@@ -84,9 +86,28 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	fileMenu->addSeparator();
 
-	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
-		for (const auto& file : QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)")) {
-			this->loadTexture(file);
+	fileMenu->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR), QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+			QMareOptions::set(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QFileInfo{files.last()}.canonicalPath());
+			for (const auto& file : files) {
+				this->loadTexture(file);
+			}
+		}
+	});
+
+	fileMenu->addSeparator();
+
+	fileMenu->addAction(QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_alt.png" : ":/button_extract.png"}, tr("&Extract"), Qt::CTRL | Qt::Key_E, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromTextures(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	fileMenu->addAction(QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_multi_alt.png" : ":/button_extract_multi.png"}, tr("E&xtract from Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_E, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromDir(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
 		}
 	});
 
@@ -110,20 +131,70 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* optionsMenu = this->menuBar()->addMenu(tr("&Options"));
 
+#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* generalMenu = optionsMenu->addMenu(QIcon{":/logo.png"}, tr("&General"));
 
-#if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	auto* optionRaiseToTopOpeningFileAction = generalMenu->addAction(tr("Raise When Opening New File"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
 	optionRaiseToTopOpeningFileAction->setCheckable(true);
 	optionRaiseToTopOpeningFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE));
+
+	auto* optionAllowMultipleAppInstancesAction = generalMenu->addAction(tr("Allow Multiple Application Instances"), [showRestartWarning] {
+		showRestartWarning();
+		QMareOptions::invert(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES);
+	});
+	optionAllowMultipleAppInstancesAction->setCheckable(true);
+	optionAllowMultipleAppInstancesAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES));
 #endif
 
-	auto* optionShowTabBarForSingleFileAction = generalMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
+	auto* optionTrypanophobiaModeAction = generalMenu->addAction(tr("Trypanophobia Mode"), [showRestartWarning] {
+		showRestartWarning();
+		QMareOptions::invert(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE);
+	});
+	optionTrypanophobiaModeAction->setCheckable(true);
+	optionTrypanophobiaModeAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE));
+
+	auto* workspaceMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_FileIcon), tr("&Workspace"));
+
+	auto* optionShowTabBarForSingleFileAction = workspaceMenu->addAction(tr("Show Tab Bar for Single File"), [this] {
 		QMareOptions::invert(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE);
 		this->textureTabs->setTabBarAutoHide(!QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
 	});
 	optionShowTabBarForSingleFileAction->setCheckable(true);
 	optionShowTabBarForSingleFileAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_SHOW_TAB_BAR_FOR_SINGLE_FILE));
+
+	auto* optionHighQualityThumbnailsAction = workspaceMenu->addAction(tr("High Quality File Thumbnails"), std::bind_front(&QMareOptions::invert, QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS));
+	optionHighQualityThumbnailsAction->setCheckable(true);
+	optionHighQualityThumbnailsAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS));
+
+	auto* optionHighQualityMinimapAction = workspaceMenu->addAction(tr("High Quality Minimap"), [this] {
+		QMareOptions::invert(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP);
+		if (auto* tab = this->textureTabs->currentWidget()) {
+			tab->update();
+		}
+	});
+	optionHighQualityMinimapAction->setCheckable(true);
+	optionHighQualityMinimapAction->setChecked(QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_MINIMAP));
+
+	auto* minimapScaleMenu = workspaceMenu->addMenu(tr("&Minimap Scale"));
+	auto* minimapScaleMenuGroup = new QActionGroup{minimapScaleMenu};
+	minimapScaleMenuGroup->setExclusive(true);
+	const QVector<QPair<QString, int>> minimapScaleMapping{
+		{tr("Disabled"),  0},
+		{tr("Small"),    -1},
+		{tr("Medium"),   -2},
+		{tr("Large"),    -3},
+	};
+	for (const auto& [minimapScaleName, minimapScaleValue] : minimapScaleMapping) {
+		auto* action = minimapScaleMenu->addAction(minimapScaleName, [this, minimapScaleValue] {
+			QMareOptions::set(QMareOptions::INT_MINIMAP_SCALE, minimapScaleValue);
+			if (auto* tab = this->textureTabs->currentWidget()) {
+				tab->update();
+			}
+		});
+		action->setCheckable(true);
+		action->setChecked(minimapScaleValue == QMareOptions::get<int>(QMareOptions::INT_MINIMAP_SCALE));
+		minimapScaleMenuGroup->addAction(action);
+	}
 
 	auto* languageMenu = optionsMenu->addMenu(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Language"));
 	auto* languageMenuGroup = new QActionGroup{languageMenu};
@@ -174,7 +245,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		QMareDiscordPresence::setState("v" PROJECT_VERSION_PRETTY);
 		QMareDiscordPresence::setLargeImage("icon");
 		QMareDiscordPresence::setLargeImageText(PROJECT_TITLE);
-		QMareDiscordPresence::setTopButton({"View on GitHub", PROJECT_HOMEPAGE_URL});
+		QMareDiscordPresence::setTopButton({"View on GitHub", PROJECT_GITHUB_URL});
 	};
 	auto* discordEnableAction = discordMenu->addAction(tr("Enable Rich Presence"), [setupDiscordRichPresence] {
 		QMareOptions::invert(QMareOptions::BOOL_ENABLE_DISCORD_RICH_PRESENCE);
@@ -199,18 +270,18 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	auto* helpMenu = this->menuBar()->addMenu(tr("&Help"));
 
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
+	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Credi&ts"), Qt::Key_F1, [this] {
 		QMareCreditsDialog::showCredits(this);
 	});
 
 	helpMenu->addSeparator();
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Report an &Issue"), [] {
-		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+		QDesktopServices::openUrl({PROJECT_GITHUB_URL "/issues/new"});
 	});
 
 	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("Request a &Feature"), [] {
-		QDesktopServices::openUrl({PROJECT_HOMEPAGE_URL "/issues/new"});
+		QDesktopServices::openUrl({PROJECT_GITHUB_URL "/issues/new"});
 	});
 
 	// Texture tabs ---------------------------------------
@@ -243,61 +314,105 @@ QMareTextureWindow::QMareTextureWindow() {
 	auto* previewGeneralLayout = new QFormLayout{this->previewGeneralGroup};
 	previewGeneralLayout->setFormAlignment(Qt::AlignHCenter);
 
-	auto* rgbaParent = new QWidget{previewWidget};
-	auto* rgbaLayout = new QHBoxLayout{rgbaParent};
-	rgbaLayout->setContentsMargins(0, 0, 0, 0);
+	auto* previewChannelsParent = new QWidget{previewWidget};
+	auto* previewChannelsLayout = new QGridLayout{previewChannelsParent};
+	previewChannelsLayout->setContentsMargins(0, 0, 0, 0);
 
-	this->previewR = new QCheckBox{tr("R"), rgbaParent};
-	rgbaLayout->addWidget(this->previewR);
+	this->previewR = new QPushButton{"R", previewChannelsParent};
+	this->previewR->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewR, 0, 0);
 
 	// Change red
-	connect(this->previewR, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewR, &QPushButton::clicked, this, [this](bool checked) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
+			const bool enableOthers = !checked && !this->previewG->isChecked() && !this->previewB->isChecked();
+			this->previewR->setChecked(true);
+			this->previewG->setChecked(enableOthers);
+			this->previewB->setChecked(enableOthers);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setR(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewG = new QCheckBox{tr("G"), rgbaParent};
-	rgbaLayout->addWidget(this->previewG);
+	this->previewG = new QPushButton{tr("G"), previewChannelsParent};
+	this->previewG->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewG, 0, 1);
 
 	// Change green
-	connect(this->previewG, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewG, &QPushButton::clicked, this, [this](bool checked) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
+			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewB->isChecked();
+			this->previewR->setChecked(enableOthers);
+			this->previewG->setChecked(true);
+			this->previewB->setChecked(enableOthers);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setG(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewB = new QCheckBox{tr("B"), rgbaParent};
-	rgbaLayout->addWidget(this->previewB);
+	this->previewB = new QPushButton{tr("B"), previewChannelsParent};
+	this->previewB->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewB, 0, 2);
 
 	// Change blue
-	connect(this->previewB, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewB, &QPushButton::clicked, this, [this](bool checked) {
+		if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
+			const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked();
+			this->previewR->setChecked(enableOthers);
+			this->previewG->setChecked(enableOthers);
+			this->previewB->setChecked(true);
+		}
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setB(checked);
+			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
 
-	this->previewA = new QCheckBox{tr("A"), rgbaParent};
-	rgbaLayout->addWidget(this->previewA);
+	this->previewA = new QPushButton{tr("Alpha"), previewChannelsParent};
+	this->previewA->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewA, 1, 0);
 
 	// Change alpha
-	connect(this->previewA, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewA, &QPushButton::clicked, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setA(checked);
+			if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
+				const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked() && !this->previewB->isChecked();
+				this->previewR->setChecked(enableOthers);
+				this->previewG->setChecked(enableOthers);
+				this->previewB->setChecked(enableOthers);
+				activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
+				this->previewAMask->setChecked(enableOthers);
+				activeTexture->setAMask(this->previewAMask->isChecked());
+				this->previewA->setChecked(true);
+			}
+			activeTexture->setA(this->previewA->isChecked());
 		}
 	});
 
-	previewGeneralLayout->addRow(tr("Channels"), rgbaParent);
-
-	this->previewBackground = new QCheckBox{previewWidget};
-	previewGeneralLayout->addRow(tr("Background"), this->previewBackground);
+	this->previewAMask = new QPushButton{tr("Mask"), previewChannelsParent};
+	this->previewAMask->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewAMask, 1, 1);
 
 	// Change background
-	connect(this->previewBackground, &QCheckBox::toggled, this, [this](bool checked) {
+	connect(this->previewAMask, &QPushButton::clicked, this, [this](bool checked) {
 		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
-			activeTexture->setBackground(checked);
+			activeTexture->setAMask(checked);
 		}
 	});
+
+	this->previewTiled = new QPushButton{tr("Tile"), previewChannelsParent};
+	this->previewTiled->setCheckable(true);
+	previewChannelsLayout->addWidget(this->previewTiled, 1, 2);
+
+	// Change tiled
+	connect(this->previewTiled, &QPushButton::clicked, this, [this](bool checked) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+			activeTexture->setTiled(checked);
+		}
+	});
+
+	previewGeneralLayout->addRow(tr("Channels"), previewChannelsParent);
 
 	this->previewCurrentMip = new QMareSpinBox{previewWidget};
 	previewGeneralLayout->addRow(tr("Current Mip"), this->previewCurrentMip);
@@ -452,6 +567,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	}
 	detailsFileTypeLayout->addRow(tr("Format"), this->detailsFormat);
 
+	this->detailsFileSizeLabel = new QLabel{this->detailsFileTypeGroup};
+	this->detailsFileSize = new QMareDoubleSpinBox{this->detailsFileTypeGroup};
+	this->detailsFileSize->setDecimals(3);
+	this->detailsFileSize->setDisabled(true);
+	detailsFileTypeLayout->addRow(this->detailsFileSizeLabel, this->detailsFileSize);
+
 	detailsWidgetLayout->addWidget(this->detailsFileTypeGroup);
 
 	this->detailsDimsGroup = new QGroupBox{tr("Dimensions"), detailsWidget};
@@ -481,7 +602,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	detailsDimsLayout->addRow(tr("Mipmaps"), this->detailsMipmaps);
 	this->detailsConsoleMipScale = new QMareSpinBox{this->detailsDimsGroup};
 	this->detailsConsoleMipScale->setRange(0, 31);
-	detailsDimsLayout->addRow(tr("(Console) Mip Scale"), this->detailsConsoleMipScale);
+	detailsDimsLayout->addRow(tr("Mip Scale (Console)"), this->detailsConsoleMipScale);
 
 	detailsWidgetLayout->addWidget(this->detailsDimsGroup);
 
@@ -683,6 +804,15 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	resWidgetLayout->addWidget(this->resAuthorInfoGroup);
 
+	this->resSourcePPFlagsGroup = new QGroupBox{tr("MareTF Flags"), resWidget};
+	auto* resSourcePPFlagsLayout = new QVBoxLayout{this->resSourcePPFlagsGroup};
+	resSourcePPFlagsLayout->setAlignment(Qt::AlignHCenter);
+
+	this->resSourcePPFlagsList = new QMareFlagsExtraWidget{this->resSourcePPFlagsGroup};
+	resSourcePPFlagsLayout->addWidget(this->resSourcePPFlagsList);
+
+	resWidgetLayout->addWidget(this->resSourcePPFlagsGroup);
+
 	// todo: particle sheet
 
 	// todo: hotspot
@@ -711,6 +841,8 @@ QMareTextureWindow::QMareTextureWindow() {
 	// Final setup ----------------------------------------
 
 	this->regenerateDetails();
+
+	this->setAcceptDrops(true);
 }
 
 void QMareTextureWindow::loadTexture(const QString& path) {
@@ -747,7 +879,8 @@ void QMareTextureWindow::regenerateDetails() {
 		this->previewG->setChecked(true);
 		this->previewB->setChecked(true);
 		this->previewA->setChecked(true);
-		this->previewBackground->setChecked(true);
+		this->previewAMask->setChecked(true);
+		this->previewTiled->setChecked(false);
 		this->previewCurrentMip->setValue(0);
 
 		this->previewAnimationGroup->setVisible(false);
@@ -764,6 +897,9 @@ void QMareTextureWindow::regenerateDetails() {
 		this->detailsPlatform->setCurrentIndex(0);
 		this->detailsVersion->setCurrentIndex(0);
 		this->detailsFormat->setCurrentIndex(0);
+		this->detailsFileSizeLabel->setText(tr("File Size"));
+		this->detailsFileSize->setSuffix(tr("b"));
+		this->detailsFileSize->setValue(0.0);
 
 		this->detailsDimsGroup->setVisible(false);
 		this->detailsWidth->setValue(0);
@@ -823,6 +959,9 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resAuthorInfoGroup->setVisible(false);
 		this->resAuthorInfoData->clear();
 
+		this->resSourcePPFlagsGroup->setVisible(false);
+		this->resSourcePPFlagsList->clear();
+
 		return;
 	}
 
@@ -846,7 +985,8 @@ void QMareTextureWindow::regenerateDetails() {
 	this->previewG->setChecked(activeTexture->useG());
 	this->previewB->setChecked(activeTexture->useB());
 	this->previewA->setChecked(activeTexture->useA());
-	this->previewBackground->setChecked(activeTexture->useBackground());
+	this->previewAMask->setChecked(activeTexture->useAMask());
+	this->previewTiled->setChecked(activeTexture->useTiled());
 	this->previewCurrentMip->setRange(0, vtf.getMipCount() - 1);
 	this->previewCurrentMip->setValue(activeTexture->getCurrentMip());
 	this->previewCurrentMip->setEnabled(vtf.getMipCount() > 1);
@@ -868,6 +1008,25 @@ void QMareTextureWindow::regenerateDetails() {
 	searchAndSetCombo(this->detailsPlatform, vtf.getPlatform());
 	this->detailsVersion->setCurrentIndex(static_cast<int>(vtf.getVersion()));
 	searchAndSetCombo(this->detailsFormat, static_cast<int>(vtf.getFormat()));
+	{
+		bool exactSize = true;
+		auto fileSize = static_cast<double>(vtf.estimateBakeSize(exactSize));
+		if (exactSize) {
+			this->detailsFileSizeLabel->setText(tr("File Size"));
+		} else {
+			this->detailsFileSizeLabel->setText(tr("Est. File Size"));
+		}
+		this->detailsFileSize->setSuffix(tr("b"));
+		if (fileSize >= 1024) {
+			fileSize /= 1024;
+			this->detailsFileSize->setSuffix(tr("kb"));
+		}
+		if (fileSize > 1024) {
+			fileSize /= 1024;
+			this->detailsFileSize->setSuffix(tr("mb"));
+		}
+		this->detailsFileSize->setValue(fileSize);
+	}
 
 	this->detailsDimsGroup->setVisible(true);
 	this->detailsWidth->setRange(0, std::numeric_limits<uint16_t>::max());
@@ -971,7 +1130,7 @@ void QMareTextureWindow::regenerateDetails() {
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
 		this->resTS0Group->setVisible(true);
-		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsExtendedFlags(), 8, 16, QChar{u'0'}));
+		this->resTS0Value->setText(QString{"%1"}.arg(resource->getDataAsFlags(), 8, 16, QChar{u'0'}));
 	} else {
 		this->resTS0Group->setVisible(false);
 		this->resTS0Value->setText("00000000");
@@ -1008,6 +1167,14 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resAuthorInfoData->clear();
 	}
 
+	if (const auto sppFlags = vtf.getFlagsExtra()) {
+		this->resSourcePPFlagsGroup->setVisible(true);
+		this->resSourcePPFlagsList->repopulateFlagList(sppFlags);
+	} else {
+		this->resSourcePPFlagsGroup->setVisible(false);
+		this->resSourcePPFlagsList->clear();
+	}
+
 	// Delay a tick to allow everything to be laid out
 	QTimer::singleShot(0, this, [this] {
 		this->resizeDocks({
@@ -1016,4 +1183,44 @@ void QMareTextureWindow::regenerateDetails() {
 			this->previewDock->minimumSizeHint().height(),
 		}, Qt::Vertical);
 	});
+}
+
+void QMareTextureWindow::dragEnterEvent(QDragEnterEvent* event) {
+	if (!event->mimeData()->hasUrls()) {
+		return;
+	}
+	for (const auto& url : event->mimeData()->urls()) {
+		if (!(
+			url.isLocalFile() &&
+			(url.fileName().endsWith(".vtf") || url.fileName().endsWith(".xtf")) ||
+			::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())
+		)) {
+			return;
+		}
+	}
+	event->acceptProposedAction();
+}
+
+void QMareTextureWindow::dropEvent(QDropEvent* event) {
+	QStringList texturesToCreate;
+	for (const auto& url : event->mimeData()->urls()) {
+		if (::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())) {
+			texturesToCreate.append(url.toLocalFile());
+		} else {
+			this->loadTexture(url.toLocalFile());
+		}
+	}
+	event->acceptProposedAction();
+
+	if (!texturesToCreate.isEmpty()) {
+		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this, texturesToCreate)) {
+			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
+				for (const auto& path : paths) {
+					this->loadTexture(path);
+				}
+			});
+			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			createTextureDialog->open();
+		}
+	}
 }

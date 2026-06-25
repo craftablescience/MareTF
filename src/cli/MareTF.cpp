@@ -1,9 +1,12 @@
 // ReSharper disable CppDFATimeOver
+// ReSharper disable CppDeclaratorNeverUsed
+// ReSharper disable CppUnusedIncludeDirective
 // ReSharper disable CppUseStructuredBinding
 
 #include "MareTF.h"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <csignal>
 #include <cstdio>
@@ -16,10 +19,8 @@
 #include <mutex>
 #include <random>
 #include <ranges>
-#include <string>
 #include <string_view>
 #include <thread>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -27,7 +28,7 @@
 #include <io.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
 #endif
 
@@ -55,9 +56,11 @@ using namespace std::literals;
 namespace {
 
 [[nodiscard]] bool runningInTTY() {
-#if defined(_WIN32)
+#if !defined(MARETF_CLI)
+	static constexpr bool check = true;
+#elif defined(_WIN32)
 	static const bool check = _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
-#elif defined(__linux__)
+#elif defined(__unix__) || defined(__APPLE__)
 	static const bool check = isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
 #else
 	static constexpr bool check = true;
@@ -136,6 +139,14 @@ void enumValueValidityCheck(std::string_view enumName, const std::string& arg) {
 	}
 }
 
+void reduceValueValidityCheck(const std::string& value) {
+	uint16_t num = 0;
+	sourcepp::string::toInt(value, num);
+	if (!std::has_single_bit(num)) {
+		throw std::runtime_error{"Invalid reduce value (not a power of 2): " + value};
+	}
+}
+
 template<typename duration = std::chrono::milliseconds>
 class ElapsedTime {
 	using clock = std::chrono::steady_clock;
@@ -153,11 +164,11 @@ protected:
 
 class MareTFFileWatchListener : public efsw::FileWatchListener {
 public:
-	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, std::string)>;
+	using Callback = std::function<void(efsw::WatchID, const std::string&, const std::string&, efsw::Action, const std::string&)>;
 
 	explicit MareTFFileWatchListener(Callback callback_) : efsw::FileWatchListener{}, callback{std::move(callback_)} {}
 
-	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) override {
+	void handleFileAction(efsw::WatchID watchID, const std::string& dir, const std::string& filename, efsw::Action action, const std::string& oldFilename) override {
 		this->callback(watchID, dir, filename, action, oldFilename);
 	}
 
@@ -167,44 +178,128 @@ private:
 
 struct tfout_t {
 	static inline bool QUIET = false;
+#ifdef MARETF_CLI
 	tfout_t& operator<<(const auto& x) {
 		if (!QUIET) std::cout << x;
 		return *this;
 	}
+#else
+	static inline std::optional<std::string> OUT_STRING = std::nullopt;
+	tfout_t& operator<<(const auto& x) {
+		if (!QUIET && OUT_STRING) {
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(x)>, std::filesystem::path>) {
+				// C++26 fixes this
+				*OUT_STRING += x.string();
+			} else {
+				*OUT_STRING += std::format("{}", x);
+			}
+		}
+		return *this;
+	}
+#endif
 } tfout;
 
 struct tferr_t {
 	static inline bool QUIET = false;
+#ifdef MARETF_CLI
 	tferr_t& operator<<(const auto& x) {
 		if (!QUIET) std::cerr << x;
 		return *this;
 	}
+#else
+	static inline std::optional<std::string> ERR_STRING = std::nullopt;
+	tferr_t& operator<<(const auto& x) {
+		if (!QUIET && ERR_STRING) {
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(x)>, std::filesystem::path>) {
+				// C++26 fixes this
+				*ERR_STRING += x.string();
+			} else {
+				*ERR_STRING += std::format("{}", x);
+			}
+		}
+		return *this;
+	}
+#endif
 } tferr;
 
 struct tfendl_t {} tfendl;
 
 // ReSharper disable once CppDeclaratorNeverUsed
 template<> tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
+#ifdef MARETF_CLI
 	if (!QUIET) std::cout << std::endl;
+#else
+	if (!QUIET && OUT_STRING) OUT_STRING->append("\n");
+#endif
 	return *this;
 }
 
 // ReSharper disable once CppDeclaratorNeverUsed
 template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
+#ifdef MARETF_CLI
 	if (!QUIET) std::cerr << std::endl;
+#else
+	if (!QUIET && ERR_STRING) ERR_STRING->append("\n");
+#endif
 	return *this;
 }
+
+[[nodiscard]] std::string encodeBase64(std::span<const std::byte> input) {
+	static constexpr auto encodeBlock = [](std::byte a, std::byte b, std::byte c) -> std::array<char, 4> {
+		static constexpr std::string_view B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+		const auto bits = static_cast<uint32_t>(a) << 16 | static_cast<uint32_t>(b) << 8 | static_cast<uint32_t>(c) << 0;
+		return {
+			B64_CHARS[bits >> 18 & 0b111111],
+			B64_CHARS[bits >> 12 & 0b111111],
+			B64_CHARS[bits >>  6 & 0b111111],
+			B64_CHARS[bits >>  0 & 0b111111],
+		};
+	};
+
+    std::string output;
+    output.reserve((input.size() / 3 + 2) * 4);
+
+    for (uint64_t i = 0; i < input.size() / 3; i++) {
+        std::ranges::copy(encodeBlock(input[i*3+0], input[i*3+1], input[i*3+2]), std::back_inserter(output));
+    }
+    if (input.size() % 3 == 2) {
+        const auto encodedChars = encodeBlock(input.last(2)[0], input.last(2)[1], static_cast<std::byte>(0));
+        output.push_back(encodedChars[0]);
+        output.push_back(encodedChars[1]);
+        output.push_back(encodedChars[2]);
+        output.push_back('=');
+    } else if (input.size() % 3 == 1) {
+        const auto encodedChars = encodeBlock(input.back(), std::byte{0}, std::byte{0});
+    	output.push_back(encodedChars[0]);
+    	output.push_back(encodedChars[1]);
+    	output.push_back('=');
+    	output.push_back('=');
+    }
+
+    return output;
+}
+
+#ifdef MARETF_CLI
+#define MARETF_RETURN(code) return code
+#else
+#define MARETF_RETURN(code) return {code, tferr_t::ERR_STRING ? *tferr_t::ERR_STRING : ""}
+#endif
 
 } // namespace
 
 #ifdef MARETF_CLI
 int main(int argc, const char* const argv[]) {
 #else
-int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
+std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 #endif
 #if defined(MARETF_CLI) && defined(_WIN32)
 	SetConsoleOutputCP(CP_UTF8); // Set up console to show UTF-8 characters
 	setvbuf(stdout, nullptr, _IOFBF, 1000); // Enable buffering so VS terminal won't chop up UTF-8 byte sequences
+#endif
+
+#ifndef MARETF_CLI
+	tferr_t::ERR_STRING = "";
 #endif
 
 	argparse::ArgumentParser cli{PROJECT_NAME, PROJECT_VERSION, argparse::default_arguments::help};
@@ -290,12 +385,16 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.store_into(noRecurse);
 
 	bool noPrettyFormatting;
+#ifdef MARETF_CLI
 	cli
 		.add_argument("--no-pretty-formatting")
 		.help("Disables printing ANSI color codes and emojis. Pretty formatting is disabled by default"
 		      " if no TTY is detected.")
 		.flag()
 		.store_into(noPrettyFormatting);
+#else
+	noPrettyFormatting = true;
+#endif
 
 	//endregion
 
@@ -349,10 +448,18 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
-		.help("The resize filter used to generate mipmaps and when resizing the base texture to match a power of 2"
-		      " (if necessary).")
+		.help("The resize filter used to generate mipmaps, resize the base texture to match a power of 2"
+		      " (if necessary), and downscale non-alpha channels when distance mapping.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
 		.default_value(filter).store_into(filter);
+
+	std::string edge{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeEdge::CLAMP)};
+	createCLI
+		.add_argument("-e", "--edge")
+		.metavar("RESIZE_EDGE")
+		.help("The edge policy used when distance mapping to govern alpha sampling and downscale non-alpha channels.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeEdge>, "RESIZE_EDGE"))
+		.default_value(edge).store_into(edge);
 
 	int size = 0;
 	createCLI
@@ -430,8 +537,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	createCLI
 		.add_argument("--flag")
 		.metavar("FLAG")
-		.help("Extra flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied"
-		      " automatically based on the VTF properties.")
+		.help("Flags to add. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP flags are applied automatically"
+		      " based on the VTF properties.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::Flags>, "FLAG"))
 		.append()
 		.store_into(flags);
@@ -440,8 +547,8 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	createCLI
 		.add_argument("--flags-uint")
 		.metavar("FLAGS")
-		.help("Extra flags to add, specified as an unsigned integer. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA,"
-			  " and NO_MIP flags are applied automatically based on the VTF properties. This is for advanced users.")
+		.help("Flags to add, specified as an unsigned integer. ENVMAP, ONE_BIT_ALPHA, MULTI_BIT_ALPHA, and NO_MIP"
+			  " flags are applied automatically based on the VTF properties. This is for advanced users.")
 		.scan<'u', unsigned int>()
 		.store_into(flagsUInt);
 
@@ -451,6 +558,23 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.help("Disable adding ONE_BIT_ALPHA and MULTI_BIT_ALPHA flags by default depending on the output image format.")
 		.flag()
 		.store_into(noTransparencyFlags);
+
+	std::vector<std::string> flagsExtra;
+	createCLI
+		.add_argument("--flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to add.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(flagsExtra);
+
+	unsigned int flagsExtraUInt = 0;
+	createCLI
+		.add_argument("--flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to add, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(flagsExtraUInt);
 
 	bool noMips;
 	createCLI
@@ -532,19 +656,22 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(invertGreenChannelAlt);
 
-	bool hdri;
+	std::string hdriModeForce{not_magic_enum::enum_name(maretf::HDRIMode::FLAT)};
 	createCLI
 		.add_argument("--hdri")
-		.help("Interpret the given image as an equirectangular HDRI and create a cubemap.")
-		.flag()
-		.store_into(hdri);
+		.metavar("HDRI_MODE")
+		.help("Interpret the given image as an equirectangular HDRI and create a cubemap or skybox.")
+		.action(std::bind_front(&::enumValueValidityCheck<maretf::HDRIMode>, "HDRI_MODE"))
+		.default_value(hdriModeForce).store_into(hdriModeForce);
 
-	bool hdriAutodetect;
+	std::string hdriModeAuto{not_magic_enum::enum_name(maretf::HDRIMode::FLAT)};
 	createCLI
 		.add_argument("--hdri-autodetect")
-		.help("Automatically detects if given image is an equirectangular HDRI and creates a cubemap if it is.")
-		.flag()
-		.store_into(hdriAutodetect);
+		.metavar("HDRI_MODE")
+		.help("Automatically detects if given image is an equirectangular HDRI and creates a cubemap or skybox"
+		      " if it is. Ignored if --hdri is specified.")
+		.action(std::bind_front(&::enumValueValidityCheck<maretf::HDRIMode>, "HDRI_MODE"))
+		.default_value(hdriModeForce).store_into(hdriModeForce);
 
 	bool hdriNoFilter;
 	createCLI
@@ -603,6 +730,100 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		      " engine, change this if you know what you're doing.")
 		.scan<'g', float>()
 		.default_value(gammaCorrectionAmount).store_into(gammaCorrectionAmount);
+
+	bool alphaToDistance = false;
+	createCLI
+		.add_argument("-D", "--alpha-to-distance")
+		.help("Transform the texture's alpha channel (or, if the input image type is single-channel, its only channel)"
+		      " into a distance map, downscaling any color channels if present.")
+		.flag()
+		.store_into(alphaToDistance);
+
+	uint16_t reduce = 4;
+	createCLI
+		.add_argument("-R", "--distance-reduce")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale when distance mapping. Must be a power of 2. Overridden by"
+		      " --distance-reduce-x and --distance-reduce-y.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduce).store_into(reduce);
+
+	uint16_t reduceX = 0;
+	createCLI
+		.add_argument("--distance-reduce-x")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale width when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceX).store_into(reduceX);
+
+	uint16_t reduceY = 0;
+	createCLI
+		.add_argument("--distance-reduce-y")
+		.metavar("FACTOR")
+		.help("Factor by which to downscale height when distance mapping. Must be a power of 2.")
+		.scan<'u', uint16_t>()
+		.action(&::reduceValueValidityCheck)
+		.default_value(reduceY).store_into(reduceY);
+
+	bool noValveDistanceQuirks = false;
+	createCLI
+		.add_argument("--distance-no-valve-quirks")
+		.help("Do not mimic vtex by forcing the edges of a generated distance map to zero, nor warn when"
+		      " this happens.")
+		.flag()
+		.store_into(noValveDistanceQuirks);
+
+	bool distanceDoDither = false;
+	createCLI
+		.add_argument("--distance-dither")
+		.help("When distance mapping, and the output format is not floating-point, run an experimental"
+		      " gradient-aligned dither filter on the alpha channel before it is quantized from the floating-point"
+		      " representation used to compute it. Effect may differ between releases until this notice is removed.")
+		.flag()
+		.store_into(distanceDoDither);
+
+	float distanceSpread = 1.f;
+	createCLI
+		.add_argument("--distance-spread")
+		.metavar("SPREAD")
+		.scan<'f', float>()
+		.help("Multiply the search radius when determining distance. Large values are computationally expensive. Must"
+		      " not result in a radius of zero when multiplied by either reduction factor.")
+		.default_value(distanceSpread).store_into(distanceSpread);
+
+	float alphaThreshold = 0.04f;
+	createCLI
+		.add_argument("--distance-alpha-threshold")
+		.metavar("THRESHOLD")
+		.scan<'f', float>()
+		.help("Alpha value, expressed in the range 0..1, below which alpha is considered zero when distance mapping.")
+		.default_value(alphaThreshold).store_into(alphaThreshold);
+
+	bool distanceAA = false;
+	createCLI
+		.add_argument("--distance-aa")
+		.help("When distance mapping, interpret the alpha channel as antialiased. May reduce second-order artifacts or worsen"
+		      " them depending on the contents.")
+		.flag()
+		.store_into(distanceAA);
+
+	bool distanceEuclidean = false;
+	createCLI
+		.add_argument("--distance-euclidean")
+		.help("When distance mapping, accept distance hits only in an ellipse governed by reduction and spread, rather than"
+		      " in a rectangle as vtex does.")
+		.flag()
+		.store_into(distanceEuclidean);
+
+	bool distanceSampleCentered = false;
+	createCLI
+		.add_argument("--distance-sample-centered")
+		.help("When distance mapping, sample from the center of pixels in destination coordinate space, rather than"
+		      " from the northwest corner as vtex does. Can mitigate a perceived southeast shift at extreme reductions.")
+		.flag()
+		.store_into(distanceSampleCentered);
 
 	bool srgb;
 	createCLI
@@ -834,6 +1055,40 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		.flag()
 		.store_into(recomputeTransparencyFlags);
 
+	std::vector<std::string> addFlagsExtra;
+	editCLI
+		.add_argument("--add-flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to add.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(addFlagsExtra);
+
+	unsigned int addFlagsExtraUInt = 0;
+	createCLI
+		.add_argument("--add-flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to add, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(addFlagsExtraUInt);
+
+	std::vector<std::string> removeFlagsExtra;
+	editCLI
+		.add_argument("--remove-flag-extra")
+		.metavar("FLAG_EXTRA")
+		.help("Extra flags to remove.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::VTF::FlagsExtra>, "FLAG_EXTRA"))
+		.append()
+		.store_into(removeFlagsExtra);
+
+	unsigned int removeFlagsExtraUInt = 0;
+	createCLI
+		.add_argument("--remove-flags-extra-uint")
+		.metavar("FLAGS_EXTRA")
+		.help("Extra flags to remove, specified as an unsigned integer. This is for advanced users.")
+		.scan<'u', unsigned int>()
+		.store_into(removeFlagsExtraUInt);
+
 	bool recomputeMips;
 	editCLI
 		.add_argument("--recompute-mips")
@@ -896,7 +1151,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 			  " is above 1.0, it is assumed the user is setting the exact compression level for the algorithm"
 			  " in use manually (this is for backwards compatibility). Ignored if CPU compression is not in use.")
 		.scan<'g', float>()
-		.default_value(compressionLevel).store_into(compressionLevel);
+		.default_value(setCompressionLevel).store_into(setCompressionLevel);
 
 	int setStartFrame;
 	editCLI
@@ -932,8 +1187,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	bool removeParticleSheetResource;
 	editCLI
 		.add_argument("--remove-particle-sheet-resource")
-		.help("Remove the particle sheet resource. If set particle sheet resource is specified,"
-		      " this argument is ignored.")
+		.help("Remove the particle sheet resource. If set particle sheet resource is specified, this argument is ignored.")
 		.flag()
 		.store_into(removeParticleSheetResource);
 
@@ -1040,6 +1294,158 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 	//endregion
 
+	//region Extract Mode Arguments
+
+	auto& extractCLI = cli.add_group(R"("extract" mode)");
+
+	bool extractSkipImage;
+	extractCLI
+		.add_argument("--extract-skip-image")
+		.help("Do not extract image data. Useful if a different resource in the file is desired.")
+		.flag()
+		.store_into(extractSkipImage);
+
+	std::string extractFileFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
+	extractCLI
+		.add_argument("--extract-file-format")
+		.metavar("FILE_FORMAT")
+		.help("Output file format.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::FileFormat>, "FILE_FORMAT"))
+		.default_value(extractFileFormat).store_into(extractFileFormat);
+
+	std::string extractImageFormat{not_magic_enum::enum_name(vtfpp::VTF::FORMAT_UNCHANGED)};
+	extractCLI
+		.add_argument("--extract-image-format")
+		.metavar("IMAGE_FORMAT")
+		.help("The image format to convert the texture data to before extracting.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageFormat>, "IMAGE_FORMAT"))
+		.default_value(extractImageFormat).store_into(extractImageFormat);
+
+	bool extractAlphaChannel;
+	extractCLI
+		.add_argument("--extract-alpha-channel")
+		.help("If image has an alpha channel, extract the alpha and convert to a black-and-white image, where black is 0% alpha and white is 100% alpha.")
+		.flag()
+		.store_into(extractAlphaChannel);
+
+	int extractMip = 0;
+	extractCLI
+		.add_argument("--extract-mip")
+		.metavar("MIP")
+		.help("Set the mip to extract. Overridden by --extract-all-mips.")
+		.scan<'d', int>()
+		.default_value(extractMip).store_into(extractMip);
+
+	bool extractAllMips;
+	extractCLI
+		.add_argument("--extract-all-mips")
+		.help("Extract all mips. Overridden by --extract-all-images.")
+		.flag()
+		.store_into(extractAllMips);
+
+	int extractFrame = 0;
+	extractCLI
+		.add_argument("--extract-frame")
+		.metavar("FRAME")
+		.help("Set the frame to extract. Overridden by --extract-all-frames.")
+		.scan<'d', int>()
+		.default_value(0).store_into(extractFrame);
+
+	bool extractAllFrames;
+	extractCLI
+		.add_argument("--extract-all-frames")
+		.help("Extract all frames. Overridden by --extract-all-images.")
+		.flag()
+		.store_into(extractAllFrames);
+
+	int extractFace = 0;
+	extractCLI
+		.add_argument("--extract-face")
+		.metavar("FACE")
+		.help("Set the face to extract. Overridden by --extract-all-faces.")
+		.scan<'d', int>()
+		.default_value(extractFace).store_into(extractFace);
+
+	bool extractAllFaces;
+	extractCLI
+		.add_argument("--extract-all-faces")
+		.help("Extract all faces. Overridden by --extract-all-images.")
+		.flag()
+		.store_into(extractAllFaces);
+
+	int extractSlice = 0;
+	extractCLI
+		.add_argument("--extract-slice")
+		.metavar("SLICE")
+		.help("Set the slice to extract. Overridden by --extract-all-slices.")
+		.scan<'d', int>()
+		.default_value(extractSlice).store_into(extractSlice);
+
+	bool extractAllSlices;
+	extractCLI
+		.add_argument("--extract-all-slices")
+		.help("Extract all slices. Overridden by --extract-all-images.")
+		.flag()
+		.store_into(extractAllSlices);
+
+	bool extractAllImages;
+	extractCLI
+		.add_argument("--extract-all-images")
+		.help("Extract all mips, frames, faces, and slices.")
+		.flag()
+		.store_into(extractAllImages);
+
+	bool extractThumbnail;
+	extractCLI
+		.add_argument("--extract-thumbnail")
+		.help("Extract thumbnail resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractThumbnail);
+
+	bool extractParticleSheetResource;
+	extractCLI
+		.add_argument("--extract-particle-sheet-resource")
+		.help("Extract particle sheet resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractParticleSheetResource);
+
+	bool extractKeyValuesDataResource;
+	extractCLI
+		.add_argument("--extract-kvd-resource")
+		.help("Extract the nonstandard KVD (KeyValues Data) resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractKeyValuesDataResource);
+
+	bool extractAuthorInfoResource;
+	extractCLI
+		.add_argument("--extract-ath-resource")
+		.help("Extract the nonstandard ATH (Author Info) resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractAuthorInfoResource);
+
+	bool extractHotspotDataResource;
+	extractCLI
+		.add_argument("--extract-hotspot-data-resource")
+		.help("Extract the hotspot data resource to disk if present. Overridden by --extract-all-resources.")
+		.flag()
+		.store_into(extractHotspotDataResource);
+
+	bool extractAllResources;
+	extractCLI
+		.add_argument("--extract-all-resources")
+		.help("Extract all resources to disk.")
+		.flag()
+		.store_into(extractAllResources);
+
+	bool extractStdOut;
+	extractCLI
+		.add_argument("--extract-stdout")
+		.help("When extracting an image or resource, print the name and base64-encoded contents to console instead of writing a file.")
+		.flag()
+		.store_into(extractStdOut);
+
+	//endregion
+
 	//region Info Mode Arguments
 
 	auto& infoCLI = cli.add_group(R"("info" mode)");
@@ -1060,87 +1466,6 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 	//endregion
 
-	//region Extract Mode Arguments
-
-	auto& extractCLI = cli.add_group(R"("extract" mode)");
-
-	std::string extractFormat{not_magic_enum::enum_name(vtfpp::ImageConversion::FileFormat::DEFAULT)};
-	extractCLI
-		.add_argument("--extract-format")
-		.metavar("FILE_FORMAT")
-		.help("Output file format.")
-		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::FileFormat>, "FILE_FORMAT"))
-		.default_value(extractFormat).store_into(extractFormat);
-
-	int extractMip = 0;
-	editCLI
-		.add_argument("--extract-mip")
-		.metavar("MIP")
-		.help("Set the mip to extract. Overridden by --extract-all-mips.")
-		.scan<'d', int>()
-		.default_value(extractMip).store_into(extractMip);
-
-	bool extractAllMips;
-	extractCLI
-		.add_argument("--extract-all-mips")
-		.help("Extract all mips. Overridden by --extract-all.")
-		.flag()
-		.store_into(extractAllMips);
-
-	int extractFrame = 0;
-	editCLI
-		.add_argument("--extract-frame")
-		.metavar("FRAME")
-		.help("Set the frame to extract. Overridden by --extract-all-frames.")
-		.scan<'d', int>()
-		.default_value(0).store_into(extractFrame);
-
-	bool extractAllFrames;
-	extractCLI
-		.add_argument("--extract-all-frames")
-		.help("Extract all frames. Overridden by --extract-all.")
-		.flag()
-		.store_into(extractAllFrames);
-
-	int extractFace = 0;
-	editCLI
-		.add_argument("--extract-face")
-		.metavar("FACE")
-		.help("Set the face to extract. Overridden by --extract-all-faces.")
-		.scan<'d', int>()
-		.default_value(extractFace).store_into(extractFace);
-
-	bool extractAllFaces;
-	extractCLI
-		.add_argument("--extract-all-faces")
-		.help("Extract all faces. Overridden by --extract-all.")
-		.flag()
-		.store_into(extractAllFaces);
-
-	int extractSlice = 0;
-	editCLI
-		.add_argument("--extract-slices")
-		.metavar("SLICE")
-		.help("Set the slice to extract. Overridden by --extract-all-slices.")
-		.scan<'d', int>()
-		.default_value(extractSlice).store_into(extractSlice);
-
-	bool extractAllSlices;
-	extractCLI
-		.add_argument("--extract-all-slices")
-		.help("Extract all slices. Overridden by --extract-all.")
-		.flag()
-		.store_into(extractAllSlices);
-
-	bool extractAll;
-	extractCLI
-		.add_argument("--extract-all")
-		.help("Extract all mips, frames, faces, and slices.")
-		.flag()
-		.store_into(extractAll);
-
-	//endregion
-
 	//region Program Info
 
 	std::string enumInfo = "Enumerations:\n\n";
@@ -1156,10 +1481,13 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	};
 	addEnumInfo.operator()<vtfpp::ImageFormat>("IMAGE_FORMAT");
 	addEnumInfo.operator()<vtfpp::VTF::Flags>("FLAG");
+	addEnumInfo.operator()<vtfpp::VTF::FlagsExtra>("FLAG_EXTRA");
+	addEnumInfo.operator()<maretf::HDRIMode>("HDRI_MODE");
 	addEnumInfo.operator()<vtfpp::HOT::Rect::Flags>("HOTSPOT_RECT_FLAGS");
 	addEnumInfo.operator()<vtfpp::VTF::Platform>("PLATFORM");
 	addEnumInfo.operator()<vtfpp::ImageConversion::FileFormat>("FILE_FORMAT");
 	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeFilter>("RESIZE_FILTER");
+	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeEdge>("RESIZE_EDGE");
 	addEnumInfo.operator()<vtfpp::ImageConversion::ResizeMethod>("RESIZE_METHOD");
 	addEnumInfo.operator()<vtfpp::CompressionMethod>("COMPRESSION_METHOD");
 
@@ -1171,7 +1499,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		" • maretf edit input.360.vtf -o input.vtf --set-platform PC --set-version 7.6 --recompute-mips\n"
 		" • maretf info input.vtf\n"
 		"See the project README for more information.\n\n"
-		"Want to report a bug or request a feature? Make an issue at " PROJECT_HOMEPAGE_URL "/issues"
+		"Want to report a bug or request a feature? Make an issue at " PROJECT_GITHUB_URL "/issues"
 	};
 
 	cli.add_epilog(enumInfo + std::string{PROGRAM_DETAILS});
@@ -1181,16 +1509,11 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 	try {
 		cli.parse_args(argc, argv);
 
-#ifdef MARETF_CLI
 		if (!::runningInTTY()) {
 			overwrite = true;
 			quiet = true;
 			noPrettyFormatting = true;
 		}
-#else
-		quiet = true;
-		noPrettyFormatting = true;
-#endif
 
 		if (quiet && !verbose) {
 			tfout_t::QUIET = true;
@@ -1420,12 +1743,19 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 		};
 
 		if (mode == "create" || mode == "convert") {
+			std::vector<std::filesystem::path> processedInputPathFrames;
+
 			const auto create = [&](const std::string& currentInputPath) {
+				// Used to work around animated frames being multiple files
+				if (const auto processedCurrentInputPath = std::filesystem::weakly_canonical(currentInputPath); std::ranges::find(processedInputPathFrames, processedCurrentInputPath) != processedInputPathFrames.end()) {
+					return EXIT_SUCCESS;
+				}
+
 				// Check output path
 				if (outputPath.empty()) {
 					outputPath = ::getOutputPathForInput(currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 				} else if (inputPaths.size() > 1) {
-					outputPath = (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string();
+					outputPath = ::getOutputPathForInput((std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string(), *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
 				}
 				{
 					bool checkFileShouldRet;
@@ -1525,13 +1855,12 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					if (options.version >= 3) {
 						options.flags |= vtfpp::VTF::FLAG_V3_SSBUMP;
 					}
-				} else if (animatedFrames && !hdri && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
+				} else if (animatedFrames && inputStem.size() >= 2 && sourcepp::string::matches(inputStem.substr(inputStem.size() - 2, inputStem.size()), "%d%d")) {
 					// At least 2 digits to avoid false positives
 					frameNumberCount = 2;
 					inputStem.pop_back();
 					inputStem.pop_back();
-					while (std::isdigit(inputStem.back())) {
-						frameNumberCount++;
+					for (; std::isdigit(inputStem.back()); frameNumberCount++) {
 						inputStem.pop_back();
 					}
 					{
@@ -1541,13 +1870,45 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						sourcepp::string::toInt(temp, frameNumberStart);
 					}
 					options.initialFrameCount = 1;
-					while (std::filesystem::exists(std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()))) {
+					while (true) {
+						const auto framePath = std::filesystem::path{currentInputPath}.parent_path() / (inputStem + sourcepp::string::padNumber(options.initialFrameCount, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string());
+						if (!std::filesystem::exists(framePath)) {
+							break;
+						}
+						processedInputPathFrames.emplace_back(std::filesystem::weakly_canonical(framePath));
 						options.initialFrameCount++;
 					}
+					options.initialFrameCount -= frameNumberStart;
 				}
 
 				// Set default transparency flags
 				options.computeTransparencyFlags = !noTransparencyFlags;
+
+				// Set extra flags
+				options.flagsExtra |= flagsExtraUInt;
+				for (const auto& flag : flagsExtra) {
+					options.flagsExtra |= *not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag);
+				}
+
+				// Set resize bounds
+				if (size || sizeWidth) {
+					options.resizeBounds.resizeMinWidth = options.resizeBounds.resizeMaxWidth = sizeWidth ? sizeWidth : size;
+				}
+				if (size || sizeHeight) {
+					options.resizeBounds.resizeMinHeight = options.resizeBounds.resizeMaxHeight = sizeHeight ? sizeHeight : size;
+				}
+				if (maxSize || maxSizeWidth) {
+					options.resizeBounds.resizeMaxWidth = maxSizeWidth ? maxSizeWidth : maxSize;
+				}
+				if (maxSize || maxSizeHeight) {
+					options.resizeBounds.resizeMaxHeight = maxSizeHeight ? maxSizeHeight : maxSize;
+				}
+				if (minSize || minSizeWidth) {
+					options.resizeBounds.resizeMinWidth = minSizeWidth ? minSizeWidth : minSize;
+				}
+				if (minSize || minSizeHeight) {
+					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
+				}
 
 				// Set mipmap generation
 				options.computeMips = !noMips;
@@ -1588,6 +1949,27 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				// Set console mip scale
 				options.consoleMipScale = consoleMipScale;
+
+				// Setup distance mapping flags
+				auto distanceFlags = vtfpp::DistanceMapping::Flags::NONE;
+				if (distanceAA) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::DISTANCEAA;
+				}
+				if (distanceEuclidean) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::EUCLIDEAN;
+				}
+				if (distanceSampleCentered) {
+					distanceFlags |= vtfpp::DistanceMapping::Flags::SAMPLECENTERED;
+				}
+
+				// Set up distance dither method
+				const auto distanceDither = distanceDoDither ? vtfpp::DistanceMapping::Dither::GRADIENT_TANGENT : vtfpp::DistanceMapping::Dither::NONE;
+				if (!reduceX) {
+					reduceX = reduce;
+				}
+				if (!reduceY) {
+					reduceY = reduce;
+				}
 
 				// Start stopwatch
 				::ElapsedTime stopwatch;
@@ -1639,49 +2021,47 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				};
 
 				// Function to bake the VTF
-				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image) {
+				const auto bake = [noPrettyFormatting, &END, &CYAN, &BOLD, &outputPath, &currentInputPath, &stopwatch](const vtfpp::VTF& vtf, std::string_view image, std::filesystem::path outputPathOverride = {}) {
 					const auto vtfData = vtf.bake();
 					if (vtfData.empty()) {
 						tferr << "Failed to TF input " << image << " at " << BOLD << currentInputPath << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
 					const auto elapsed = stopwatch.get().count();
-					if (!sourcepp::fs::writeFileBuffer(outputPath, vtfData)) {
-						tferr << "Failed to write to " << BOLD << outputPath << END << "." << tfendl;
+					if (outputPathOverride.empty()) {
+						outputPathOverride = outputPath;
+					}
+					if (!sourcepp::fs::writeFileBuffer(outputPathOverride, vtfData)) {
+						tferr << "Failed to write to " << BOLD << outputPathOverride << END << "." << tfendl;
 						return EXIT_FAILURE;
 					}
 					tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
 					return EXIT_SUCCESS;
 				};
 
-				// We need to test if input texture is an HDRI. Yes this is expensive
-				if (hdriAutodetect) {
-					vtfpp::ImageFormat hdriFormat;
-					int hdriWidth, hdriHeight, hdriFrameCount;
-					static_cast<void>(vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount));
-					if (vtfpp::ImageFormatDetails::large(hdriFormat) && hdriWidth == hdriHeight * 2) {
-						hdri = true;
+				// Process HDRI mode
+				auto hdriMode = *not_magic_enum::enum_cast<maretf::HDRIMode>(hdriModeForce);
+				if (hdriMode == maretf::HDRIMode::FLAT) {
+					// We need to test if input texture is an HDRI. Yes this is expensive
+					if (const auto hdriModeTest = *not_magic_enum::enum_cast<maretf::HDRIMode>(hdriModeAuto); hdriModeTest != maretf::HDRIMode::FLAT) {
+						vtfpp::ImageFormat hdriFormat;
+						int hdriWidth, hdriHeight, hdriFrameCount;
+						static_cast<void>(vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount));
+						if (vtfpp::ImageFormatDetails::large(hdriFormat) && hdriWidth == hdriHeight * 2) {
+							hdriMode = hdriModeTest;
+						}
 					}
 				}
 
-				// Special case for HDRI -> cubemap conversion
-				if (hdri) {
-					options.isCubeMap = true;
-
-					// Compute mips if desired after the cubemap is constructed
-					options.computeMips = false;
-
-					// Another time-saver
-					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
-					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
-
+				// Function to load HDRIs into an array of cubemap faces
+				const auto loadHDRI = [hdriNoFilter, &END, &BOLD, &findRequestedSize](const std::filesystem::path& hdriPath, bool skybox = false) -> std::optional<std::tuple<vtfpp::ImageFormat, uint16_t, std::array<std::vector<std::byte>, 6>>> {
 					// Load image
 					vtfpp::ImageFormat hdriFormat;
 					int hdriWidth, hdriHeight, hdriFrameCount;
-					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(currentInputPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
+					std::vector<std::byte> hdriData = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(hdriPath), hdriFormat, hdriWidth, hdriHeight, hdriFrameCount);
 					if (hdriData.empty() || !hdriWidth || !hdriHeight || !hdriFrameCount) {
-						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-						return EXIT_FAILURE;
+						tferr << "Failed to TF input HDRI at " << BOLD << hdriPath << END << ". Is it a supported format?" << tfendl;
+						return std::nullopt;
 					}
 
 					// Find requested size
@@ -1697,138 +2077,462 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					}
 
 					// Split HDRI
-					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter);
+					std::array<std::vector<std::byte>, 6> cubemapFaces = vtfpp::ImageConversion::convertHDRIToCubeMap(hdriData, hdriFormat, hdriWidth, hdriHeight, requestedSize, !hdriNoFilter, skybox);
 					if (cubemapFaces[0].empty() || cubemapFaces[1].empty() || cubemapFaces[2].empty() || cubemapFaces[3].empty() || cubemapFaces[4].empty() || cubemapFaces[5].empty()) {
-						tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Couldn't split up the HDRI!" << tfendl;
-						return EXIT_FAILURE;
-					}
-					if (requestedSize > 0) {
-						hdriHeight = requestedSize;
+						tferr << "Failed to TF input HDRI at " << BOLD << hdriPath << END << ". Couldn't split the HDRI!" << tfendl;
+						return std::nullopt;
 					}
 
-					// Create VTF
-					vtfpp::VTF vtf = vtfpp::VTF::create(hdriFormat, hdriHeight, hdriHeight, options);
-					vtf.setFaceCount(true);
+					return {{hdriFormat, requestedSize > 0 ? requestedSize : hdriHeight, std::move(cubemapFaces)}};
+				};
 
-					// Set faces
-					for (int face = 0; face < 6; face++) {
-						if (!vtf.setImage(cubemapFaces[face], hdriFormat, hdriHeight, hdriHeight, options.filter, 0, 0, face)) {
-							tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
-							return EXIT_FAILURE;
+				// Function to create a distance map from the input path if requested
+				const auto createDistanceMap = [alphaToDistance, reduceX, reduceY, noValveDistanceQuirks, &filter, &edge, srgb, distanceSpread, alphaThreshold, &END, &CYAN, &BOLD, &options, distanceFlags, distanceDither](const std::string& imagePath, uint16_t& newWidth, uint16_t& newHeight) -> std::optional<std::vector<std::byte>> {
+					if (!alphaToDistance) {
+						return std::nullopt;
+					}
+
+					int inputWidth = 0, inputHeight = 0, inputFrameCount = 1;
+					vtfpp::ImageFormat inputFormat;
+					auto image = vtfpp::ImageConversion::convertFileToImageData(sourcepp::fs::readFileBuffer(imagePath), inputFormat, inputWidth, inputHeight, inputFrameCount);
+
+					std::string_view outputFormatIntent;
+					switch (options.outputFormat) {
+						default:
+							outputFormatIntent = "Requested";
+							break;
+						case vtfpp::VTF::FORMAT_UNCHANGED:
+						case vtfpp::VTF::FORMAT_DEFAULT:
+							options.outputFormat = inputFormat;
+							outputFormatIntent = "Inferred";
+							break;
+					}
+
+					static constexpr auto getDistanceMapFormat = [](vtfpp::ImageFormat fmt) {
+						using namespace vtfpp::ImageFormatDetails;
+						return alpha(fmt)
+							? vtfpp::ImageFormat::RGBA32323232F
+							: red(fmt) == bpp(fmt) && bpp(fmt)
+								? vtfpp::ImageFormat::R32F
+								: vtfpp::ImageFormat::EMPTY;
+					};
+
+					const vtfpp::ImageFormat intermediateFormat = getDistanceMapFormat(inputFormat);
+					if (intermediateFormat == vtfpp::ImageFormat::EMPTY) {
+						tferr << "Could not find a suitable channel for distance mapping in " << BOLD << imagePath << END << " using inferred format " << BOLD << not_magic_enum::enum_name(inputFormat) << END << "." << tfendl;
+						return std::nullopt;
+					}
+					if (getDistanceMapFormat(options.outputFormat) == vtfpp::ImageFormat::EMPTY) {
+						tferr << outputFormatIntent << " output format " << BOLD << not_magic_enum::enum_name(options.outputFormat) << END << " cannot represent a distance map." << tfendl;
+						return std::nullopt;
+					}
+
+					newWidth = inputWidth;
+					newHeight = inputHeight;
+					vtfpp::ImageConversion::setResizedDims(newWidth, options.widthResizeMethod, newHeight, options.heightResizeMethod);
+					image = vtfpp::ImageConversion::resizeImageData(image, inputFormat, inputWidth, newWidth, inputHeight, newHeight, srgb, options.flagsExtra & vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE, options.filter);
+					auto sampleImage = vtfpp::ImageConversion::convertImageDataToFormat(image, inputFormat, intermediateFormat, newWidth, newHeight);
+
+					const auto checkReduceScale = [&END, &CYAN, &BOLD, distanceSpread](uint16_t val, char dimID, uint16_t dim) -> bool {
+						if (val > dim) {
+							tferr << "Reduce " << dimID << " value (" << CYAN << val << END << ") is greater than the dimension it divides.";
+							return false;
 						}
+						const auto rad = static_cast<uint16_t>(std::ceil(distanceSpread * static_cast<float>(val)));
+						if (rad * 2 > dim) {
+							tferr << "Reduce " << dimID << " by " << BOLD << "--distance-spread" << END << " results in a search radius greater than the input image." << tfendl;
+							return true; // technically valid, but anomalous enough that the user would want to know
+						}
+						if (!rad) {
+							tferr << "Reduce " << dimID << " by " << BOLD << "--distance-spread" << END << " results in a search radius of zero." << tfendl;
+							return false;
+						}
+						return true;
+					};
+					if (!checkReduceScale(reduceX, 'X', newWidth) || !checkReduceScale(reduceY, 'Y', newHeight)) {
+						return std::nullopt;
 					}
 
-					// Now compute mips after faces exist
-					if (!noMips) {
-						vtf.computeMips(options.filter);
+					bool valveQuirks = false;
+					auto distanceMapped = vtfpp::DistanceMapping::alphaToDistance(sampleImage, intermediateFormat, options.outputFormat, newWidth, newHeight, reduceX, reduceY, srgb, distanceSpread, alphaThreshold, distanceFlags, distanceDither, *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(filter), *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeEdge>(edge), noValveDistanceQuirks ? nullptr : &valveQuirks);
+					if (valveQuirks) {
+						tferr << "Edges of generated distance map were opaque; forcibly masking. Pass " << BOLD << "--no-valve-distance-quirks" << END << " to disable this." << tfendl;
 					}
-
-					// And now convert to output format
-					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+					if (distanceMapped.empty()) {
+						tferr << "Distance mapping returned empty image." << tfendl;
+						return std::nullopt;
 					}
+					return distanceMapped;
+				};
 
-					// Set resources
-					handleSettingResourcesForVTF(vtf, false);
+				// Function to create a VTF which may be using distance mapping
+				const auto createVTF = [alphaToDistance, reduceX, reduceY, &currentInputPath, &options, &createDistanceMap]() -> std::optional<vtfpp::VTF> {
+					if (alphaToDistance) {
+						uint16_t newWidth = 0, newHeight = 0;
+						if (const auto distanceMapped = createDistanceMap(currentInputPath, newWidth, newHeight)) {
+							return vtfpp::VTF::create(*distanceMapped, options.outputFormat, newWidth / reduceX, newHeight / reduceY, options);
+						}
+						return std::nullopt;
+					}
+					return vtfpp::VTF::create(currentInputPath, options);
+				};
 
-					// Bake VTF
-					return bake(vtf, "HDRI");
-				}
+				// Function to set a VTF frame which may be using distance mapping
+				const auto setVTFFrame = [alphaToDistance, reduceX, reduceY, &options, &createDistanceMap](vtfpp::VTF& vtf, const std::string& framePath, uint16_t frame) -> bool {
+					if (alphaToDistance) {
+						uint16_t newWidth = 0, newHeight = 0;
+						if (const auto distanceMapped = createDistanceMap(framePath, newWidth, newHeight)) {
+							return vtf.setImage(*distanceMapped, options.outputFormat, newWidth / reduceX, newHeight / reduceY, options.filter, 0, frame);
+						}
+						return false;
+					}
+					return vtf.setImage(framePath, options.filter, 0, frame);
+				};
 
-				// Set resize bounds
-				if (size || sizeWidth) {
-					options.resizeBounds.resizeMinWidth = options.resizeBounds.resizeMaxWidth = sizeWidth ? sizeWidth : size;
-				}
-				if (size || sizeHeight) {
-					options.resizeBounds.resizeMinHeight = options.resizeBounds.resizeMaxHeight = sizeHeight ? sizeHeight : size;
-				}
-				if (maxSize || maxSizeWidth) {
-					options.resizeBounds.resizeMaxWidth = maxSizeWidth ? maxSizeWidth : maxSize;
-				}
-				if (maxSize || maxSizeHeight) {
-					options.resizeBounds.resizeMaxHeight = maxSizeHeight ? maxSizeHeight : maxSize;
-				}
-				if (minSize || minSizeWidth) {
-					options.resizeBounds.resizeMinWidth = minSizeWidth ? minSizeWidth : minSize;
-				}
-				if (minSize || minSizeHeight) {
-					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
-				}
-
-				// Special case for animated VTFs
 				if (options.initialFrameCount > 1) {
-					// Compute mips later
-					options.computeMips = false;
+					switch (hdriMode) {
+						// Special case for animated VTFs
+						case maretf::HDRIMode::FLAT: {
+							// Compute mips later
+							options.computeMips = false;
 
-					// Another time-saver
-					vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
-					options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
 
-					// Create initial VTF
-					auto vtf = vtfpp::VTF::create(currentInputPath, options);
-					if (!vtf) {
-						tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-						return EXIT_FAILURE;
-					}
+							// Create initial VTF
+							auto initialVTF = createVTF();
+							if (!initialVTF) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << " due to a distance mapping error." << tfendl;
+								return EXIT_FAILURE;
+							}
+							auto vtf = std::move(*initialVTF);
+							if (!vtf) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+								return EXIT_FAILURE;
+							}
 
-					// Set frames
-					auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
-					auto currentInputPathBase = currentInputPathBasePath.string();
-					currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
-					std::unique_ptr<indicators::ProgressBar> bar;
-					if (!noPrettyFormatting && !quiet) {
-						bar = std::make_unique<indicators::ProgressBar>(
-							indicators::option::PostfixText{"Adding frames..."},
-							indicators::option::ShowPercentage{true},
-							indicators::option::MaxProgress{options.initialFrameCount}
-						);
-					}
-					for (int frame = frameNumberStart; frame < options.initialFrameCount; frame++) {
-						if (!vtf.setImage((std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), options.filter, 0, frame)) {
-							tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
-							return EXIT_FAILURE;
+							// Set frames
+							auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+							auto currentInputPathBase = currentInputPathBasePath.string();
+							currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+							std::unique_ptr<indicators::ProgressBar> bar;
+							if (!noPrettyFormatting && !quiet) {
+								bar = std::make_unique<indicators::ProgressBar>(
+									indicators::option::PostfixText{"Adding frames..."},
+									indicators::option::ShowPercentage{true},
+									indicators::option::MaxProgress{options.initialFrameCount}
+								);
+							}
+							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
+								if (!setVTFFrame(vtf, (std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string())).string(), frame - frameNumberStart)) {
+									tferr << "Failed to TF input frame at " << BOLD << currentInputPath << END << ". Frame " << CYAN << frame << END << " could not be set!" << tfendl;
+									return EXIT_FAILURE;
+								}
+								if (bar) {
+									bar->tick();
+								}
+							}
+							if (bar) {
+								bar->mark_as_completed();
+							}
+
+							// Now compute mips after frames exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "animation");
 						}
-						if (bar) {
-							bar->tick();
+
+						// Special case for animated HDRI -> cubemap conversion
+						case maretf::HDRIMode::CUBEMAP: {
+							options.isCubeMap = true;
+
+							// Compute mips if desired after the cubemap is constructed
+							options.computeMips = false;
+
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+							// Create initial VTF
+							// We throw out this cubemap data since it is handled later, but it is necessary to establish format and size
+							const auto firstFrameHDRIData = loadHDRI(currentInputPath);
+							if (!firstFrameHDRIData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaces] = *firstFrameHDRIData;
+							vtfpp::VTF vtf = vtfpp::VTF::create(firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaceSize, options);
+
+							// Set frames
+							auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+							auto currentInputPathBase = currentInputPathBasePath.string();
+							currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+							std::unique_ptr<indicators::ProgressBar> bar;
+							if (!noPrettyFormatting && !quiet) {
+								bar = std::make_unique<indicators::ProgressBar>(
+									indicators::option::PostfixText{"Adding frames..."},
+									indicators::option::ShowPercentage{true},
+									indicators::option::MaxProgress{options.initialFrameCount}
+								);
+							}
+							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
+								// Load HDRI
+								const auto hdriData = loadHDRI(std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()));
+								if (!hdriData) {
+									return EXIT_FAILURE;
+								}
+								const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+								// Set faces
+								for (int face = 0; face < 6; face++) {
+									if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, frame - frameNumberStart, face)) {
+										tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " at frame " << CYAN << frame << END << " could not be set!" << tfendl;
+										return EXIT_FAILURE;
+									}
+								}
+								if (bar) {
+									bar->tick();
+								}
+							}
+							if (bar) {
+								bar->mark_as_completed();
+							}
+
+							// Now compute mips after faces exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "animated HDRI");
+						}
+
+						// Special case for animated HDRI -> skybox conversion
+						case maretf::HDRIMode::SKYBOX: {
+							// Compute mips if desired after the skybox is constructed
+							options.computeMips = false;
+
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+							// Create initial VTFs
+							// We throw out this cubemap data since it is handled later, but it is necessary to establish format and size
+							const auto firstFrameHDRIData = loadHDRI(currentInputPath, true);
+							if (!firstFrameHDRIData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaces] = *firstFrameHDRIData;
+							std::array<vtfpp::VTF, 6> vtfs;
+							for (auto& vtf : vtfs) {
+								vtf = vtfpp::VTF::create(firstFrameHDRIFormat, firstFrameCubemapFaceSize, firstFrameCubemapFaceSize, options);
+							}
+
+							// Set frames
+							auto currentInputPathBasePath = std::filesystem::path{currentInputPath}.stem();
+							auto currentInputPathBase = currentInputPathBasePath.string();
+							currentInputPathBase = currentInputPathBase.substr(0, currentInputPathBase.size() - currentInputPathBasePath.extension().string().size() - frameNumberCount);
+							std::unique_ptr<indicators::ProgressBar> bar;
+							if (!noPrettyFormatting && !quiet) {
+								bar = std::make_unique<indicators::ProgressBar>(
+									indicators::option::PostfixText{"Adding frames..."},
+									indicators::option::ShowPercentage{true},
+									indicators::option::MaxProgress{options.initialFrameCount}
+								);
+							}
+							for (int frame = frameNumberStart; frame < options.initialFrameCount + frameNumberStart; frame++) {
+								// Load HDRI
+								const auto hdriData = loadHDRI(std::filesystem::path{currentInputPath}.parent_path() / (currentInputPathBase + sourcepp::string::padNumber(frame, frameNumberCount) + std::filesystem::path{currentInputPath}.extension().string()), true);
+								if (!hdriData) {
+									return EXIT_FAILURE;
+								}
+								const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+								// Set faces
+								for (int face = 0; face < 6; face++) {
+									if (!vtfs[face].setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, frame - frameNumberStart)) {
+										tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " at frame " << CYAN << frame << END << " could not be set!" << tfendl;
+										return EXIT_FAILURE;
+									}
+								}
+								if (bar) {
+									bar->tick();
+								}
+							}
+							if (bar) {
+								bar->mark_as_completed();
+							}
+
+							// Write VTFs
+							int out = EXIT_SUCCESS;
+							const auto outputPaths = ::getOutputSkyboxPathsForInput(inputPaths.size() > 1 ? (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string() : currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
+							for (int face = 0; face < 6; face++) {
+								auto& vtf = vtfs[face];
+
+								// Check for overwrite
+								{
+									bool checkFileShouldRet = true;
+									out = out || checkFileDoesntExist(outputPaths[face], checkFileShouldRet);
+									if (checkFileShouldRet) {
+										return out;
+									}
+								}
+
+								// Now compute mips after faces exist
+								if (!noMips) {
+									vtf.computeMips(options.filter);
+								}
+
+								// And now convert to output format
+								if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+									vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+								} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+									vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+								}
+
+								// Set resources
+								handleSettingResourcesForVTF(vtf, false);
+
+								// Bake VTF
+								out = out || bake(vtf, "animated HDRI", outputPaths[face]);
+							}
+							const auto elapsed = stopwatch.get().count();
+							tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+							return out;
 						}
 					}
-					if (bar) {
-						bar->mark_as_completed();
+				} else {
+					switch (hdriMode) {
+						// Expected case for no animation, no cubemap/skybox
+						case maretf::HDRIMode::FLAT: {
+							// Create initial VTF
+							auto initialVTF = createVTF();
+							if (!initialVTF) {
+								tferr << "Failed to TF input animation at " << BOLD << currentInputPath << END << " due to a distance mapping error." << tfendl;
+								return EXIT_FAILURE;
+							}
+							auto vtf = std::move(*initialVTF);
+							if (!vtf) {
+								tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
+								return EXIT_FAILURE;
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "image");
+						}
+
+						// Special case for HDRI -> cubemap conversion
+						case maretf::HDRIMode::CUBEMAP: {
+							options.isCubeMap = true;
+
+							// Compute mips if desired after the cubemap is constructed
+							options.computeMips = false;
+
+							// Another time-saver
+							vtfpp::ImageFormat outputFormatBackup = options.outputFormat;
+							options.outputFormat = vtfpp::VTF::FORMAT_UNCHANGED;
+
+							// Load HDRI
+							const auto hdriData = loadHDRI(currentInputPath);
+							if (!hdriData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+							// Create VTF
+							vtfpp::VTF vtf = vtfpp::VTF::create(hdriFormat, cubemapFaceSize, cubemapFaceSize, options);
+
+							// Set faces
+							for (int face = 0; face < 6; face++) {
+								if (!vtf.setImage(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options.filter, 0, 0, face)) {
+									tferr << "Failed to TF input HDRI at " << BOLD << currentInputPath << END << ". Face " << CYAN << face << END << " could not be set!" << tfendl;
+									return EXIT_FAILURE;
+								}
+							}
+
+							// Now compute mips after faces exist
+							if (!noMips) {
+								vtf.computeMips(options.filter);
+							}
+
+							// And now convert to output format
+							if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
+								vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
+								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
+							}
+
+							// Set resources
+							handleSettingResourcesForVTF(vtf, false);
+
+							// Bake VTF
+							return bake(vtf, "HDRI");
+						}
+
+						// Special case for HDRI -> skybox conversion
+						case maretf::HDRIMode::SKYBOX: {
+							// Load HDRI
+							const auto hdriData = loadHDRI(currentInputPath, true);
+							if (!hdriData) {
+								return EXIT_FAILURE;
+							}
+							const auto& [hdriFormat, cubemapFaceSize, cubemapFaces] = *hdriData;
+
+							// Create VTFs
+							int out = EXIT_SUCCESS;
+							const auto outputPaths = ::getOutputSkyboxPathsForInput(inputPaths.size() > 1 ? (std::filesystem::path{outputPath} / std::filesystem::path{currentInputPath}.filename()).string() : currentInputPath, *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform));
+							for (int face = 0; face < 6; face++) {
+								// Check for overwrite
+								{
+									bool checkFileShouldRet = true;
+									out = out || checkFileDoesntExist(outputPaths[face], checkFileShouldRet);
+									if (checkFileShouldRet) {
+										return out;
+									}
+								}
+
+								// Create VTF
+								vtfpp::VTF vtf = vtfpp::VTF::create(cubemapFaces[face], hdriFormat, cubemapFaceSize, cubemapFaceSize, options);
+
+								// Set resources
+								handleSettingResourcesForVTF(vtf, false);
+
+								// Bake VTF
+								out = out || bake(vtf, "HDRI", outputPaths[face]);
+							}
+							const auto elapsed = stopwatch.get().count();
+							tfout << BOLD << currentInputPath << END << " was TF'ed in " << CYAN << elapsed << "ms" << END << (noPrettyFormatting ? "" : " 💖") << tfendl;
+							return out;
+						}
 					}
-
-					// Now compute mips after frames exist
-					if (!noMips) {
-						vtf.computeMips(options.filter);
-					}
-
-					// And now convert to output format
-					if (outputFormatBackup == vtfpp::VTF::FORMAT_DEFAULT) {
-						vtf.setFormat(vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1), vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
-						vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
-					}
-
-					// Set resources
-					handleSettingResourcesForVTF(vtf, false);
-
-					// Bake VTF
-					return bake(vtf, "animation");
 				}
-
-				// Create VTF
-				auto vtf = vtfpp::VTF::create(currentInputPath, options);
-				if (!vtf) {
-					tferr << "Failed to TF input image at " << BOLD << currentInputPath << END << ". Is it a supported format?" << tfendl;
-					return EXIT_FAILURE;
-				}
-
-				// Set resources
-				handleSettingResourcesForVTF(vtf, false);
-
-				// Bake VTF
-				return bake(vtf, "image");
+				return EXIT_FAILURE;
 			};
 
 			int out = EXIT_SUCCESS;
@@ -1870,7 +2574,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				outputPath = savedOutputPath;
 			}
 			if (out != EXIT_SUCCESS) {
-				return out;
+				MARETF_RETURN(out);
 			}
 
 			if (watch) {
@@ -2042,8 +2746,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					fileWatcher.removeWatch(watchID);
 				}
 			}
-
-			return EXIT_SUCCESS;
+			MARETF_RETURN(EXIT_SUCCESS);
 		}
 		if (mode == "edit") {
 			const auto edit = [&](const std::string& currentInputPath) {
@@ -2086,6 +2789,16 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					} else if (setFormatActual == vtfpp::VTF::FORMAT_DEFAULT) {
 						setFormatActual = vtfpp::VTF::getDefaultCompressedFormat(vtf.getFormat(), vtf.getVersion(), vtf.getFaceCount() > 1);
 					}
+				}
+
+				// Set extra flags
+				vtf.addFlagsExtra(addFlagsExtraUInt);
+				for (const auto& flag : addFlagsExtra) {
+					vtf.addFlagsExtra(*not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag));
+				}
+				vtf.removeFlagsExtra(removeFlagsExtraUInt);
+				for (const auto& flag : removeFlagsExtra) {
+					vtf.removeFlagsExtra(*not_magic_enum::enum_cast<vtfpp::VTF::FlagsExtra>(flag));
 				}
 
 				// Set platform
@@ -2234,7 +2947,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 		if (mode == "extract") {
 			const auto extract = [&](const std::string& currentInputPath) {
@@ -2247,10 +2960,16 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 				}
 				tfout << "Loaded input VTF at " << BOLD << currentInputPath << END << " in " << CYAN << loadStopwatch.get().count() << "ms" << END << (noPrettyFormatting ? "" : " 🐎") << tfendl;
 
-				// Get output format
-				vtfpp::ImageConversion::FileFormat fileFormat = *not_magic_enum::enum_cast<vtfpp::ImageConversion::FileFormat>(extractFormat);
+				// Get output file format
+				vtfpp::ImageConversion::FileFormat fileFormat = *not_magic_enum::enum_cast<vtfpp::ImageConversion::FileFormat>(extractFileFormat);
 				if (fileFormat == vtfpp::ImageConversion::FileFormat::DEFAULT) {
 					fileFormat = vtfpp::ImageConversion::getDefaultFileFormatForImageFormat(vtf.getFormat());
+				}
+
+				// Get output image format
+				vtfpp::ImageFormat imageFormat = *not_magic_enum::enum_cast<vtfpp::ImageFormat>(extractImageFormat);
+				if (imageFormat == vtfpp::VTF::FORMAT_DEFAULT) {
+					imageFormat = vtfpp::VTF::FORMAT_UNCHANGED;
 				}
 
 				// Check output path
@@ -2264,15 +2983,20 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					outputPath.append(::supportedImageFileFormatExtension(fileFormat));
 				}
 
-				// Extract all VTF image data
 				::ElapsedTime extractStopwatch;
 				std::vector<bool> extractionSuccessful;
-				if (extractAll) {
+				const std::filesystem::path outputPathFixupBase{outputPath};
+				if (extractAllImages) {
 					extractAllMips = extractAllFrames = extractAllFaces = extractAllSlices = true;
 				}
-				if (extractAllMips || extractAllFrames || extractAllFaces || extractAllSlices) {
+				if (extractAllResources) {
+					extractThumbnail = extractParticleSheetResource = extractKeyValuesDataResource = extractAuthorInfoResource = extractHotspotDataResource = true;
+				}
+
+				// Extract image data
+				if (!extractSkipImage) {
 					for (int frame = extractAllFrames ? 0 : extractFrame; frame < (extractAllFrames ? vtf.getFrameCount() : extractFrame + 1); frame++) {
-						std::filesystem::path outputPathFixupFrame{outputPath};
+						std::filesystem::path outputPathFixupFrame = outputPathFixupBase;
 						if (extractAllFrames && vtf.getFrameCount() > 1) {
 							outputPathFixupFrame = outputPathFixupFrame.parent_path() / (outputPathFixupFrame.stem().string() + "_frame" + sourcepp::string::padNumber(frame, 3) + outputPathFixupFrame.extension().string());
 						}
@@ -2284,27 +3008,182 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 							for (int slice = extractAllSlices ? 0 : extractSlice; slice < (extractAllSlices ? vtf.getDepth() : extractSlice + 1); slice++) {
 								std::filesystem::path outputPathFixupSlice = outputPathFixupFace;
 								if (extractAllSlices && vtf.getDepth() > 1) {
-									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 2) + outputPathFixupSlice.extension().string());
+									outputPathFixupSlice = outputPathFixupSlice.parent_path() / (outputPathFixupSlice.stem().string() + "_slice" + sourcepp::string::padNumber(slice, 3) + outputPathFixupSlice.extension().string());
 								}
 								for (int mip = extractAllMips ? 0 : extractMip; mip < (extractAllMips ? vtf.getMipCount() : extractMip + 1); mip++) {
 									std::filesystem::path outputPathFixupMip = outputPathFixupSlice;
 									if (extractAllMips && vtf.getMipCount() > 1) {
 										outputPathFixupMip = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_mip" + sourcepp::string::padNumber(mip, 2) + outputPathFixupMip.extension().string());
 									}
-									bool notSuccess;
-									checkFileDoesntExist(outputPathFixupMip.string(), notSuccess);
-									extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPathFixupMip.string(), mip, frame, face, slice, fileFormat));
+									bool shouldContinue;
+									if (!extractStdOut) {
+										checkFileDoesntExist(outputPathFixupMip.string(), shouldContinue);
+										if (shouldContinue) {
+											continue;
+										}
+									} else {
+										shouldContinue = false;
+									}
+
+									// Convert image data
+									std::span<std::byte> currentData = vtf.getImageDataRaw(mip, frame, face, slice);
+									std::vector<std::byte> currentDataBacking;
+									if (imageFormat != vtfpp::VTF::FORMAT_UNCHANGED) {
+										currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, vtf.getFormat(), imageFormat, vtf.getWidth(mip), vtf.getHeight(mip));
+										currentData = currentDataBacking;
+									} else {
+										imageFormat = vtf.getFormat();
+									}
+
+									// Decompress image data now so it is easier to work with
+									if (vtfpp::ImageFormatDetails::compressed(imageFormat)) {
+										currentDataBacking = vtfpp::ImageConversion::convertImageDataToFormat(currentData, imageFormat, vtfpp::ImageFormatDetails::containerFormat(imageFormat), vtf.getWidth(mip), vtf.getHeight(mip));
+										currentData = currentDataBacking;
+										imageFormat = vtfpp::ImageFormatDetails::containerFormat(imageFormat);
+									}
+
+									// Extract image data to file
+									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
+										extractionSuccessful.push_back(false);
+									} else if (extractStdOut) {
+										tfout << '"' << BOLD << outputPathFixupMip.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl;
+										extractionSuccessful.push_back(true);
+									} else {
+										extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
+									}
+
+									// Extract alpha channel
+									if (extractionSuccessful.back() && extractAlphaChannel && vtfpp::ImageFormatDetails::alpha(imageFormat) > 0) {
+										std::filesystem::path outputPathFixupAlpha = outputPathFixupMip.parent_path() / (outputPathFixupMip.stem().string() + "_alpha" + outputPathFixupMip.extension().string());
+										if (!extractStdOut) {
+											checkFileDoesntExist(outputPathFixupAlpha.string(), shouldContinue);
+										} else {
+											shouldContinue = false;
+										}
+										if (!shouldContinue) {
+											std::vector<std::byte> fileData;
+											switch (imageFormat) {
+												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
+													case vtfpp::ImageFormat::format: \
+														fileData = vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); \
+														if (extractStdOut) { \
+															tfout << '"' << BOLD << outputPathFixupAlpha.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl; \
+															extractionSuccessful.push_back(true); \
+														} else { \
+															extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, fileData)); \
+														} \
+														break
+
+												MARETF_EXTRACT_ALPHA_CASE(RGBA8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(ABGR8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(IA88, a);
+												MARETF_EXTRACT_ALPHA_CASE(A8, a);
+												MARETF_EXTRACT_ALPHA_CASE(ARGB8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA8888, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA4444, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA5551, a);
+												MARETF_EXTRACT_ALPHA_CASE(UVWQ8888, q);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA16161616F, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA16161616, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA32323232F, a);
+												MARETF_EXTRACT_ALPHA_CASE(RGBA1010102, a);
+												MARETF_EXTRACT_ALPHA_CASE(BGRA1010102, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_RGBA8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_ABGR8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_ARGB8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_BGRA8888_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_RGBA16161616_LINEAR, a);
+												MARETF_EXTRACT_ALPHA_CASE(CONSOLE_BGRA8888_LE, a);
+												default: break;
+
+												#undef MARETF_EXTRACT_ALPHA_CASE
+											}
+										}
+									}
 								}
 							}
 						}
 					}
-				} else {
-					bool notSuccess;
-					checkFileDoesntExist(outputPath, notSuccess);
-					extractionSuccessful.push_back(!notSuccess && vtf.saveImageToFile(outputPath, extractMip, extractFrame, extractFace, extractSlice, fileFormat));
 				}
 
-				// Extract VTF
+				// Extract thumbnail resource
+				if (extractThumbnail && vtf.hasThumbnailData()) {
+					std::filesystem::path outputPathFixupThumb = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_thumb" + outputPathFixupBase.extension().string());
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupThumb.filename().string() << END << '"' << ' ' << ::encodeBase64(vtfpp::ImageConversion::convertImageDataToFile(vtf.getThumbnailDataRaw(), vtf.getThumbnailFormat(), vtf.getThumbnailWidth(), vtf.getThumbnailHeight(), fileFormat)) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupThumb.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(vtf.saveThumbnailToFile(outputPathFixupThumb, fileFormat));
+						}
+					}
+				}
+
+				// Extract particle sheet resource
+				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)))) {
+					std::filesystem::path outputPathFixupSheet = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".sht");
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupSheet.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsParticleSheet().bake()) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupSheet.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupSheet, rsrc->getDataAsParticleSheet().bake()));
+						}
+					}
+				}
+
+				// Extract keyvalues data resource
+				if (const vtfpp::Resource* rsrc; extractKeyValuesDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA)))) {
+					std::filesystem::path outputPathFixupKeyValues = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".vdf");
+					const auto kvd = rsrc->getDataAsKeyValuesData();
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupKeyValues.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(kvd.data()), kvd.size()}) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupKeyValues.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileText(outputPathFixupKeyValues, kvd));
+						}
+					}
+				}
+
+				// Extract author info resource
+				if (const vtfpp::Resource* rsrc; extractAuthorInfoResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)))) {
+					std::filesystem::path outputPathFixupAuthor = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_author.txt");
+					const auto authorInfo = rsrc->getDataAsAuthorInfo();
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupAuthor.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(authorInfo.data()), authorInfo.size()}) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupAuthor.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileText(outputPathFixupAuthor, authorInfo));
+						}
+					}
+				}
+
+				// Extract hotspot data resource
+				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)))) {
+					std::filesystem::path outputPathFixupHotspot = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".hot");
+					if (extractStdOut) {
+						tfout << '"' << BOLD << outputPathFixupHotspot.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsHotspotData().bake()) << tfendl;
+						extractionSuccessful.push_back(true);
+					} else {
+						bool shouldContinue;
+						checkFileDoesntExist(outputPathFixupHotspot.string(), shouldContinue);
+						if (!shouldContinue) {
+							extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupHotspot, rsrc->getDataAsHotspotData().bake()));
+						}
+					}
+				}
+
+				// Aggregate stats
 				if (int successCount = std::accumulate(extractionSuccessful.begin(), extractionSuccessful.end(), 0); successCount < extractionSuccessful.size()) {
 					tferr << "Failed to save " << CYAN << (extractionSuccessful.size() - successCount) << END << " of " << CYAN << extractionSuccessful.size() << END << " files." << tfendl;
 					return EXIT_FAILURE;
@@ -2348,7 +3227,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 		if (mode == "info") {
 			const auto info = [&](const std::string& currentInputPath) {
@@ -2378,7 +3257,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						tfout << BOLD << "Dimensions:    " << CYAN << vtf.getWidth() << END << " x " << CYAN << vtf.getHeight() << END << tfendl;
 					}
 
-					tfout << BOLD << "Flags:         " << END << CYAN << "0x" << std::hex << vtf.getFlags() << std::dec << END;
+					tfout << BOLD << "Flags:         " << END << CYAN << std::format("{:#x}", vtf.getFlags()) << END;
 					if (vtf.getFlags()) {
 						tfout << " (";
 						bool first = true;
@@ -2430,47 +3309,35 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					}
 					tfout << END << tfendl;
 
-					tfout << BOLD << "Palette:        ";
 					if (vtf.getResource(vtfpp::Resource::TYPE_PALETTE_DATA)) {
-						tfout << GREEN << "Exists";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Palette:        " << END << GREEN << "Exists" << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Fallback:       ";
 					if (vtf.hasFallbackData()) {
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "Dimensions: " << CYAN << static_cast<int>(vtf.getFallbackWidth()) << END << " x " << CYAN << static_cast<int>(vtf.getFallbackHeight()) << END << " — " << BOLD << "Mips: " << CYAN << static_cast<int>(vtf.getFallbackMipCount());
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Fallback:       " << "Dimensions: " << END << CYAN << static_cast<int>(vtf.getFallbackWidth()) << END << " x " << CYAN << static_cast<int>(vtf.getFallbackHeight()) << END << " — " << BOLD << "Mips: " << CYAN << static_cast<int>(vtf.getFallbackMipCount()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Particle Sheet: ";
 					const auto* particleSheetResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA);
 					if (particleSheetResourcePtr) {
+						tfout << BOLD << "Particle Sheet: " << END;
 						if (const auto sheet = particleSheetResourcePtr->getDataAsParticleSheet()) {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
+							tfout << BOLD << "Version: " << CYAN << sheet.getVersion() << END << " — " << BOLD << "Sequences: " << CYAN << sheet.getSequences().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Hotspot Data:   ";
 					const auto* hotspotDataResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA);
 					if (hotspotDataResourcePtr) {
+						tfout << BOLD << "Hotspot Data:   " << END;
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
-							tfout << GREEN << "Exists" << END << " — " << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
+							tfout << BOLD << "Version: " << CYAN << static_cast<int>(hotspots.getVersion()) << END << " — " << BOLD << "Rects: " << CYAN << hotspots.getRects().size();
 						} else {
 							tfout << RED << "Exists, but failed to parse";
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
 					tfout << BOLD << "Image:          ";
 					if (vtf.hasImageData()) {
@@ -2480,53 +3347,54 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					}
 					tfout << END << tfendl;
 
-					tfout << BOLD << "Extended Flags: ";
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << ts0ResourcePtr->getDataAsExtendedFlags() << std::dec;
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Extended Flags: " << END << CYAN << std::format("{:#x}", ts0ResourcePtr->getDataAsFlags()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "CRC:            ";
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
-						tfout << GREEN << "Exists" << END << " — " << CYAN << "0x" << std::hex << crcResourcePtr->getDataAsCRC() << std::dec;
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "CRC:            " << END << CYAN << std::format("{:#x}", crcResourcePtr->getDataAsCRC()) << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "LOD:            ";
 					if (const auto* lodResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_LOD_CONTROL_INFO)) {
 						const auto lod = lodResourcePtr->getDataAsLODControlInfo();
-						tfout << GREEN << "Exists" << END << " — " << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
+						tfout << BOLD << "LOD:            " << END << BOLD << "U: " << END << CYAN << static_cast<int>(std::get<0>(lod)) << END << " — " << BOLD << "V: " << END << CYAN << static_cast<int>(std::get<1>(lod));
 						if (vtf.getPlatform() != vtfpp::VTF::PLATFORM_PC) {
-							tfout << END << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
+							tfout << END << " — " << BOLD << "U (Console): " << END << CYAN << static_cast<int>(std::get<2>(lod)) << END << " — " << BOLD << "V (Console): " << END << CYAN << static_cast<int>(std::get<3>(lod));
 						}
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "KeyValues Data: ";
 					const auto* kvdResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_KEYVALUES_DATA);
 					if (kvdResourcePtr) {
 						const auto keyvalues = kvdResourcePtr->getDataAsKeyValuesData();
-						tfout << GREEN << "Exists" << END << " — " << CYAN << keyvalues.size() << " chars";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "KeyValues Data: " << END << CYAN << keyvalues.size() << " chars" << END << tfendl;
 					}
-					tfout << END << tfendl;
 
-					tfout << BOLD << "Author Info: ";
 					const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO);
 					if (athResourcePtr) {
 						const auto authorInfo = athResourcePtr->getDataAsAuthorInfo();
-						tfout << GREEN << "Exists" << END << " — " << CYAN << authorInfo.size() << " chars";
-					} else {
-						tfout << RED << "Doesn't exist";
+						tfout << BOLD << "Author Info:    " << END << CYAN << authorInfo.size() << " chars" << END << tfendl;
 					}
-					tfout << END << tfendl;
+
+					if (const auto sppFlags = vtf.getFlagsExtra(); sppFlags != 0) {
+						tfout << BOLD << "MareTF Flags:   " << CYAN << std::format("{:#x}", sppFlags) << END;
+						if (sppFlags) {
+							tfout << " (";
+							const auto& sppPrettyFlagNames = not_magic_enum::enum_names<vtfpp::VTF::FlagsExtra>(true);
+							bool first = true;
+							for (int i = 0; i < sppPrettyFlagNames.size(); i++) {
+								if (sppFlags & 1 << i) {
+									if (!first) {
+										tfout << " | ";
+									}
+									first = false;
+									tfout << CYAN << sppPrettyFlagNames[i] << END;
+								}
+							}
+							tfout << ')';
+						}
+						tfout << tfendl;
+					}
 
 					// Bail here if requested
 					if (infoSkipResources) {
@@ -2569,7 +3437,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						if (const auto hotspots = hotspotDataResourcePtr->getDataAsHotspotData()) {
 							tfout << '\n' << GREEN << BOLD << " ――― HOTSPOT DATA RESOURCE ―――" << END << tfendl;
 							tfout << BOLD << "Version: " << END << CYAN << static_cast<int>(hotspots.getVersion()) << END << tfendl;
-							tfout << BOLD << "Flags:   " << END << CYAN << "0x" << std::hex << static_cast<int>(hotspots.getFlags()) << std::dec << END;
+							tfout << BOLD << "Flags:   " << END << CYAN << std::format("{:#x}", static_cast<int>(hotspots.getFlags())) << END;
 							if (hotspots.getFlags()) {
 								tfout << " (";
 								bool first = true;
@@ -2588,7 +3456,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 							for (int i = 0; i < hotspots.getRects().size(); i++) {
 								const auto& rect = hotspots.getRects().at(i);
 								tfout << BOLD << "Rect " << END << CYAN << (i + 1) << END << BOLD << ':' << END << tfendl;
-								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << "0x" << std::hex << static_cast<int>(rect.flags) << std::dec << END;
+								tfout << '\t' << BOLD << "Flags:  " << END << CYAN << std::format("{:#x}", static_cast<int>(rect.flags)) << END;
 								if (rect.flags) {
 									tfout << " (";
 									bool first = true;
@@ -2718,7 +3586,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 						}
 					}
 					if (const auto* ts0ResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_EXTENDED_FLAGS)) {
-						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsExtendedFlags());
+						kv["resources"]["ts0"] = static_cast<int>(ts0ResourcePtr->getDataAsFlags());
 					}
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
 						kv["resources"]["crc"] = static_cast<int>(crcResourcePtr->getDataAsCRC());
@@ -2736,6 +3604,9 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 					if (const auto* athResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_AUTHOR_INFO)) {
 						kv["resources"]["ath"] = athResourcePtr->getDataAsAuthorInfo();
 					}
+					if (const auto sppFlags = vtf.getFlagsExtra(); sppFlags != 0) {
+						kv["resources"]["spp"] = static_cast<int>(sppFlags);
+					}
 
 					// ...and print it all out
 					tfout << kv.bake();
@@ -2749,7 +3620,7 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 			// This is for Stefan and other tool devs
 			if (inputPaths.size() == 1 && inputPaths[0] == "version") {
 				std::cout << PROJECT_VERSION << std::endl;
-				return EXIT_SUCCESS;
+				MARETF_RETURN(EXIT_SUCCESS);
 			}
 
 			int out = EXIT_SUCCESS;
@@ -2796,16 +3667,20 @@ int maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 
 				outputPath = savedOutputPath;
 			}
-			return out;
+			MARETF_RETURN(out);
 		}
 	} catch (const std::exception& e) {
+#ifdef MARETF_CLI
 		if (argc > 1) {
 			std::cerr << e.what() << '\n' << std::endl;
 			std::cerr << "Run " << argv[0] << " with no arguments for usage information." << '\n' << std::endl;
 		} else {
 			std::cout << cli << std::endl;
 		}
-		return EXIT_FAILURE;
+#else
+		tferr << e.what() << '\n' << tfendl;
+#endif
+		MARETF_RETURN(EXIT_FAILURE);
 	}
-	return EXIT_SUCCESS;
+	MARETF_RETURN(EXIT_SUCCESS);
 }

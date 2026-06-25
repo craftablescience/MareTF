@@ -2,6 +2,10 @@
     <qresource prefix="/">
         <file>../logo.png</file>
         <file>button_discord.png</file>
+        <file>button_extract.png</file>
+        <file>button_extract_alt.png</file>
+        <file>button_extract_multi.png</file>
+        <file>button_extract_multi_alt.png</file>
         <file>button_kofi.png</file>
         <file>button_load.png</file>
         <file>button_new.png</file>

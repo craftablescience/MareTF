@@ -113,7 +113,7 @@ public:
 				format = vtfpp::ImageFormat::BGRA8888;
 			}
 			if (targetWidth != outWidth || targetHeight != outHeight) {
-				data = vtfpp::ImageConversion::resizeImageData(data, format, outWidth, targetWidth, outHeight, targetHeight, !vtfpp::ImageFormatDetails::large(format), vtfpp::ImageConversion::ResizeFilter::BILINEAR);
+				data = vtfpp::ImageConversion::resizeImageData(data, format, outWidth, targetWidth, outHeight, targetHeight, !vtfpp::ImageFormatDetails::large(format), false, vtfpp::ImageConversion::ResizeFilter::BILINEAR);
 			}
 
 			BITMAPINFO bmi = {};

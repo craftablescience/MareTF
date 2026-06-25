@@ -3,7 +3,7 @@
 - koerismo - Initial NICE filtering algorithm implementation
 - HurricanePootis - AUR maintainer
 - lunairekitty - Additional CLI creation messages
-- partyvan - Initial big-endian support
+- partyvan - Distance mapping support, initial big-endian support
 - mikesk8r - Touchscreen support
 
 ## Artists
@@ -22,7 +22,7 @@
 - Gocnak
 - goodusername12345
 - Igrium
-- iiboharz
+- iiboharz (the best one! thank you so much!)
 - jayrickaby
 - sheepy676
 - Soders

@@ -28,6 +28,7 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Original Xbox
     - Xbox 360
     - PlayStation 3
+  - Create distance mapped textures for [`$distancealpha`](https://developer.valvesoftware.com/wiki/$distancealpha)
   - Uses an improved version of Valve's NICE mipmap filtering by default
   - Supports new formats in Alien Swarm and beyond, Titanfall 1/2, Strata Source
   - Supports new Strata Source VTF version with CPU compression (Deflate / Zstd)
@@ -43,7 +44,7 @@ A utility to create, edit, and display every type of VTF file ever made.
     - Defaults to PNG or EXR based on the image format
 - Info
   - Print out all VTF metadata and non-image resource data
-  - Parse compiled particle sheet resource to plaintext
+  - Parse compiled particle sheet resource, hotspot resource to plaintext
   - Print data as colored human-readable text or as plain KeyValues
 - Thumbnail
   - Display thumbnails for all VTF platforms and versions on Windows and Linux in your file explorer of choice
@@ -62,6 +63,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - [indicators](https://github.com/p-ranav/indicators)
   - [SourcePP](https://sourcepp.org)
   - [Qt](https://www.qt.io)
+- See the [CREDITS](/CREDITS) file for more information
 
 ## Example CLI Usage
 
@@ -94,45 +96,7 @@ maretf info input.vtf
 ## Full CLI Help Text
 
 ```
-Usage: maretf [--help] [--input PATH...] [--output PATH] [--yes] [--no] [--quiet] [--verbose]
-              [--no-recurse] [--no-pretty-formatting] [--watch] [--version X.Y]
-              [--format IMAGE_FORMAT] [--quality COMPRESSION_QUALITY]
-              [--filter RESIZE_FILTER] [--size SIZE] [--width WIDTH] [--height HEIGHT]
-              [--max-size SIZE] [--max-width WIDTH] [--max-height HEIGHT] [--min-size SIZE]
-              [--min-width WIDTH] [--min-height HEIGHT] [--flag FLAG]... [--flags-uint FLAGS]
-              [--no-automatic-transparency-flags] [--no-mips] [--animated-frames]
-              [--no-thumbnail] [--platform PLATFORM]
-              [--compression-method COMPRESSION_METHOD] [--compression-level LEVEL]
-              [--start-frame FRAME_INDEX] [--bumpscale BUMPMAP_SCALE] [--invert-green]
-              [--opengl] [--hdri] [--hdri-autodetect] [--hdri-no-filter]
-              [--resize-method RESIZE_METHOD] [--width-resize-method RESIZE_METHOD]
-              [--height-resize-method RESIZE_METHOD] [--console-mip-scale SCALE]
-              [--gamma-correct] [--gamma-correct-amount GAMMA] [--srgb] [--clamps] [--clampt]
-              [--clampu] [--pointsample] [--trilinear] [--aniso] [--normal] [--ssbump]
-              [--particle-sheet-resource PATH] [--crc-resource CRC]
-              [--lod-resource U.V[.U360.V360]] [--ts0-resource COMBINED_FLAGS]
-              [--kvd-resource PATH] [--ath-resource INFO] [--hotspot-data-resource PATH]
-              [--hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]... [--set-version X.Y]
-              [--set-format IMAGE_FORMAT] [--set-size SIZE] [--set-width WIDTH]
-              [--set-height HEIGHT] [--edit-filter RESIZE_FILTER] [--add-flag FLAG]...
-              [--add-flags-uint FLAGS] [--remove-flag FLAG]... [--remove-flags-uint FLAGS]
-              [--recompute-transparency-flags] [--recompute-mips] [--remove-mips]
-              [--recompute-thumbnail] [--remove-thumbnail] [--recompute-reflectivity]
-              [--set-platform PLATFORM] [--set-compression-method COMPRESSION_METHOD]
-              [--set-compression-level LEVEL] [--set-start-frame FRAME_INDEX]
-              [--set-bumpmap-scale SCALE] [--set-console-mip-scale SCALE]
-              [--set-particle-sheet-resource PATH] [--remove-particle-sheet-resource]
-              [--set-crc-resource CRC] [--remove-crc-resource]
-              [--set-lod-resource U.V[.U360.V360]] [--remove-lod-resource]
-              [--set-ts0-resource COMBINED_FLAGS] [--remove-ts0-resource]
-              [--set-kvd-resource PATH] [--remove-kvd-resource] [--set-ath-resource INFO]
-              [--remove-ath-resource] [--set-hotspot-data-resource PATH]
-              [--remove-hotspot-data-resource]
-              [--add-hotspot-rect X1 Y1 X2 Y2 HOTSPOT_RECT_FLAGS...]...
-              [--info-output-mode VAR] [--info-skip-resources] [--extract-format FILE_FORMAT]
-              [--extract-mip MIP] [--extract-all-mips] [--extract-frame FRAME]
-              [--extract-all-frames] [--extract-face FACE] [--extract-all-faces]
-              [--extract-slices SLICE] [--extract-all-slices] [--extract-all] MODE PATH
+Usage: maretf <MODE> <PATH or -i/--input PATHS> [options]
 
 Positional arguments:
   MODE                                         The mode to run the program in. This
@@ -192,10 +156,14 @@ Optional arguments:
                                                values will be used (0.1 for BC7, BC6H, and
                                                1.0 for all others). Ignored if output format
                                                is uncompressed. [nargs=0..1] [default: -1]
-  -r, --filter                                 The resize filter used to generate mipmaps and
-                                               when resizing the base texture to match a
-                                               power of 2 (if necessary). [nargs=0..1]
+  -r, --filter                                 The resize filter used to generate mipmaps,
+                                               resize the base texture to match a power of 2
+                                               (if necessary), and downscale non-alpha
+                                               channels when distance mapping. [nargs=0..1]
                                                [default: "NICE"]
+  -e, --edge                                   The edge policy used when distance mapping to
+                                               govern alpha sampling and downscale non-alpha
+                                               channels. [nargs=0..1] [default: "CLAMP"]
   -s, --size SIZE                              Sets the width and height of the output
                                                texture if nonzero.
   --width WIDTH                                Sets the width of the output texture if
@@ -214,11 +182,11 @@ Optional arguments:
                                                if nonzero.
   --min-height HEIGHT                          Sets the minimum height of the output texture
                                                if nonzero.
-  --flag FLAG                                  Extra flags to add. ENVMAP, ONE_BIT_ALPHA,
+  --flag FLAG                                  Flags to add. ENVMAP, ONE_BIT_ALPHA,
                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                automatically based on the VTF properties.
                                                [may be repeated]
-  --flags-uint FLAGS                           Extra flags to add, specified as an unsigned
+  --flags-uint FLAGS                           Flags to add, specified as an unsigned
                                                integer. ENVMAP, ONE_BIT_ALPHA,
                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                automatically based on the VTF properties.
@@ -226,6 +194,9 @@ Optional arguments:
   --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
                                                MULTI_BIT_ALPHA flags by default depending on
                                                the output image format.
+  --flag-extra FLAG_EXTRA                      Extra flags to add. [may be repeated]
+  --flags-extra-uint FLAGS_EXTRA               Extra flags to add, specified as an unsigned
+                                               integer. This is for advanced users.
   --no-mips                                    Disable mipmap generation.
   -a, --animated-frames                        If input texture filename ends in two or more
                                                numbers, check for consecutive numbered files
@@ -233,15 +204,21 @@ Optional arguments:
   --no-thumbnail                               Disable thumbnail generation.
   -p, --platform                               Set the platform (PC/console) to build for.
                                                [nargs=0..1] [default: "PC"]
-  -m, --compression-method                     Set the compression method. Deflate is
+  -m, --compression-method                     Set the CPU compression method. Deflate is
                                                supported on all Strata Source games for VTF
                                                v7.6. Zstd is supported on all Strata Source
                                                games for VTF v7.6 besides Portal: Revolution.
                                                LZMA is supported for console VTFs.
                                                [nargs=0..1] [default: "ZSTD"]
-  -c, --compression-level                      Set the compression level. -1 to 9 for Deflate
-                                               and LZMA, -1 to 22 for Zstd. [nargs=0..1]
-                                               [default: 6]
+  -c, --compression-level                      The CPU compression level, between 0.0 and
+                                               1.0. Higher levels will take longer to create
+                                               the texture. If level is below 0.0, default
+                                               compression level will be used. If level is
+                                               above 1.0, it is assumed the user is setting
+                                               the exact compression level for the algorithm
+                                               in use manually (this is for backwards
+                                               compatibility). Ignored if CPU compression is
+                                               not in use. [nargs=0..1] [default: -1]
   --start-frame                                The start frame used in animations, counting
                                                from zero. Ignored when creating console VTFs.
                                                [nargs=0..1] [default: 0]
@@ -253,21 +230,23 @@ Optional arguments:
   --opengl                                     Alias of --invert-green, added for vtex2
                                                compatibility.
   --hdri                                       Interpret the given image as an
-                                               equirectangular HDRI and create a cubemap.
+                                               equirectangular HDRI and create a cubemap or
+                                               skybox. [nargs=0..1] [default: "FLAT"]
   --hdri-autodetect                            Automatically detects if given image is an
-                                               equirectangular HDRI and creates a cubemap if
-                                               it is.
+                                               equirectangular HDRI and creates a cubemap or
+                                               skybox if it is. Ignored if --hdri is
+                                               specified. [nargs=0..1] [default: "FLAT"]
   --hdri-no-filter                             When creating a cubemap from an input HDRI, do
                                                not perform bilinear filtering.
   --resize-method                              How to resize the texture's width and height
                                                to match a power of 2. Overridden by
                                                --width-resize-method and
                                                --height-resize-method. [nargs=0..1]
-                                               [default: "BIGGER"]
+                                               [default: "NEAREST"]
   --width-resize-method                        How to resize the texture's width to match a
-                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+                                               power of 2. [nargs=0..1] [default: "NEAREST"]
   --height-resize-method                       How to resize the texture's height to match a
-                                               power of 2. [nargs=0..1] [default: "BIGGER"]
+                                               power of 2. [nargs=0..1] [default: "NEAREST"]
   --console-mip-scale                          On console platforms, expands the perceived
                                                size of the texture when applied to map
                                                geometry and models. For example, given a
@@ -280,6 +259,51 @@ Optional arguments:
                                                of 1/2.2 is assumed by a good deal of code in
                                                Source engine, change this if you know what
                                                you're doing. [nargs=0..1] [default: 0.454545]
+  -D, --alpha-to-distance                      Transform the texture's alpha channel (or, if
+                                               the input image type is single-channel, its
+                                               only channel) into a distance map, downscaling
+                                               any color channels if present.
+  -R, --distance-reduce                        Factor by which to downscale when distance
+                                               mapping. Must be a power of 2. Overridden by
+                                               --distance-reduce-x and --distance-reduce-y.
+                                               [nargs=0..1] [default: 4]
+  --distance-reduce-x                          Factor by which to downscale width when
+                                               distance mapping. Must be a power of 2.
+                                               [nargs=0..1] [default: 0]
+  --distance-reduce-y                          Factor by which to downscale height when
+                                               distance mapping. Must be a power of 2.
+                                               [nargs=0..1] [default: 0]
+  --distance-no-valve-quirks                   Do not mimic vtex by forcing the edges of a
+                                               generated distance map to zero, nor warn when
+                                               this happens.
+  --distance-dither                            When distance mapping, and the output format
+                                               is not floating-point, run an experimental
+                                               gradient-aligned dither filter on the alpha
+                                               channel before it is quantized from the
+                                               floating-point representation used to compute
+                                               it. Effect may differ between releases until
+                                               this notice is removed.
+  --distance-spread                            Multiply the search radius when determining
+                                               distance. Large values are computationally
+                                               expensive. Must not result in a radius of zero
+                                               when multiplied by either reduction factor.
+                                               [nargs=0..1] [default: 1]
+  --distance-alpha-threshold                   Alpha value, expressed in the range 0..1,
+                                               below which alpha is considered zero when
+                                               distance mapping. [nargs=0..1] [default: 0.04]
+  --distance-aa                                When distance mapping, interpret the alpha
+                                               channel as antialiased. May reduce
+                                               second-order artifacts or worsen them
+                                               depending on the contents.
+  --distance-euclidean                         When distance mapping, accept distance hits
+                                               only in an ellipse governed by reduction and
+                                               spread, rather than in a rectangle as vtex
+                                               does.
+  --distance-sample-centered                   When distance mapping, sample from the center
+                                               of pixels in destination coordinate space,
+                                               rather than from the northwest corner as vtex
+                                               does. Can mitigate a perceived southeast shift
+                                               at extreme reductions.
   --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
                                                adds SRGB flag otherwise.
   --clamps                                     Alias of --flag CLAMP_S, added for vtex2
@@ -365,6 +389,12 @@ Optional arguments:
                                                This is for advanced users.
   --recompute-transparency-flags               Recomputes transparency flags based on the
                                                image format.
+  --add-flag-extra FLAG_EXTRA                  Extra flags to add. [may be repeated]
+  --add-flags-extra-uint FLAGS_EXTRA           Extra flags to add, specified as an unsigned
+                                               integer. This is for advanced users.
+  --remove-flag-extra FLAG_EXTRA               Extra flags to remove. [may be repeated]
+  --remove-flags-extra-uint FLAGS_EXTRA        Extra flags to remove, specified as an
+                                               unsigned integer. This is for advanced users.
   --recompute-mips                             Recomputes mipmaps with the specified edit
                                                resize filter.
   --remove-mips                                Remove mipmaps. If recompute mips is
@@ -374,13 +404,20 @@ Optional arguments:
                                                is specified, this argument is ignored.
   --recompute-reflectivity                     Recompute the reflectivity vector.
   --set-platform PLATFORM                      Set the VTF platform.
-  --set-compression-method COMPRESSION_METHOD  Set the compression method. Deflate is
+  --set-compression-method COMPRESSION_METHOD  Set the CPU compression method. Deflate is
                                                supported on all Strata Source games for VTF
                                                v7.6. Zstd is supported on all Strata Source
                                                games for VTF v7.6 besides Portal: Revolution.
                                                LZMA is supported for console VTFs.
-  --set-compression-level LEVEL                Set the compression level. -1 to 9 for Deflate
-                                               and LZMA, -1 to 22 for Zstd.
+  --set-compression-level                      Set the CPU compression level, between 0.0 and
+                                               1.0. Higher levels will take longer to create
+                                               the texture. If level is below 0.0, default
+                                               compression level will be used. If level is
+                                               above 1.0, it is assumed the user is setting
+                                               the exact compression level for the algorithm
+                                               in use manually (this is for backwards
+                                               compatibility). Ignored if CPU compression is
+                                               not in use. [nargs=0..1] [default: -1]
   --set-start-frame FRAME_INDEX                Set the start frame.
   --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
                                                point.
@@ -411,8 +448,11 @@ Optional arguments:
   --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
                                                resource. If set KVD resource is specified,
                                                this argument is ignored.
-  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info) resource.
-  --remove-ath-resource                        Remove the nonstandard ATH (Author Info) resource. If set ATH resource is specified, this argument is ignored.
+  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info)
+                                               resource.
+  --remove-ath-resource                        Remove the nonstandard ATH (Author Info)
+                                               resource. If set ATH resource is specified,
+                                               this argument is ignored.
   --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should
                                                point to a valid HOT file.
   --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT
@@ -427,33 +467,61 @@ Optional arguments:
                                                initialized to default values if not present
                                                beforehand. [nargs: 5] [may be repeated]
 
+"extract" mode (detailed usage):
+  --extract-skip-image                         Do not extract image data. Useful if a
+                                               different resource in the file is desired.
+  --extract-file-format                        Output file format. [nargs=0..1]
+                                               [default: "DEFAULT"]
+  --extract-image-format                       The image format to convert the texture data
+                                               to before extracting. [nargs=0..1]
+                                               [default: "UNCHANGED"]
+  --extract-alpha-channel                      If image has an alpha channel, extract the
+                                               alpha and convert to a black-and-white image,
+                                               where black is 0% alpha and white is 100%
+                                               alpha.
+  --extract-mip                                Set the mip to extract. Overridden by
+                                               --extract-all-mips. [nargs=0..1] [default: 0]
+  --extract-all-mips                           Extract all mips. Overridden by
+                                               --extract-all-images.
+  --extract-frame                              Set the frame to extract. Overridden by
+                                               --extract-all-frames. [nargs=0..1]
+                                               [default: 0]
+  --extract-all-frames                         Extract all frames. Overridden by
+                                               --extract-all-images.
+  --extract-face                               Set the face to extract. Overridden by
+                                               --extract-all-faces. [nargs=0..1] [default: 0]
+  --extract-all-faces                          Extract all faces. Overridden by
+                                               --extract-all-images.
+  --extract-slice                              Set the slice to extract. Overridden by
+                                               --extract-all-slices. [nargs=0..1]
+                                               [default: 0]
+  --extract-all-slices                         Extract all slices. Overridden by
+                                               --extract-all-images.
+  --extract-all-images                         Extract all mips, frames, faces, and slices.
+  --extract-thumbnail                          Extract thumbnail resource to disk if present.
+                                               Overridden by --extract-all-resources.
+  --extract-particle-sheet-resource            Extract particle sheet resource to disk if
+                                               present. Overridden by
+                                               --extract-all-resources.
+  --extract-kvd-resource                       Extract the nonstandard KVD (KeyValues Data)
+                                               resource to disk if present. Overridden by
+                                               --extract-all-resources.
+  --extract-ath-resource                       Extract the nonstandard ATH (Author Info)
+                                               resource to disk if present. Overridden by
+                                               --extract-all-resources.
+  --extract-hotspot-data-resource              Extract the hotspot data resource to disk if
+                                               present. Overridden by
+                                               --extract-all-resources.
+  --extract-all-resources                      Extract all resources to disk.
+  --extract-stdout                             When extracting an image or resource, print
+                                               the name and base64-encoded contents to
+                                               console instead of writing a file.
+
 "info" mode (detailed usage):
   --info-output-mode                           The mode to output information in. Can be
                                                "human" or "kv1". [nargs=0..1]
                                                [default: "human"]
   --info-skip-resources                        Do not print resource internals.
-
-"extract" mode (detailed usage):
-  --extract-format                             Output file format. [nargs=0..1]
-                                               [default: "DEFAULT"]
-  --extract-mip                                Set the mip to extract. Overridden by
-                                               --extract-all-mips. [nargs=0..1] [default: 0]
-  --extract-all-mips                           Extract all mips. Overridden by --extract-all.
-  --extract-frame                              Set the frame to extract. Overridden by
-                                               --extract-all-frames. [nargs=0..1]
-                                               [default: 0]
-  --extract-all-frames                         Extract all frames. Overridden by
-                                               --extract-all.
-  --extract-face                               Set the face to extract. Overridden by
-                                               --extract-all-faces. [nargs=0..1] [default: 0]
-  --extract-all-faces                          Extract all faces. Overridden by
-                                               --extract-all.
-  --extract-slices                             Set the slice to extract. Overridden by
-                                               --extract-all-slices. [nargs=0..1]
-                                               [default: 0]
-  --extract-all-slices                         Extract all slices. Overridden by
-                                               --extract-all.
-  --extract-all                                Extract all mips, frames, faces, and slices.
 
 Enumerations:
 
@@ -561,6 +629,14 @@ FLAG
  • CSGO_ASYNC_SKIP_INITIAL_LOW_RES
  • IGNORE_PICMIP
 
+FLAG_EXTRA
+ • USING_PREMULTIPLIED_ALPHA_RESIZE
+
+HDRI_MODE
+ • FLAT
+ • CUBEMAP
+ • SKYBOX
+
 HOTSPOT_RECT_FLAGS
  • RANDOM_ROTATION
  • RANDOM_REFLECTION
@@ -595,6 +671,12 @@ RESIZE_FILTER
  • POINT_SAMPLE
  • KAISER
  • NICE
+
+RESIZE_EDGE
+ • CLAMP
+ • REFLECT
+ • WRAP
+ • ZERO
 
 RESIZE_METHOD
  • NONE

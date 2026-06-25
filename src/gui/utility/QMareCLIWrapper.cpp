@@ -31,7 +31,7 @@ QString QMareCLIWrapper::getCommand() const {
 	return command;
 }
 
-int QMareCLIWrapper::exec() const {
+std::tuple<int, std::string> QMareCLIWrapper::exec() const {
 	std::vector<std::string> argumentStrs;
 	for (const auto& arg : this->arguments) {
 		argumentStrs.emplace_back(arg.toUtf8().constData());

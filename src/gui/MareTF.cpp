@@ -24,54 +24,55 @@ int main(int argc, char* argv[]) {
 	QMareOptions::setupOptions(*options);
 
 #if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
-	const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
-	QLocalSocket socket;
-	socket.connectToServer(serverName);
-	if (socket.waitForConnected(500)) {
-		QByteArray data;
-		QDataStream stream{&data, QIODevice::WriteOnly};
-		stream << QCoreApplication::arguments();
-		socket.write(data);
-		socket.waitForBytesWritten(500);
-		return 0;
-	}
-
 	QLocalServer server;
-	QLocalServer::removeServer(serverName);
-	QObject::connect(&server, &QLocalServer::newConnection, [&server] {
-		auto* client = server.nextPendingConnection();
-		QObject::connect(client, &QLocalSocket::readyRead, [client] {
-			if (g_ManeWindow) {
-				const QByteArray data = client->readAll();
-				QDataStream stream{data};
-				QStringList args;
-				stream >> args;
-				for (int i = 1; i < args.size(); i++) {
-					g_ManeWindow->loadTexture(args[i]);
-				}
+	if (!QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES)) {
+		const auto serverName = QString{"%1_%2_%3"}.arg(PROJECT_ORGANIZATION_NAME, PROJECT_NAME, PROJECT_VERSION);
+		QLocalSocket socket;
+		socket.connectToServer(serverName);
+		if (socket.waitForConnected(500)) {
+			QByteArray data;
+			QDataStream stream{&data, QIODevice::WriteOnly};
+			stream << QCoreApplication::arguments();
+			socket.write(data);
+			socket.waitForBytesWritten(500);
+			return 0;
+		}
 
-				if (QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE))
+		QLocalServer::removeServer(serverName);
+		QObject::connect(&server, &QLocalServer::newConnection, [&server] {
+			auto* client = server.nextPendingConnection();
+			QObject::connect(client, &QLocalSocket::readyRead, [client] {
+				if (g_ManeWindow) {
+					const QByteArray data = client->readAll();
+					QDataStream stream{data};
+					QStringList args;
+					stream >> args;
+					for (int i = 1; i < args.size(); i++) {
+						g_ManeWindow->loadTexture(args[i]);
+					}
+
+					if (QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE))
 #ifdef Q_OS_WIN
-				{
-					const auto flags = g_ManeWindow->windowFlags();
-					g_ManeWindow->setWindowFlags(flags | Qt::WindowStaysOnTopHint);
-					g_ManeWindow->show();
-					g_ManeWindow->setWindowFlags(flags);
-				}
-				// Will simply flash in taskbar if above code didn't run
+					{
+						const auto flags = g_ManeWindow->windowFlags();
+						g_ManeWindow->setWindowFlags(flags | Qt::WindowStaysOnTopHint);
+						g_ManeWindow->show();
+						g_ManeWindow->setWindowFlags(flags);
+					}
+					// Will simply flash in taskbar if above code didn't run
 #endif
-				{
-					// Yes we need all of these
-					g_ManeWindow->show();
-					g_ManeWindow->raise();
-					g_ManeWindow->activateWindow();
+					{
+						// Yes we need all of these
+						g_ManeWindow->show();
+						g_ManeWindow->raise();
+						g_ManeWindow->activateWindow();
+					}
 				}
-
-			}
-			client->deleteLater();
+				client->deleteLater();
+			});
 		});
-	});
-	server.listen(serverName);
+		server.listen(serverName);
+	}
 #endif
 
 	const auto languageOverride = QMareOptions::get<QString>(QMareOptions::STR_LANGUAGE_OVERRIDE);

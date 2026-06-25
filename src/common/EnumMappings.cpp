@@ -144,7 +144,69 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"BC7",
 	"BC6H",
 };
-const std::vector<std::string_view> IMAGE_FORMAT_P = IMAGE_FORMAT_S;
+const std::vector<std::string_view> IMAGE_FORMAT_P{
+	"Unchanged",
+	"Default",
+	"RGBA8888",
+	"ABGR8888",
+	"RGB888",
+	"BGR888",
+	"RGB565",
+	"I8",
+	"IA88",
+	"P8",
+	"A8",
+	"RGB888_BLUESCREEN",
+	"BGR888_BLUESCREEN",
+	"ARGB8888",
+	"BGRA8888",
+	"BGRA8888_HDR",
+	"DXT1",
+	"DXT3",
+	"DXT5",
+	"BGRX8888",
+	"BGR565",
+	"BGRX5551",
+	"BGRA4444",
+	"DXT1_ONE_BIT_ALPHA",
+	"BGRA5551",
+	"UV88",
+	"UVWQ8888",
+	"RGBA16161616F",
+	"RGBA16161616",
+	"RGBA16161616_HDR",
+	"UVLX8888",
+	"R32F",
+	"RGB323232F",
+	"RGBA32323232F",
+	"RG1616F",
+	"RG3232F",
+	"RGBX8888",
+	"EMPTY",
+	"ATI2N",
+	"ATI1N",
+	"RGBA1010102",
+	"BGRA1010102",
+	"R16F",
+	"CONSOLE_BGRX8888_LINEAR",
+	"CONSOLE_RGBA8888_LINEAR",
+	"CONSOLE_ABGR8888_LINEAR",
+	"CONSOLE_ARGB8888_LINEAR",
+	"CONSOLE_BGRA8888_LINEAR",
+	"CONSOLE_RGB888_LINEAR",
+	"CONSOLE_BGR888_LINEAR",
+	"CONSOLE_BGRX5551_LINEAR",
+	"CONSOLE_I8_LINEAR",
+	"CONSOLE_RGBA16161616_LINEAR",
+	"CONSOLE_RGBA16161616_HDR",
+	"CONSOLE_BGRX8888_LE",
+	"CONSOLE_BGRA8888_LE",
+	"TITANFALL_BC6H",
+	"TITANFALL_BC7",
+	"R8",
+	"BC7",
+	"BC6H",
+};
 
 const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORMAT_E{
 	vtfpp::ImageConversion::FileFormat::DEFAULT,
@@ -170,7 +232,18 @@ const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
 	"HDR",
 	"EXR",
 };
-const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_P = IMAGE_CONVERSION_FILE_FORMAT_S;
+const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_P{
+	"Default",
+	"PNG",
+	"JPG",
+	"JPEG",
+	"BMP",
+	"TGA",
+	"WEBP",
+	"QOI",
+	"HDR",
+	"EXR",
+};
 
 const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_FILTER_E{
 	vtfpp::ImageConversion::ResizeFilter::DEFAULT,
@@ -204,6 +277,25 @@ const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_FILTER_P{
 	"Point Sample",
 	"Kaiser",
 	"NICE",
+};
+
+const std::vector<vtfpp::ImageConversion::ResizeEdge> IMAGE_CONVERSION_RESIZE_EDGE_E{
+	vtfpp::ImageConversion::ResizeEdge::CLAMP,
+	vtfpp::ImageConversion::ResizeEdge::REFLECT,
+	vtfpp::ImageConversion::ResizeEdge::WRAP,
+	vtfpp::ImageConversion::ResizeEdge::ZERO,
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_EDGE_S{
+	"CLAMP",
+	"REFLECT",
+	"WRAP",
+	"ZERO",
+};
+const std::vector<std::string_view> IMAGE_CONVERSION_RESIZE_EDGE_P{
+	"Clamp",
+	"Reflect",
+	"Wrap",
+	"Zero",
 };
 
 const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E{
@@ -385,6 +477,16 @@ const std::vector<std::string_view> VTF_FLAGS_S{
 };
 const std::vector<std::string_view> VTF_FLAGS_P = VTF_FLAGS_S;
 
+const std::vector<vtfpp::VTF::FlagsExtra> VTF_FLAGS_EXTRA_E{
+	vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE,
+};
+const std::vector<std::string_view> VTF_FLAGS_EXTRA_S{
+	"USING_PREMULTIPLIED_ALPHA_RESIZE",
+};
+const std::vector<std::string_view> VTF_FLAGS_EXTRA_P{
+	"Premultiplied Alpha Resize",
+};
+
 const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E{
 	vtfpp::VTF::PLATFORM_PC,
 	vtfpp::VTF::PLATFORM_XBOX,
@@ -405,6 +507,22 @@ const std::vector<std::string_view> VTF_PLATFORM_P{
 	"X360",
 	"PS3 (Orange Box)",
 	"PS3 (P2, CS:GO)",
+};
+
+const std::vector<maretf::HDRIMode> HDRI_MODE_E{
+	maretf::HDRIMode::FLAT,
+	maretf::HDRIMode::CUBEMAP,
+	maretf::HDRIMode::SKYBOX,
+};
+const std::vector<std::string_view> HDRI_MODE_S{
+	"FLAT",
+	"CUBEMAP",
+	"SKYBOX",
+};
+const std::vector<std::string_view> HDRI_MODE_P{
+	"Flat Texture",
+	"Cubemap",
+	"Skybox",
 };
 
 } // namespace not_magic_enum::detail

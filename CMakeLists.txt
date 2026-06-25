@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 # set up project
 project(maretf
         DESCRIPTION "A utility to create, edit, and display every type of VTF file ever made."
-        VERSION 0.10.4
-        HOMEPAGE_URL "https://github.com/craftablescience/MareTF")
+        VERSION 0.12.0
+        HOMEPAGE_URL "https://maretf.me")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -16,6 +16,7 @@ include(CS_All)
 set(PROJECT_NAME_PRETTY "MareTF" CACHE STRING "" FORCE)
 cs_version_pretty() # PROJECT_VERSION_PRETTY
 set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
+set(PROJECT_GITHUB_URL "https://github.com/craftablescience/MareTF" CACHE STRING "" FORCE)
 
 # options
 option(MARETF_BUILD_FOR_STRATA_SOURCE "Build ${PROJECT_NAME_PRETTY} for Strata Source games" OFF)
@@ -30,6 +31,13 @@ cs_setup_vs_defaults(STARTUP_PROJECT "${PROJECT_NAME}")
 # set common compile options
 option(MARETF_USE_LTO "Compile ${PROJECT_NAME_PRETTY} with LTO/IPO" OFF)
 cs_configure_defaults(MARETF_USE_LTO)
+
+# "system" cpack generators use system-provided Qt
+if(DEFINED CPACK_GENERATOR AND ((CPACK_GENERATOR STREQUAL "DEB") OR (CPACK_GENERATOR STREQUAL "RPM")))
+    set(MARETF_SYSTEM_INSTALL ON CACHE BOOL "" FORCE)
+else()
+    set(MARETF_SYSTEM_INSTALL OFF CACHE BOOL "" FORCE)
+endif()
 
 # external libraries
 cs_include_directory(ext)

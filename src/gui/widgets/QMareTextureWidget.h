@@ -49,23 +49,23 @@ public:
 
 	[[nodiscard]] bool useR() const;
 
-	void setR(bool newR);
-
 	[[nodiscard]] bool useG() const;
-
-	void setG(bool newG);
 
 	[[nodiscard]] bool useB() const;
 
-	void setB(bool newB);
+	void setRGB(bool newR, bool newG, bool newB);
 
 	[[nodiscard]] bool useA() const;
 
 	void setA(bool newA);
 
-	[[nodiscard]] bool useBackground() const;
+	[[nodiscard]] bool useAMask() const;
 
-	void setBackground(bool newBackground);
+	void setAMask(bool newAMask);
+
+	[[nodiscard]] bool useTiled() const;
+
+	void setTiled(bool newTiled);
 
 	[[nodiscard]] int getCurrentCubemapMode() const;
 
@@ -103,7 +103,8 @@ protected:
 	bool g = true;
 	bool b = true;
 	bool a = true;
-	bool background = true;
+	bool aMask = true;
+	bool tiled = false;
 	int cubemapMode = 0;
 
 	QPointF mousePressPosition;

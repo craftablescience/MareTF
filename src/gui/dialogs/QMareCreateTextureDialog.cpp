@@ -27,6 +27,7 @@
 #include "utility/QMareCLIWrapper.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
+#include "widgets/QMareFilesystemBox.h"
 #include "widgets/QMareFlagsWidget.h"
 #include "widgets/QMareSpinBox.h"
 
@@ -46,7 +47,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureTabScroll->setWidget(textureTab);
 	auto* textureTabLayout = new QFormLayout{textureTab};
 	textureTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(textureTabScroll, tr("Texture"));
+	tabs->addTab(textureTabScroll, tr("General"));
 
 	// Platform
 	auto* platformCombo = new QMareComboBox{textureTab};
@@ -203,15 +204,19 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(textureMipmapsGenerateCheck, textureMipmapsGroup);
 
+	// Animated frames
+	auto* textureAnimatedFramesCheck = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Animate Numbered Sequences"), textureAnimatedFramesCheck);
+
 	// HDRI
 	auto* textureHDRIGroup = new QGroupBox{textureTab};
 	auto* textureHDRILayout = new QFormLayout{textureHDRIGroup};
 	textureHDRILayout->setFormAlignment(Qt::AlignHCenter);
 
 	auto* textureHDRIConversionMethodCombo = new QMareComboBox{textureHDRIGroup};
-	textureHDRIConversionMethodCombo->addItem(tr("Flat Texture"));
-	textureHDRIConversionMethodCombo->addItem(tr("Cubemap"));
-	//textureHDRIConversionMethodCombo->addItem(tr("Skybox"));
+	for (const auto& [hdriMode, hdriModeName] : not_magic_enum::enum_entries<maretf::HDRIMode>(true)) {
+		textureHDRIConversionMethodCombo->addItem(hdriModeName.data(), static_cast<int>(hdriMode));
+	}
 	textureHDRILayout->addRow(tr("Convert to"), textureHDRIConversionMethodCombo);
 
 	auto* textureHDRIFilterCheck = new QCheckBox{textureHDRIGroup};
@@ -230,6 +235,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureGammaCorrectionAmountSpin->setSingleStep(0.05);
 
 	textureTabLayout->addRow(textureGammaCorrectionEnableCheck, textureGammaCorrectionAmountSpin);
+
+	// Distance mapping
+	auto* textureUseDistanceMapping = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Distance Mapping"), textureUseDistanceMapping);
+
+	// Premultiplied alpha
+	auto* texturePremultipliedAlpha = new QCheckBox{textureTab};
+	textureTabLayout->addRow(tr("Treat Alpha As Mask (Premultiplied)"), texturePremultipliedAlpha);
 
 	// Invert green channel
 	auto* textureInvertGreenCheck = new QCheckBox{textureTab};
@@ -267,6 +280,69 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionLayout->addRow(textureCompressionLevelEnableCheck, textureCompressionLevelSpin);
 
 	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
+
+	// Distance mapping tab
+	auto* distanceTabScroll = new QScrollArea{tabs};
+	auto* distanceTab = new QWidget{distanceTabScroll};
+	distanceTabScroll->setWidgetResizable(true);
+	distanceTabScroll->setWidget(distanceTab);
+	auto* distanceTabLayout = new QFormLayout{distanceTab};
+	distanceTabLayout->setFormAlignment(Qt::AlignHCenter);
+	tabs->addTab(distanceTabScroll, tr("Distance Mapping"));
+
+	auto* distanceReduceGroup = new QGroupBox{distanceTab};
+	auto* distanceReduceLayout = new QFormLayout{distanceReduceGroup};
+	distanceReduceLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* distanceReduceAxesDifferCheck = new QCheckBox{distanceReduceGroup};
+	distanceReduceLayout->addRow(tr("Axes Differ"), distanceReduceAxesDifferCheck);
+
+	auto* distanceReduceFactorSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor"), distanceReduceFactorSpin);
+
+	auto* distanceReduceFactorXSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorXSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor (X)"), distanceReduceFactorXSpin);
+
+	auto* distanceReduceFactorYSpin = new QMareSpinBox{distanceReduceGroup};
+	distanceReduceFactorYSpin->setValue(4);
+	distanceReduceLayout->addRow(tr("Factor (Y)"), distanceReduceFactorYSpin);
+
+	auto* distanceReduceEdgeCombo = new QMareComboBox{distanceReduceGroup};
+	for (const auto& [edge, edgeName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeEdge>(true)) {
+		distanceReduceEdgeCombo->addItem(edgeName.data(), static_cast<int>(edge));
+	}
+	distanceReduceEdgeCombo->setCurrentIndex(0); // CLAMP
+	distanceReduceLayout->addRow(tr("Edge"), distanceReduceEdgeCombo);
+
+	distanceTabLayout->addRow(tr("Reduce"), distanceReduceGroup);
+
+	auto* distanceNoValveQuirksCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("No Valve Quirks"), distanceNoValveQuirksCheck);
+
+	auto* distanceGradientDitherCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("(Experimental) Gradient-Aligned Dither Filter"), distanceGradientDitherCheck);
+
+	auto* distanceSpreadSpin = new QMareDoubleSpinBox{distanceTab};
+	distanceSpreadSpin->setValue(1.0);
+	distanceSpreadSpin->setSingleStep(0.1);
+	distanceTabLayout->addRow(tr("Search Radius"), distanceSpreadSpin);
+
+	auto* distanceAlphaThresholdSpin = new QMareDoubleSpinBox{distanceTab};
+	distanceAlphaThresholdSpin->setRange(0.0, 100.0);
+	distanceAlphaThresholdSpin->setSuffix("%");
+	distanceAlphaThresholdSpin->setValue(4.0);
+	distanceTabLayout->addRow(tr("Alpha Threshold"), distanceAlphaThresholdSpin);
+
+	auto* distanceAntialiasingCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Antialiased Alpha"), distanceAntialiasingCheck);
+
+	auto* distanceEuclideanCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Euclidean"), distanceEuclideanCheck);
+
+	auto* distanceSampleCenteredCheck = new QCheckBox{distanceTab};
+	distanceTabLayout->addRow(tr("Sample Centered"), distanceSampleCenteredCheck);
 
 	// Flags tab
 	auto* flagsChecks = new QMareFlagsWidget{tabs};
@@ -363,83 +439,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	/* ---------------------------- FILESYSTEM BEGIN ---------------------------- */
 
-	auto* filesystemGroup = new QGroupBox{tr("Filesystem"), this};
-	auto* filesystemLayout = new QFormLayout{filesystemGroup};
-	filesystemLayout->setFormAlignment(Qt::AlignHCenter);
-
-	/* ------------------------------- Input Path ------------------------------- */
-
-	auto* filesystemInputPathParent = new QWidget{filesystemGroup};
-	auto* filesystemInputPathLayout = new QHBoxLayout{filesystemInputPathParent};
-	filesystemInputPathLayout->setSpacing(4);
-	filesystemInputPathLayout->setContentsMargins(0, 0, 0, 0);
-
-	auto* filesystemInputPath = new QLineEdit{filesystemGroup};
-	filesystemInputPath->setText(QMareCLIWrapper::joinPaths(inputPaths));
-	filesystemInputPath->setMinimumWidth(200);
-	filesystemInputPath->setReadOnly(true);
-	filesystemInputPathLayout->addWidget(filesystemInputPath);
-
-	auto* filesystemInputPathSearch = new QPushButton{filesystemGroup};
-	filesystemInputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
-	filesystemInputPathLayout->addWidget(filesystemInputPathSearch);
-
-	filesystemLayout->addRow(tr("Input Path"), filesystemInputPathParent);
-
-	/* ------------------------------  Output Path ------------------------------ */
-
-	auto* filesystemOutputPathParent = new QWidget{filesystemGroup};
-	auto* filesystemOutputPathLayout = new QHBoxLayout{filesystemOutputPathParent};
-	filesystemOutputPathLayout->setSpacing(4);
-	filesystemOutputPathLayout->setContentsMargins(0, 0, 0, 0);
-
-	auto* filesystemOutputPath = new QLineEdit{filesystemGroup};
-	filesystemOutputPath->setPlaceholderText(tr("Leave empty for default"));
-	filesystemOutputPath->setMinimumWidth(200);
-	filesystemOutputPath->setReadOnly(true);
-	filesystemOutputPathLayout->addWidget(filesystemOutputPath);
-
-	auto* filesystemOutputPathSearch = new QPushButton{filesystemGroup};
-	filesystemOutputPathSearch->setIcon(this->style()->standardIcon(QStyle::SP_DirOpenIcon));
-	filesystemOutputPathLayout->addWidget(filesystemOutputPathSearch);
-
-	filesystemLayout->addRow(tr("Output Path"), filesystemOutputPathParent);
-
-	/* ------------------------------- Overwrite -------------------------------- */
-
-	auto* overwriteGroup = new QGroupBox{filesystemGroup};
-	auto* overwriteLayout = new QHBoxLayout{overwriteGroup};
-	overwriteLayout->setSpacing(24);
-	overwriteLayout->setAlignment(Qt::AlignHCenter);
-
-	auto* overwriteRadioGroup = new QButtonGroup{overwriteGroup};
-	overwriteRadioGroup->setExclusive(true);
-
-	auto* overwriteRadioYes = new QRadioButton{tr("Yes"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioYes);
-	overwriteLayout->addWidget(overwriteRadioYes);
-
-	auto* overwriteRadioAsk = new QRadioButton{tr("Ask"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioAsk);
-	overwriteLayout->addWidget(overwriteRadioAsk);
-
-	auto* overwriteRadioNo = new QRadioButton{tr("No"), overwriteGroup};
-	overwriteRadioGroup->addButton(overwriteRadioNo);
-	overwriteLayout->addWidget(overwriteRadioNo);
-
-	overwriteRadioAsk->setChecked(true);
-
-	filesystemLayout->addRow(tr("Overwrite"), overwriteGroup);
-
-	/* ----------------------------- Recurse/Watch ------------------------------ */
-
-	auto* recurseIntoSubdirsCheck = new QCheckBox{filesystemGroup};
-	recurseIntoSubdirsCheck->setChecked(createFromDir);
-	filesystemLayout->addRow(tr("Enter Subfolders"), recurseIntoSubdirsCheck);
-	filesystemLayout->setRowVisible(recurseIntoSubdirsCheck, createFromDir);
-
-	auto* watchFilesCheck = new QCheckBox{filesystemGroup};
-	filesystemLayout->addRow(tr("Watch For Changes"), watchFilesCheck);
+	auto* filesystemGroup = new QMareFilesystemBox{inputPaths, createFromDir, true, this};
 
 	/* ----------------------------- FILESYSTEM END ----------------------------- */
 
@@ -566,6 +566,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureGammaCorrectionEnableCheck->stateChanged(textureGammaCorrectionEnableCheck->isChecked());
 #endif
 
+	// Enable "Distance Mapping" tab when Distance Mapping is checked
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(textureUseDistanceMapping, &QCheckBox::checkStateChanged, this, [tabs](Qt::CheckState state) {
+		tabs->setTabVisible(1, state == Qt::Checked);
+	});
+	textureUseDistanceMapping->checkStateChanged(textureUseDistanceMapping->checkState());
+#else
+	connect(textureUseDistanceMapping, &QCheckBox::stateChanged, this, [tabs](bool state) {
+		tabs->setTabVisible(1, state);
+	});
+	textureUseDistanceMapping->stateChanged(textureUseDistanceMapping->isChecked());
+#endif
+
 	// Disable "Version" combo when platform is not PC, and set it to the appropriate version so the flags list is correct
 	// "CPU Compression" group has many restrictions from "Version" group:
 	// - Disable group entirely if platform is PC and version is not 7.6, or if platform is XBOX, or if platform is PS3_ORANGEBOX
@@ -671,6 +685,24 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureCompressionLevelEnableCheck->stateChanged(textureCompressionLevelEnableCheck->isChecked());
 #endif
 
+	// Enable individual x, y factor spins when Axes Differ is checked
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect(distanceReduceAxesDifferCheck, &QCheckBox::checkStateChanged, this, [distanceReduceLayout, distanceReduceFactorSpin, distanceReduceFactorXSpin, distanceReduceFactorYSpin](Qt::CheckState state) {
+		distanceReduceLayout->setRowVisible(distanceReduceFactorSpin, state != Qt::Checked);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorXSpin, state == Qt::Checked);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorYSpin, state == Qt::Checked);
+	});
+	distanceReduceAxesDifferCheck->checkStateChanged(distanceReduceAxesDifferCheck->checkState());
+#else
+	connect(distanceReduceAxesDifferCheck, &QCheckBox::stateChanged, this, [distanceReduceLayout, distanceReduceFactorSpin, distanceReduceFactorXSpin, distanceReduceFactorYSpin](bool state) {
+		distanceReduceLayout->setRowVisible(distanceReduceFactorSpin, !state);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorXSpin, state);
+		distanceReduceLayout->setRowVisible(distanceReduceFactorYSpin, state);
+	});
+	distanceReduceAxesDifferCheck->stateChanged(distanceReduceAxesDifferCheck->isChecked());
+#endif
+
 	// Set path in "Particle Sheet" group when "Search" clicked
 
 	connect(resourcesSHTPathSearch, &QPushButton::pressed, this, [=, this] {
@@ -714,27 +746,27 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Set input path in "Filesystem" group when "Input Search" clicked
 
-	connect(filesystemInputPathSearch, &QPushButton::pressed, this, [=, this] {
+	connect(filesystemGroup->filesystemInputPathSearch, &QPushButton::pressed, this, [=, this] {
 		if (
 			const auto paths = !createFromDir
 				? QFileDialog::getOpenFileNames(this, tr("Open Images"), QString{}, ::supportedImageFileFormatsForLoad().data())
 				: QStringList{QFileDialog::getExistingDirectory(this, tr("Open Folder"))};
 			!paths.isEmpty() && !paths[0].isEmpty()
 		) {
-			filesystemInputPath->setText(QMareCLIWrapper::joinPaths(paths));
+			filesystemGroup->filesystemInputPath->setText(QMareCLIWrapper::joinPaths(paths));
 		}
 	});
 
 	// Set output path in "Filesystem" group when "Output Search" clicked
 
-	connect(filesystemOutputPathSearch, &QPushButton::pressed, this, [this, &inputPaths, createFromDir, filesystemInputPath, filesystemOutputPath] {
+	connect(filesystemGroup->filesystemOutputPathSearch, &QPushButton::pressed, this, [this, &inputPaths, createFromDir, filesystemGroup] {
 		if (
 			const auto path = !createFromDir || inputPaths.size() > 1
-				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
+				? QFileDialog::getSaveFileName(this, tr("Save Texture"), QFileInfo{filesystemGroup->filesystemInputPath->text()}.canonicalFilePath(), "Valve Texture Format (*.vtf *.xtf)", nullptr, QFileDialog::DontConfirmOverwrite)
 				: QFileDialog::getExistingDirectory(this, tr("Save to Folder"));
 			!path.isEmpty()
 		) {
-			filesystemOutputPath->setText(path);
+			filesystemGroup->filesystemOutputPath->setText(path);
 		}
 	});
 
@@ -743,18 +775,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	const auto getCLI = [=, this] {
 		auto* cli = new QMareCLIWrapper{"create", this};
 
-		// Input paths
-		if (
-			const auto filesystemInputPathSplit = QMareCLIWrapper::splitPaths(filesystemInputPath->text());
-			filesystemInputPathSplit.size() == 1
-		) {
-			cli->addArg(filesystemInputPathSplit[0]);
-		} else {
-			cli->addArg("--input");
-			for (const auto& path : filesystemInputPathSplit) {
-				cli->addArg(path);
-			}
-		}
+		filesystemGroup->addArguments(*cli);
 
 		if (static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt()) != vtfpp::VTF::PLATFORM_PC) {
 			cli->addEnum<vtfpp::VTF::Platform>(platformCombo, "--platform");
@@ -809,8 +830,12 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			cli->addInt(textureMipmapsScaleSpin, "--console-mip-scale");
 		}
 
-		cli->addFlagPredicate(textureHDRIConversionMethodCombo->currentIndex() == 1, "--hdri-autodetect");
-		if (textureHDRIConversionMethodCombo->currentIndex() != 0) {
+		if (textureAnimatedFramesCheck->isChecked()) {
+			cli->addFlag(textureAnimatedFramesCheck, "--animated-frames");
+		}
+
+		if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) != maretf::HDRIMode::FLAT) {
+			cli->addEnum<maretf::HDRIMode>(textureHDRIConversionMethodCombo, "--hdri-autodetect");
 			cli->addFlag(textureHDRIFilterCheck, "--hdri-no-filter", true);
 		}
 
@@ -818,6 +843,43 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 		if (textureGammaCorrectionEnableCheck->isChecked()) {
 			cli->addFloat(textureGammaCorrectionAmountSpin, "--gamma-correct-amount");
+		}
+
+		if (texturePremultipliedAlpha->isChecked()) {
+			// Change this if we ever add more flags
+			cli->addArgPair("--flags-extra-uint", std::format("{}", static_cast<uint32_t>(vtfpp::VTF::FLAG_EXTRA_USING_PREMULTIPLIED_ALPHA_RESIZE)).data());
+		}
+
+		cli->addFlag(textureUseDistanceMapping, "--alpha-to-distance");
+		if (textureUseDistanceMapping->isChecked()) {
+			if (distanceReduceAxesDifferCheck->isChecked()) {
+				if (distanceReduceFactorXSpin->value() != 4) {
+					cli->addInt(distanceReduceFactorXSpin, "--distance-reduce-x");
+				}
+				if (distanceReduceFactorYSpin->value() != 4) {
+					cli->addInt(distanceReduceFactorYSpin, "--distance-reduce-y");
+				}
+			} else if (distanceReduceFactorSpin->value() != 4) {
+				cli->addInt(distanceReduceFactorSpin, "--distance-reduce");
+			}
+
+			cli->addEnum<vtfpp::ImageConversion::ResizeEdge>(distanceReduceEdgeCombo, "--edge");
+
+			cli->addFlag(distanceNoValveQuirksCheck, "--distance-no-valve-quirks");
+
+			cli->addFlag(distanceGradientDitherCheck, "--distance-dither");
+
+			cli->addFloat(distanceSpreadSpin, "--distance-spread");
+
+			if (distanceAlphaThresholdSpin->value() != 4.0) {
+				cli->addArgPair("--distance-alpha-threshold", std::format("{}", static_cast<float>(distanceAlphaThresholdSpin->value()) / 100.f).data());
+			}
+
+			cli->addFlag(distanceAntialiasingCheck, "--distance-aa");
+
+			cli->addFlag(distanceEuclideanCheck, "--distance-euclidean");
+
+			cli->addFlag(distanceSampleCenteredCheck, "--distance-sample-centered");
 		}
 
 		cli->addFlag(textureInvertGreenCheck, "--invert-green");
@@ -872,20 +934,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			cli->addArgPair("--kvd-resource", resourcesKVDPath->text());
 		}
 
-		if (!filesystemOutputPath->text().isEmpty()) {
-			cli->addArgPair("--output", filesystemOutputPath->text());
-		}
-
-		cli->addFlag(overwriteRadioYes, "--yes");
-
-		cli->addFlag(overwriteRadioNo, "--no");
-
-		if (createFromDir) {
-			cli->addFlag(recurseIntoSubdirsCheck, "--no-recurse", true);
-		}
-
-		cli->addFlag(watchFilesCheck, "--watch");
-
 		return cli;
 	};
 
@@ -907,15 +955,28 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
 		auto* cli = getCLI();
-		if (cli->exec()) {
-			QMessageBox::warning(this, tr("Error"), tr("Failed to create texture."));
+		if (const auto& [code, errMsg] = cli->exec(); code) {
+			QMessageBox::warning(this, tr("Error Creating Texture"), errMsg.c_str());
+			cli->deleteLater();
+			return;
 		}
 		cli->deleteLater();
 
 		if (!createFromDir) {
 			QStringList outputPaths;
-			for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemInputPath->text())) {
-				outputPaths.push_back(filesystemOutputPath->text().isEmpty() ? ::getOutputPathForInput(inputPath.toUtf8().constData(), static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt())).c_str() : filesystemOutputPath->text());
+			if (!filesystemGroup->filesystemOutputPath->text().isEmpty()) {
+				outputPaths.push_back(filesystemGroup->filesystemOutputPath->text());
+			} else {
+				for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemGroup->filesystemInputPath->text())) {
+					const auto platformEnum = static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt());
+					if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) == maretf::HDRIMode::SKYBOX) {
+						for (const auto& skyboxOutputPath : ::getOutputSkyboxPathsForInput(inputPath.toUtf8().constData(), platformEnum)) {
+							outputPaths.push_back(skyboxOutputPath.c_str());
+						}
+					} else {
+						outputPaths.push_back(::getOutputPathForInput(inputPath.toUtf8().constData(), platformEnum).c_str());
+					}
+				}
 			}
 			emit this->createdTextures(outputPaths);
 		}
@@ -925,20 +986,24 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	connect(dialogButtons, &QDialogButtonBox::rejected, this, &QMareCreateTextureDialog::reject);
 }
 
-QMareCreateTextureDialog* QMareCreateTextureDialog::fromImages(QWidget* parent) {
-	const auto inputPaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
-	if (inputPaths.isEmpty()) {
-		return nullptr;
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromImages(QWidget* parent, QStringList imagePaths) {
+	if (imagePaths.isEmpty()) {
+		imagePaths = QFileDialog::getOpenFileNames(parent, tr("Open Images"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR), ::supportedImageFileFormatsForLoad().data());
+		if (imagePaths.isEmpty()) {
+			return nullptr;
+		}
 	}
-	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPaths.last()}.canonicalPath());
-	return new QMareCreateTextureDialog{inputPaths, false, parent};
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{imagePaths.last()}.canonicalPath());
+	return new QMareCreateTextureDialog{imagePaths, false, parent};
 }
 
-QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent) {
-	const auto inputPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR));
-	if (inputPath.isEmpty()) {
-		return nullptr;
+QMareCreateTextureDialog* QMareCreateTextureDialog::fromDir(QWidget* parent, QString dirPath) {
+	if (dirPath.isEmpty()) {
+		dirPath = QFileDialog::getExistingDirectory(parent, tr("Open Folder"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR));
+		if (dirPath.isEmpty()) {
+			return nullptr;
+		}
 	}
-	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{inputPath}.canonicalPath());
-	return new QMareCreateTextureDialog{{inputPath}, true, parent};
+	QMareOptions::set(QMareOptions::STR_DEFAULT_CREATE_DIALOG_DIR, QFileInfo{dirPath}.canonicalPath());
+	return new QMareCreateTextureDialog{{dirPath}, true, parent};
 }

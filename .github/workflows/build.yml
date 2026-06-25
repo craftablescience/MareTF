@@ -40,7 +40,7 @@ jobs:
           cache: true
 
       - name: Install NSIS
-        uses: craftablescience/nsis-install@v3
+        uses: negrutiu/nsis-install@v3
         with:
           version: 'v3.11.7461.309'
           arch: x64
@@ -206,17 +206,28 @@ jobs:
           - Debug
           - Release
         cpack_generator:
+          - AppImage
           - DEB
           - RPM
+          - TZST
     runs-on: ubuntu-22.04
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: 1
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
           submodules: recursive
 
-      - name: Install Necessary Packages
-        run: sudo apt update && sudo apt install -y chrpath
+      - name: Install appimagetool
+        if: matrix.cpack_generator == 'AppImage'
+        run: |
+          wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          echo "$PWD" >> "$GITHUB_PATH"
+
+      - name: Install Latest CMake
+        uses: ssrobins/install-cmake@v1
 
       - name: Install Newer GCC
         uses: egor-tensin/setup-gcc@v2
@@ -243,43 +254,6 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j$(nproc)
           cmake --build . --config ${{matrix.build_type}} -t maretf_thumbnailer -- -j$(nproc)
 
-      - name: Fixup Binaries
-        run: |
-          chmod +x '${{env.BUILD_DIR}}/maretf_gui'
-
-          # runpath cleanup for the Qt binaries. These are (mostly) wrong, leading to crashes
-          for f in ${{env.BUILD_DIR}}/*.so*; do
-            echo "Fixing $f..."
-            chrpath -r '$ORIGIN' "$f"
-          done
-          for f in ${{env.BUILD_DIR}}/*/*.so*; do
-            echo "Fixing $f..."
-            chrpath -r '$ORIGIN/..' "$f"
-          done
-
-      - name: Upload Standalone [cpack_generator:DEB]
-        if: matrix.cpack_generator == 'DEB'
-        uses: actions/upload-artifact@v4
-        with:
-          name: 'MareTF-Linux-Standalone-gcc-${{matrix.build_type}}'
-          path: |
-            ${{env.BUILD_DIR}}/CREDITS
-            ${{env.BUILD_DIR}}/LICENSE
-            ${{env.BUILD_DIR}}/maretf
-            ${{env.BUILD_DIR}}/maretf_gui
-            ${{env.BUILD_DIR}}/maretf_thumbnailer
-            ${{env.BUILD_DIR}}/*.so*
-            ${{env.BUILD_DIR}}/egldeviceintegrations/*.so*
-            ${{env.BUILD_DIR}}/platforminputcontexts/*.so*
-            ${{env.BUILD_DIR}}/platforms/*.so*
-            ${{env.BUILD_DIR}}/platformthemes/*.so*
-            ${{env.BUILD_DIR}}/tls/*.so*
-            ${{env.BUILD_DIR}}/wayland-decoration-client/*.so*
-            ${{env.BUILD_DIR}}/wayland-graphics-integration-client/*.so*
-            ${{env.BUILD_DIR}}/wayland-shell-integration/*.so*
-            ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
-          retention-days: 7
-
       - name: Create Installer
         working-directory: ${{env.BUILD_DIR}}
         run: cpack
@@ -287,7 +261,7 @@ jobs:
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: 'MareTF-Linux-${{matrix.cpack_generator}}-Installer-gcc-${{matrix.build_type}}'
+          name: 'MareTF-Linux-${{matrix.cpack_generator}}-gcc-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/MareTF-*-Linux.*
           retention-days: 7
@@ -335,44 +309,4 @@ jobs:
           path: |
             ${{env.BUILD_DIR}}/maretf
             ${{env.BUILD_DIR}}/maretf_gui
-          retention-days: 7
-
-  deploy:
-    needs:
-      - build-windows-maretf
-      - build-windows-stratasource
-      - build-linux-maretf
-      - build-linux-stratasource
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Artifacts
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const artifacts = (await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: ${{github.run_id}},
-            })).data.artifacts;
-            const filteredArtifacts = artifacts.filter(artifact => artifact.name.includes("Release"));
-            console.log(`Found ${artifacts.length} artifacts - ${filteredArtifacts.length} qualify for upload.`);
-            for (const artifact of filteredArtifacts) {
-              console.log(`Downloading "${artifact.name}.zip"...`);
-              let download = await github.rest.actions.downloadArtifact({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                artifact_id: artifact.id,
-                archive_format: 'zip',
-              });
-              let fs = require('fs');
-              fs.writeFileSync(`${{github.workspace}}/${artifact.name}.zip`, Buffer.from(download.data));
-            }
-            console.log("Artifact download complete!");
-
-      - name: Upload Release
-        uses: actions/upload-artifact@v4
-        with:
-          name: Release-Artifacts
-          path: |
-            ${{github.workspace}}/*.zip
           retention-days: 7

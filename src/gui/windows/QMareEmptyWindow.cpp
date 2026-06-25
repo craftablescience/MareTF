@@ -4,17 +4,22 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPainter>
 #include <QScreen>
 #include <QStyle>
 #include <QToolBar>
+#include <QToolButton>
 
+#include "Common.h"
 #include "Config.h"
 
 #include "dialogs/QMareCreateTextureDialog.h"
 #include "dialogs/QMareCreditsDialog.h"
+#include "dialogs/QMareExtractFromTextureDialog.h"
+#include "utility/QMareOptions.h"
 #include "QMareTextureWindow.h"
 
 QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
@@ -30,7 +35,9 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	toolbarExpanderBegin->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	this->toolbar->addWidget(toolbarExpanderBegin);
 
-	this->toolbar->addAction(QIcon{":/button_new.png"}, tr("&Create"), Qt::CTRL | Qt::Key_N, [this] {
+	auto* toolbarCreateAction = new QAction{QIcon{":/button_new.png"}, tr("&Create"), this};
+	toolbarCreateAction->setShortcut(Qt::CTRL | Qt::Key_N);
+	connect(toolbarCreateAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this)) {
 			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
 				if (!g_ManeWindow) {
@@ -47,17 +54,29 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
-	this->toolbar->addAction(QIcon{":/button_new_multi.png"}, tr("Create from &Folder"), Qt::CTRL | Qt::SHIFT | Qt::Key_N, [this] {
+	auto* toolbarCreateFromFolderAction = new QAction{QIcon{":/button_new_multi.png"}, tr("C&reate from Folder"), this};
+	toolbarCreateFromFolderAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
+	connect(toolbarCreateFromFolderAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromDir(this)) {
 			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
 			createTextureDialog->open();
 		}
 	});
 
-	this->toolbar->addSeparator();
+	auto* toolbarCreateButton = new QToolButton{this};
+	toolbarCreateButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+	toolbarCreateButton->setDefaultAction(toolbarCreateAction);
 
-	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Load"), Qt::CTRL | Qt::Key_O, [this] {
-		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Load Textures"), {}, QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+	auto* toolbarCreateMenu = new QMenu{toolbarCreateButton};
+	toolbarCreateMenu->addActions({toolbarCreateAction, toolbarCreateFromFolderAction});
+	toolbarCreateButton->setMenu(toolbarCreateMenu);
+	toolbarCreateButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+	this->toolbar->addWidget(toolbarCreateButton);
+
+	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
+		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR), QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
+			QMareOptions::set(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QFileInfo{files.last()}.canonicalPath());
 			if (!g_ManeWindow) {
 				g_ManeWindow = new QMareTextureWindow;
 			}
@@ -69,13 +88,42 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 		}
 	});
 
+	auto* toolbarExtractAction = new QAction{QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_alt.png" : ":/button_extract.png"}, tr("&Extract"), this};
+	toolbarExtractAction->setShortcut(Qt::CTRL | Qt::Key_E);
+	connect(toolbarExtractAction, &QAction::triggered, this, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromTextures(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	auto* toolbarExtractFromFolderAction = new QAction{QIcon{QMareOptions::get<bool>(QMareOptions::BOOL_ENABLE_TRYPANOPHOBIA_MODE) ? ":/button_extract_multi_alt.png" : ":/button_extract_multi.png"}, tr("E&xtract from Folder"), this};
+	toolbarExtractFromFolderAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_E);
+	connect(toolbarExtractFromFolderAction, &QAction::triggered, this, [this] {
+		if (auto* extractFromTextureDialog = QMareExtractFromTextureDialog::fromDir(this)) {
+			extractFromTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
+			extractFromTextureDialog->open();
+		}
+	});
+
+	auto* toolbarExtractButton = new QToolButton{this};
+	toolbarExtractButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+	toolbarExtractButton->setDefaultAction(toolbarExtractAction);
+
+	auto* toolbarExtractMenu = new QMenu{toolbarExtractButton};
+	toolbarExtractMenu->addActions({toolbarExtractAction, toolbarExtractFromFolderAction});
+	toolbarExtractButton->setMenu(toolbarExtractMenu);
+	toolbarExtractButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+	this->toolbar->addWidget(toolbarExtractButton);
+
 	this->toolbar->addSeparator();
 
 	this->toolbar->addAction(QIcon{":/button_kofi.png"}, tr("&Donate"), [] {
 		QDesktopServices::openUrl({"https://ko-fi.com/craftablescience"});
 	});
 
-	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Credits"), Qt::Key_F1, [this] {
+	this->toolbar->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Credi&ts"), Qt::Key_F1, [this] {
 		QMareCreditsDialog::showCredits(this);
 	});
 
@@ -110,7 +158,11 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 		return;
 	}
 	for (const auto& url : event->mimeData()->urls()) {
-		if (!url.isLocalFile() || (!url.fileName().endsWith(".vtf") && !url.fileName().endsWith(".xtf"))) {
+		if (!(
+			url.isLocalFile() &&
+			(url.fileName().endsWith(".vtf") || url.fileName().endsWith(".xtf")) ||
+			::fileIsASupportedImageFileFormat(std::filesystem::path{url.fileName().toUtf8().constData()}.extension().string())
+		)) {
 			return;
 		}
 	}
@@ -119,10 +171,7 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 
 void QMareEmptyWindow::dropEvent(QDropEvent* event) {
 	g_ManeWindow = new QMareTextureWindow;
-	for (const auto& url : event->mimeData()->urls()) {
-		g_ManeWindow->loadTexture(url.toLocalFile());
-	}
 	g_ManeWindow->show();
-	event->acceptProposedAction();
+	g_ManeWindow->dropEvent(event);
 	this->close();
 }

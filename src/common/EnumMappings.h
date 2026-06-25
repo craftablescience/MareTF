@@ -9,6 +9,8 @@
 #include <sourcepp/String.h>
 #include <vtfpp/vtfpp.h>
 
+#include "MareTF.h"
+
 namespace not_magic_enum {
 
 template<typename E>
@@ -16,11 +18,14 @@ concept SupportedEnum = std::same_as<E, vtfpp::HOT::Rect::Flags>
                      || std::same_as<E, vtfpp::ImageFormat>
                      || std::same_as<E, vtfpp::ImageConversion::FileFormat>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeFilter>
+                     || std::same_as<E, vtfpp::ImageConversion::ResizeEdge>
                      || std::same_as<E, vtfpp::ImageConversion::ResizeMethod>
                      || std::same_as<E, vtfpp::CompressionMethod>
                      || std::same_as<E, vtfpp::Resource::Type>
                      || std::same_as<E, vtfpp::VTF::Flags>
-                     || std::same_as<E, vtfpp::VTF::Platform>;
+                     || std::same_as<E, vtfpp::VTF::FlagsExtra>
+                     || std::same_as<E, vtfpp::VTF::Platform>
+                     || std::same_as<E, maretf::HDRIMode>;
 
 namespace detail {
 
@@ -40,6 +45,10 @@ extern const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_FILTER_S;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_FILTER_P;
 
+extern const std::vector<vtfpp::ImageConversion::ResizeEdge> IMAGE_CONVERSION_RESIZE_EDGE_E;
+extern const std::vector<std::string_view>                   IMAGE_CONVERSION_RESIZE_EDGE_S;
+extern const std::vector<std::string_view>                   IMAGE_CONVERSION_RESIZE_EDGE_P;
+
 extern const std::vector<vtfpp::ImageConversion::ResizeMethod> IMAGE_CONVERSION_RESIZE_METHOD_E;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_METHOD_S;
 extern const std::vector<std::string_view>                     IMAGE_CONVERSION_RESIZE_METHOD_P;
@@ -52,13 +61,21 @@ extern const std::vector<vtfpp::Resource::Type> RESOURCE_TYPE_E;
 extern const std::vector<std::string_view>      RESOURCE_TYPE_S;
 extern const std::vector<std::string_view>      RESOURCE_TYPE_P;
 
-extern const std::vector<vtfpp::VTF::Flags>  VTF_FLAGS_E;
-extern const std::vector<std::string_view>   VTF_FLAGS_S;
-extern const std::vector<std::string_view>   VTF_FLAGS_P;
+extern const std::vector<vtfpp::VTF::Flags> VTF_FLAGS_E;
+extern const std::vector<std::string_view>  VTF_FLAGS_S;
+extern const std::vector<std::string_view>  VTF_FLAGS_P;
+
+extern const std::vector<vtfpp::VTF::FlagsExtra> VTF_FLAGS_EXTRA_E;
+extern const std::vector<std::string_view>       VTF_FLAGS_EXTRA_S;
+extern const std::vector<std::string_view>       VTF_FLAGS_EXTRA_P;
 
 extern const std::vector<vtfpp::VTF::Platform> VTF_PLATFORM_E;
 extern const std::vector<std::string_view>     VTF_PLATFORM_S;
 extern const std::vector<std::string_view>     VTF_PLATFORM_P;
+
+extern const std::vector<maretf::HDRIMode> HDRI_MODE_E;
+extern const std::vector<std::string_view> HDRI_MODE_S;
+extern const std::vector<std::string_view> HDRI_MODE_P;
 
 template<SupportedEnum E>
 [[nodiscard]] const std::vector<E>& e() {
@@ -70,6 +87,8 @@ template<SupportedEnum E>
 		return IMAGE_CONVERSION_FILE_FORMAT_E;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeFilter>) {
 		return IMAGE_CONVERSION_RESIZE_FILTER_E;
+	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeEdge>) {
+		return IMAGE_CONVERSION_RESIZE_EDGE_E;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeMethod>) {
 		return IMAGE_CONVERSION_RESIZE_METHOD_E;
 	} else if constexpr (std::same_as<E, vtfpp::CompressionMethod>) {
@@ -78,8 +97,12 @@ template<SupportedEnum E>
 		return RESOURCE_TYPE_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
 		return VTF_FLAGS_E;
+	} else if constexpr (std::same_as<E, vtfpp::VTF::FlagsExtra>) {
+		return VTF_FLAGS_EXTRA_E;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return VTF_PLATFORM_E;
+	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {
+		return HDRI_MODE_E;
 	} else {
 		static std::vector<E> empty;
 		return empty;
@@ -96,6 +119,8 @@ template<SupportedEnum E>
 		return pretty ? IMAGE_CONVERSION_FILE_FORMAT_P : IMAGE_CONVERSION_FILE_FORMAT_S;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeFilter>) {
 		return pretty ? IMAGE_CONVERSION_RESIZE_FILTER_P : IMAGE_CONVERSION_RESIZE_FILTER_S;
+	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeEdge>) {
+		return pretty ? IMAGE_CONVERSION_RESIZE_EDGE_P : IMAGE_CONVERSION_RESIZE_EDGE_S;
 	} else if constexpr (std::same_as<E, vtfpp::ImageConversion::ResizeMethod>) {
 		return pretty ? IMAGE_CONVERSION_RESIZE_METHOD_P : IMAGE_CONVERSION_RESIZE_METHOD_S;
 	} else if constexpr (std::same_as<E, vtfpp::CompressionMethod>) {
@@ -104,8 +129,12 @@ template<SupportedEnum E>
 		return pretty ? RESOURCE_TYPE_P : RESOURCE_TYPE_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Flags>) {
 		return pretty ? VTF_FLAGS_P : VTF_FLAGS_S;
+	} else if constexpr (std::same_as<E, vtfpp::VTF::FlagsExtra>) {
+		return pretty ? VTF_FLAGS_EXTRA_P : VTF_FLAGS_EXTRA_S;
 	} else if constexpr (std::same_as<E, vtfpp::VTF::Platform>) {
 		return pretty ? VTF_PLATFORM_P : VTF_PLATFORM_S;
+	} else if constexpr (std::same_as<E, maretf::HDRIMode>) {
+		return pretty ? HDRI_MODE_P : HDRI_MODE_S;
 	} else {
 		static std::vector<std::string_view> empty;
 		return empty;
