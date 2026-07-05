@@ -51,7 +51,7 @@ public:
 
 	[[nodiscard]] QString getCommand() const;
 
-	[[nodiscard]] std::tuple<int, std::string> exec() const; // NOLINT(*-use-nodiscard)
+	[[nodiscard]] std::tuple<int, std::string, std::vector<std::filesystem::path>> exec() const; // NOLINT(*-use-nodiscard)
 
 	[[nodiscard]] static QString joinPaths(const QStringList& paths);
 

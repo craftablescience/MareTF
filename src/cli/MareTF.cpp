@@ -282,8 +282,10 @@ template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 
 #ifdef MARETF_CLI
 #define MARETF_RETURN(code) return code
+#define MARETF_RETURN_I(code, invalidPaths) return code
 #else
-#define MARETF_RETURN(code) return {code, tferr_t::ERR_STRING ? *tferr_t::ERR_STRING : ""}
+#define MARETF_RETURN(code) return {code, tferr_t::ERR_STRING ? *tferr_t::ERR_STRING : "", {}}
+#define MARETF_RETURN_I(code, invalidPaths) return {code, tferr_t::ERR_STRING ? *tferr_t::ERR_STRING : "", invalidPaths}
 #endif
 
 } // namespace
@@ -291,7 +293,7 @@ template<> tferr_t& tferr_t::operator<<<tfendl_t>(const tfendl_t&) {
 #ifdef MARETF_CLI
 int main(int argc, const char* const argv[]) {
 #else
-std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
+std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int argc, const char* const argv[], QWidget* guiParent) {
 #endif
 #if defined(MARETF_CLI) && defined(_WIN32)
 	SetConsoleOutputCP(CP_UTF8); // Set up console to show UTF-8 characters
@@ -2574,7 +2576,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 				outputPath = savedOutputPath;
 			}
 			if (out != EXIT_SUCCESS) {
-				MARETF_RETURN(out);
+				MARETF_RETURN_I(out, processedInputPathFrames);
 			}
 
 			if (watch) {
@@ -2746,7 +2748,7 @@ std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWid
 					fileWatcher.removeWatch(watchID);
 				}
 			}
-			MARETF_RETURN(EXIT_SUCCESS);
+			MARETF_RETURN_I(EXIT_SUCCESS, processedInputPathFrames);
 		}
 		if (mode == "edit") {
 			const auto edit = [&](const std::string& currentInputPath) {

@@ -314,7 +314,7 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 
 	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
 		auto* cli = getCLI();
-		if (const auto& [code, errMsg] = cli->exec(); code) {
+		if (const auto& [code, errMsg, invalidPaths] = cli->exec(); code) {
 			QMessageBox::warning(this, tr("Error Extracting From Texture"), errMsg.c_str());
 			cli->deleteLater();
 			return;

@@ -18,5 +18,5 @@ enum class HDRIMode {
 } // namespace maretf
 
 #ifndef MARETF_CLI
-[[nodiscard]] std::tuple<int, std::string> maretf_cli(int argc, const char* const argv[], QWidget* guiParent = nullptr);
+[[nodiscard]] std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int argc, const char* const argv[], QWidget* guiParent = nullptr);
 #endif

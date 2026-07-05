@@ -955,7 +955,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	connect(dialogButtons, &QDialogButtonBox::accepted, this, [=, this] {
 		auto* cli = getCLI();
-		if (const auto& [code, errMsg] = cli->exec(); code) {
+		const auto& [code, errMsg, invalidPaths] = cli->exec();
+		if (code) {
 			QMessageBox::warning(this, tr("Error Creating Texture"), errMsg.c_str());
 			cli->deleteLater();
 			return;
@@ -968,6 +969,11 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				outputPaths.push_back(filesystemGroup->filesystemOutputPath->text());
 			} else {
 				for (const auto& inputPath : QMareCLIWrapper::splitPaths(filesystemGroup->filesystemInputPath->text())) {
+					// Used to work around animated frames being multiple files
+					if (const auto processedCurrentInputPath = std::filesystem::weakly_canonical(inputPath.toUtf8().constData()); std::ranges::find(invalidPaths, processedCurrentInputPath) != invalidPaths.end()) {
+						continue;
+					}
+
 					const auto platformEnum = static_cast<vtfpp::VTF::Platform>(platformCombo->currentData().toInt());
 					if (static_cast<maretf::HDRIMode>(textureHDRIConversionMethodCombo->currentData().toInt()) == maretf::HDRIMode::SKYBOX) {
 						for (const auto& skyboxOutputPath : ::getOutputSkyboxPathsForInput(inputPath.toUtf8().constData(), platformEnum)) {
