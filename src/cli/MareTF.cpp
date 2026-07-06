@@ -3633,6 +3633,19 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				MARETF_RETURN(EXIT_SUCCESS);
 			}
 
+			// Hack: if the input path is "flags", show a list of flags for the given VTF version and platform and exit
+			// Again, added for Stefan and other tool devs
+			if (inputPaths.size() == 1 && inputPaths[0] == "flags") {
+				int v = 0;
+				sourcepp::string::toInt(std::string_view{&version[2], 1}, v);
+				const auto p = *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform);
+				const auto prettyFlagNames = ::getPrettyFlagNamesFor(v, p);
+				for (uint32_t i = 0; i < prettyFlagNames.size(); i++) {
+					std::cout << std::format("{}", 1u << i) << ',' << prettyFlagNames[i] << std::endl;
+				}
+				MARETF_RETURN(EXIT_SUCCESS);
+			}
+
 			int out = EXIT_SUCCESS;
 			const auto savedOutputPath = outputPath;
 			for (const auto& inputPath : inputPaths) {
