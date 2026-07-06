@@ -3505,6 +3505,14 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 					kv["image"]["dimensions"]["frames"] = static_cast<int>(vtf.getFrameCount());
 					kv["image"]["dimensions"]["faces"] = static_cast<int>(vtf.getFaceCount());
 					kv["image"]["flags"] = static_cast<int>(vtf.getFlags());
+					{
+						const auto prettyFlagNames = ::getPrettyFlagNamesFor(vtf.getVersion(), vtf.getPlatform());
+						for (uint32_t i = 0; i < prettyFlagNames.size(); i++) {
+							if (vtf.getFlags() & 1 << i) {
+								kv["image"]["flag_names"][std::format("{}", 1u << i)] = prettyFlagNames[i];
+							}
+						}
+					}
 					kv["image"]["reflectivity"]["r"] = vtf.getReflectivity()[0];
 					kv["image"]["reflectivity"]["g"] = vtf.getReflectivity()[1];
 					kv["image"]["reflectivity"]["b"] = vtf.getReflectivity()[2];
