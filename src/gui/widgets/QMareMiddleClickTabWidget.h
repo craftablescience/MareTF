@@ -2,6 +2,7 @@
 
 #include <QTabWidget>
 
+class QKeyEvent;
 class QMouseEvent;
 
 class QMareMiddleClickTabWidget : public QTabWidget {
@@ -10,8 +11,10 @@ class QMareMiddleClickTabWidget : public QTabWidget {
 public:
 	using QTabWidget::QTabWidget;
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 11, 0)
 protected:
+	void keyReleaseEvent(QKeyEvent* event) override;
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 11, 0)
 	void mouseReleaseEvent(QMouseEvent* event) override;
 #endif
 };
