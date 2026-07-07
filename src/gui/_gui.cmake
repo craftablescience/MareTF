@@ -55,5 +55,5 @@ file(GLOB ${PROJECT_NAME}_gui_I18N_TS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/i18
 qt_add_translations(${PROJECT_NAME}_gui
         TS_FILES ${${PROJECT_NAME}_gui_I18N_TS_FILES}
         RESOURCE_PREFIX "/i18n"
-        SOURCES ${${PROJECT_NAME}_SOURCES})
+        SOURCES ${${PROJECT_NAME}_gui_SOURCES})
 target_use_qt(${PROJECT_NAME}_gui)

@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=${PROJECT_NAME_PRETTY}
 Comment=${PROJECT_DESCRIPTION}
-Exec=${PROJECT_NAME}_gui %f
+Exec=${PROJECT_NAME}_gui %F
 Icon=${PROJECT_NAME}
 Terminal=false
 Type=Application
