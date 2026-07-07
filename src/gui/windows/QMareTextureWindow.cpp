@@ -118,7 +118,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	});
 
 #if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
-	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Exit"), Qt::ALT | Qt::Key_F4, [this] {
+	fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton), tr("&Quit"), QKeySequence::Quit, [this] {
 		this->close();
 	});
 #endif

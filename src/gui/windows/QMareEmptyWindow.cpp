@@ -137,6 +137,14 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	const auto scaledScreenSize = this->screen()->availableGeometry().size() * 0.5f;
 	const auto scaledScreenSizeMinDim = qMax(qMin(scaledScreenSize.width(), scaledScreenSize.height()), 300);
 	this->setFixedSize(scaledScreenSizeMinDim, scaledScreenSizeMinDim + this->toolbar->height());
+
+	// Have to do this here, don't want to add a toolbar button for it
+	auto* actionQuit = new QAction{tr("&Quit"), this};
+	actionQuit->setShortcut(QKeySequence::Quit);
+	connect(actionQuit, &QAction::triggered, this, [this] {
+		this->close();
+	});
+	this->addAction(actionQuit);
 #endif
 
 	this->setContextMenuPolicy(Qt::NoContextMenu);
