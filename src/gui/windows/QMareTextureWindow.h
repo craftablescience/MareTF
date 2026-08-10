@@ -101,6 +101,9 @@ protected:
 	QMareSpinBox* resThumbnailWidth;
 	QMareSpinBox* resThumbnailHeight;
 
+	QGroupBox* resSpritesheetGroup;
+	QPushButton* resSpritesheetEdit;
+
 	QGroupBox* resPaletteGroup;
 	QLabel* resPalettePreview;
 	// todo: use the frame spinbox in the preview section

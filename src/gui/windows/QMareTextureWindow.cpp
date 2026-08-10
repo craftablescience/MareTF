@@ -33,6 +33,7 @@
 #include "dialogs/QMareCreateTextureDialog.h"
 #include "dialogs/QMareCreditsDialog.h"
 #include "dialogs/QMareExtractFromTextureDialog.h"
+#include "dialogs/QMareSpritesheetDialog.h"
 #include "utility/QMareDiscordPresence.h"
 #include "utility/QMareOptions.h"
 #include "widgets/QMareComboBox.h"
@@ -709,7 +710,20 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->resThumbnailHeight->setDisabled(true);
 	resThumbnailLayout->addRow(tr("Height"), this->resThumbnailHeight);
 
+	this->resSpritesheetGroup = new QGroupBox{tr("Spritesheet"), resWidget};
+	auto* resSpritesheetLayout = new QFormLayout{this->resSpritesheetGroup};
+	resSpritesheetLayout->setFormAlignment(Qt::AlignHCenter);
+
+	this->resSpritesheetEdit = new QPushButton(tr("Edit"), this->resSpritesheetGroup);
+	resSpritesheetLayout->addWidget(this->resSpritesheetEdit);
+	connect(this->resSpritesheetEdit, &QPushButton::clicked, this, [this](bool checked) {
+		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		    QMareSpritesheetDialog::showSpritesheetEditor(this, activeTexture);
+		}
+	});
+
 	resWidgetLayout->addWidget(this->resThumbnailGroup);
+	resWidgetLayout->addWidget(this->resSpritesheetGroup);
 
 	this->resPaletteGroup = new QGroupBox{tr("Palette"), resWidget};
 	auto* resPaletteLayout = new QFormLayout{this->resPaletteGroup};
