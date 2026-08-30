@@ -63,7 +63,7 @@ elseif(UNIX)
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
         elseif(CPACK_GENERATOR STREQUAL "AppImage")
             # Workaround because AppImage is making a "maretf" symlink to the licenses folder(???)
-            install(FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
+            install(PROGRAMS "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
                     DESTINATION .
                     RENAME "maretf_cli")
         else()
