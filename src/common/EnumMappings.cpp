@@ -80,6 +80,8 @@ const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E{
 	vtfpp::ImageFormat::STRATA_R8,
 	vtfpp::ImageFormat::STRATA_BC7,
 	vtfpp::ImageFormat::STRATA_BC6H,
+	vtfpp::ImageFormat::STRATA_BC5,
+	vtfpp::ImageFormat::STRATA_BC4,
 };
 const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"UNCHANGED",
@@ -143,6 +145,8 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"R8",
 	"BC7",
 	"BC6H",
+	"BC5",
+	"BC4",
 };
 const std::vector<std::string_view> IMAGE_FORMAT_P{
 	"Unchanged",
@@ -206,6 +210,8 @@ const std::vector<std::string_view> IMAGE_FORMAT_P{
 	"R8",
 	"BC7",
 	"BC6H",
+	"BC5",
+	"BC4",
 };
 
 const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORMAT_E{
