@@ -111,6 +111,28 @@ protected:
 	QMareSpinBox* resFallbackHeight;
 	QMareSpinBox* resFallbackMips;
 
+	QGroupBox* resParallaxCorrectedCubemapGroup;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapOriginX = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapOriginY = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapOriginZ = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapOriginW = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV00 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV01 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV02 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV03 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV10 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV11 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV12 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV13 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV20 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV21 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV22 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV23 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV30 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV31 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV32 = nullptr;
+	QMareDoubleSpinBox* resParallaxCorrectedCubemapInverseTransformV33 = nullptr;
+
 	QGroupBox* resCRCGroup;
 	QLineEdit* resCRCValue;
 

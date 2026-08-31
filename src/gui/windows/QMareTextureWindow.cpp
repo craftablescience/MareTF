@@ -744,6 +744,58 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	resWidgetLayout->addWidget(this->resFallbackGroup);
 
+	this->resParallaxCorrectedCubemapGroup = new QGroupBox{tr("Parallax-corrected Cubemap"), resWidget};
+	auto* resParallaxCorrectedCubemapLayout = new QFormLayout{this->resParallaxCorrectedCubemapGroup};
+	resParallaxCorrectedCubemapLayout->setFormAlignment(Qt::AlignHCenter);
+
+	auto* resParallaxCorrectedCubemapOriginGroup = new QGroupBox{tr("Origin"), resWidget};
+	auto* resParallaxCorrectedCubemapOriginLayout = new QGridLayout{resParallaxCorrectedCubemapOriginGroup};
+
+	const std::array resParallaxCorrectedCubemapOriginSpins = {
+		&this->resParallaxCorrectedCubemapOriginX,
+		&this->resParallaxCorrectedCubemapOriginY,
+		&this->resParallaxCorrectedCubemapOriginZ,
+		&this->resParallaxCorrectedCubemapOriginW,
+	};
+	for (int i = 0; i < 4; i++) {
+		*resParallaxCorrectedCubemapOriginSpins[i] = new QMareDoubleSpinBox{resWidget};
+		resParallaxCorrectedCubemapOriginLayout->addWidget(*resParallaxCorrectedCubemapOriginSpins[i], 0, i);
+	}
+
+	resParallaxCorrectedCubemapLayout->addRow(resParallaxCorrectedCubemapOriginGroup);
+
+	auto* resParallaxCorrectedCubemapInverseTransformGroup = new QGroupBox{tr("Inverse Transform"), resWidget};
+	auto* resParallaxCorrectedCubemapInverseTransformLayout = new QGridLayout{resParallaxCorrectedCubemapInverseTransformGroup};
+
+	const std::array resParallaxCorrectedCubemapInverseTransformSpins = {
+		&this->resParallaxCorrectedCubemapInverseTransformV00,
+		&this->resParallaxCorrectedCubemapInverseTransformV01,
+		&this->resParallaxCorrectedCubemapInverseTransformV02,
+		&this->resParallaxCorrectedCubemapInverseTransformV03,
+		&this->resParallaxCorrectedCubemapInverseTransformV10,
+		&this->resParallaxCorrectedCubemapInverseTransformV11,
+		&this->resParallaxCorrectedCubemapInverseTransformV12,
+		&this->resParallaxCorrectedCubemapInverseTransformV13,
+		&this->resParallaxCorrectedCubemapInverseTransformV20,
+		&this->resParallaxCorrectedCubemapInverseTransformV21,
+		&this->resParallaxCorrectedCubemapInverseTransformV22,
+		&this->resParallaxCorrectedCubemapInverseTransformV23,
+		&this->resParallaxCorrectedCubemapInverseTransformV30,
+		&this->resParallaxCorrectedCubemapInverseTransformV31,
+		&this->resParallaxCorrectedCubemapInverseTransformV32,
+		&this->resParallaxCorrectedCubemapInverseTransformV33,
+	};
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			*resParallaxCorrectedCubemapInverseTransformSpins[i * 4 + j] = new QMareDoubleSpinBox{resWidget};
+			resParallaxCorrectedCubemapInverseTransformLayout->addWidget(*resParallaxCorrectedCubemapInverseTransformSpins[i * 4 + j], i, j);
+		}
+	}
+
+	resParallaxCorrectedCubemapLayout->addRow(resParallaxCorrectedCubemapInverseTransformGroup);
+
+	resWidgetLayout->addWidget(this->resParallaxCorrectedCubemapGroup);
+
 	this->resCRCGroup = new QGroupBox{tr("CRC"), resWidget};
 	auto* resCRCLayout = new QFormLayout{this->resCRCGroup};
 	resCRCLayout->setFormAlignment(Qt::AlignHCenter);
@@ -941,6 +993,28 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resFallbackHeight->setValue(0);
 		this->resFallbackMips->setValue(0);
 
+		this->resParallaxCorrectedCubemapGroup->setVisible(false);
+		this->resParallaxCorrectedCubemapOriginX->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginY->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginZ->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginW->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV00->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV01->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV02->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV03->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV10->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV11->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV12->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV13->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV20->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV21->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV22->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV23->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV30->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV31->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV32->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV33->setValue(0.f);
+
 		this->resCRCGroup->setVisible(false);
 		this->resCRCValue->setText("00000000");
 
@@ -1118,6 +1192,53 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resFallbackWidth->setValue(0);
 		this->resFallbackHeight->setValue(0);
 		this->resFallbackMips->setValue(0);
+	}
+
+	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_PARALLAX_CORRECTED_CUBEMAP)) {
+		const auto [origin, inverseTransform] = resource->getDataAsParallaxCorrectedCubemap();
+		this->resParallaxCorrectedCubemapGroup->setVisible(true);
+		this->resParallaxCorrectedCubemapOriginX->setValue(origin[0]);
+		this->resParallaxCorrectedCubemapOriginY->setValue(origin[1]);
+		this->resParallaxCorrectedCubemapOriginZ->setValue(origin[2]);
+		this->resParallaxCorrectedCubemapOriginW->setValue(origin[3]);
+		this->resParallaxCorrectedCubemapInverseTransformV00->setValue(inverseTransform[0][0]);
+		this->resParallaxCorrectedCubemapInverseTransformV01->setValue(inverseTransform[0][1]);
+		this->resParallaxCorrectedCubemapInverseTransformV02->setValue(inverseTransform[0][2]);
+		this->resParallaxCorrectedCubemapInverseTransformV03->setValue(inverseTransform[0][3]);
+		this->resParallaxCorrectedCubemapInverseTransformV10->setValue(inverseTransform[1][0]);
+		this->resParallaxCorrectedCubemapInverseTransformV11->setValue(inverseTransform[1][1]);
+		this->resParallaxCorrectedCubemapInverseTransformV12->setValue(inverseTransform[1][2]);
+		this->resParallaxCorrectedCubemapInverseTransformV13->setValue(inverseTransform[1][3]);
+		this->resParallaxCorrectedCubemapInverseTransformV20->setValue(inverseTransform[2][0]);
+		this->resParallaxCorrectedCubemapInverseTransformV21->setValue(inverseTransform[2][1]);
+		this->resParallaxCorrectedCubemapInverseTransformV22->setValue(inverseTransform[2][2]);
+		this->resParallaxCorrectedCubemapInverseTransformV23->setValue(inverseTransform[2][3]);
+		this->resParallaxCorrectedCubemapInverseTransformV30->setValue(inverseTransform[3][0]);
+		this->resParallaxCorrectedCubemapInverseTransformV31->setValue(inverseTransform[3][1]);
+		this->resParallaxCorrectedCubemapInverseTransformV32->setValue(inverseTransform[3][2]);
+		this->resParallaxCorrectedCubemapInverseTransformV33->setValue(inverseTransform[3][3]);
+	} else {
+		this->resParallaxCorrectedCubemapGroup->setVisible(false);
+		this->resParallaxCorrectedCubemapOriginX->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginY->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginZ->setValue(0.f);
+		this->resParallaxCorrectedCubemapOriginW->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV00->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV01->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV02->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV03->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV10->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV11->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV12->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV13->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV20->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV21->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV22->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV23->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV30->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV31->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV32->setValue(0.f);
+		this->resParallaxCorrectedCubemapInverseTransformV33->setValue(0.f);
 	}
 
 	if (const auto resource = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
