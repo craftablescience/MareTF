@@ -99,429 +99,437 @@ maretf info input.vtf
 Usage: maretf <MODE> <PATH or -i/--input PATHS> [options]
 
 Positional arguments:
-  MODE                                         The mode to run the program in. This
-                                               determines what arguments are processed. Valid
-                                               options: "create", "edit", "extract", and
-                                               "info". "convert" is also permissible and is
-                                               an alias of "create" for vtex2 compatibility.
-                                               [required]
-  PATH                                         The path to the input file or directory.
-                                               [nargs=0..1] [default: ""]
+  MODE                                          The mode to run the program in. This
+                                                determines what arguments are processed. Valid
+                                                options: "create", "edit", "extract", and
+                                                "info". "convert" is also permissible and is
+                                                an alias of "create" for vtex2 compatibility.
+                                                [required]
+  PATH                                          The path to the input file or directory.
+                                                [nargs=0..1] [default: ""]
 
 Optional arguments:
-  -h, --help                                   shows help message and exits
-  -i, --input                                  The paths to the input files or directories.
-                                               [nargs: 1 or more]
-  -o, --output PATH                            The path to the output file (if the current
-                                               mode outputs a file), or the parent directory
-                                               of the outputfiles if multiple input paths are
-                                               specified. Ignored if the input path is a
-                                               directory.
-  -y, --yes                                    Automatically say yes to any prompts. Enabled
-                                               by default if no TTY is detected.
-  --no                                         Automatically say no to any prompts. Overrides
-                                               --yes.
-  --quiet                                      Don't print anything to stdout or stderr
-                                               (assuming program arguments are parsed
-                                               successfully). Enabled by default if no TTY is
-                                               detected.
-  --verbose                                    Allow printing to stdout or stderr, even when
-                                               no TTY is detected (assuming program arguments
-                                               are parsed successfully).
-  --no-recurse                                 If the input path is a directory, do not enter
-                                               subdirectories when scanning for files.
-  --no-pretty-formatting                       Disables printing ANSI color codes and emojis.
-                                               Pretty formatting is disabled by default if no
-                                               TTY is detected.
+  -h, --help                                    shows help message and exits
+  -i, --input                                   The paths to the input files or directories.
+                                                [nargs: 1 or more]
+  -o, --output PATH                             The path to the output file (if the current
+                                                mode outputs a file), or the parent directory
+                                                of the outputfiles if multiple input paths are
+                                                specified. Ignored if the input path is a
+                                                directory.
+  -y, --yes                                     Automatically say yes to any prompts. Enabled
+                                                by default if no TTY is detected.
+  --no                                          Automatically say no to any prompts. Overrides
+                                                --yes.
+  --quiet                                       Don't print anything to stdout or stderr
+                                                (assuming program arguments are parsed
+                                                successfully). Enabled by default if no TTY is
+                                                detected.
+  --verbose                                     Allow printing to stdout or stderr, even when
+                                                no TTY is detected (assuming program arguments
+                                                are parsed successfully).
+  --no-recurse                                  If the input path is a directory, do not enter
+                                                subdirectories when scanning for files.
+  --no-pretty-formatting                        Disables printing ANSI color codes and emojis.
+                                                Pretty formatting is disabled by default if no
+                                                TTY is detected.
 
 "create" mode (detailed usage):
-  --watch                                      After creation is complete, watch the input
-                                               file or directory for any changes and re-TF
-                                               the VTF(s). --no is implied on the first
-                                               creation pass. --yes is implied after the
-                                               first creation pass.
-  -v, --version                                Major and minor version, split by a period.
-                                               Ignored if platform is specified as anything
-                                               other than PC. Note that older branches of the
-                                               Source engine will not load VTF versions made
-                                               for newer branches. VTF v7.6 is only loadable
-                                               by games running on Strata Source.
-                                               [nargs=0..1] [default: "7.4"]
-  -f, --format                                 Output format. [nargs=0..1]
-                                               [default: "DEFAULT"]
-  -q, --quality                                The quality of DXTn/BCn format compression,
-                                               between 0.0 and 1.0. Higher quality will take
-                                               significantly longer to create the texture. If
-                                               quality is below 0.0, default compression
-                                               values will be used (0.1 for BC7, BC6H, and
-                                               1.0 for all others). Ignored if output format
-                                               is uncompressed. [nargs=0..1] [default: -1]
-  -r, --filter                                 The resize filter used to generate mipmaps,
-                                               resize the base texture to match a power of 2
-                                               (if necessary), and downscale non-alpha
-                                               channels when distance mapping. [nargs=0..1]
-                                               [default: "NICE"]
-  -e, --edge                                   The edge policy used when distance mapping to
-                                               govern alpha sampling and downscale non-alpha
-                                               channels. [nargs=0..1] [default: "CLAMP"]
-  -s, --size SIZE                              Sets the width and height of the output
-                                               texture if nonzero.
-  --width WIDTH                                Sets the width of the output texture if
-                                               nonzero.
-  --height HEIGHT                              Sets the height of the output texture if
-                                               nonzero.
-  --max-size SIZE                              Sets the maximum width and height of the
-                                               output texture if nonzero.
-  --max-width WIDTH                            Sets the maximum width of the output texture
-                                               if nonzero.
-  --max-height HEIGHT                          Sets the maximum height of the output texture
-                                               if nonzero.
-  --min-size SIZE                              Sets the minimum width and height of the
-                                               output texture if nonzero.
-  --min-width WIDTH                            Sets the minimum width of the output texture
-                                               if nonzero.
-  --min-height HEIGHT                          Sets the minimum height of the output texture
-                                               if nonzero.
-  --flag FLAG                                  Flags to add. ENVMAP, ONE_BIT_ALPHA,
-                                               MULTI_BIT_ALPHA, and NO_MIP flags are applied
-                                               automatically based on the VTF properties.
-                                               [may be repeated]
-  --flags-uint FLAGS                           Flags to add, specified as an unsigned
-                                               integer. ENVMAP, ONE_BIT_ALPHA,
-                                               MULTI_BIT_ALPHA, and NO_MIP flags are applied
-                                               automatically based on the VTF properties.
-                                               This is for advanced users.
-  --no-automatic-transparency-flags            Disable adding ONE_BIT_ALPHA and
-                                               MULTI_BIT_ALPHA flags by default depending on
-                                               the output image format.
-  --flag-extra FLAG_EXTRA                      Extra flags to add. [may be repeated]
-  --flags-extra-uint FLAGS_EXTRA               Extra flags to add, specified as an unsigned
-                                               integer. This is for advanced users.
-  --no-mips                                    Disable mipmap generation.
-  -a, --animated-frames                        If input texture filename ends in two or more
-                                               numbers, check for consecutive numbered files
-                                               and add as animation frames if found.
-  --no-thumbnail                               Disable thumbnail generation.
-  -p, --platform                               Set the platform (PC/console) to build for.
-                                               [nargs=0..1] [default: "PC"]
-  -m, --compression-method                     Set the CPU compression method. Deflate is
-                                               supported on all Strata Source games for VTF
-                                               v7.6. Zstd is supported on all Strata Source
-                                               games for VTF v7.6 besides Portal: Revolution.
-                                               LZMA is supported for console VTFs.
-                                               [nargs=0..1] [default: "ZSTD"]
-  -c, --compression-level                      The CPU compression level, between 0.0 and
-                                               1.0. Higher levels will take longer to create
-                                               the texture. If level is below 0.0, default
-                                               compression level will be used. If level is
-                                               above 1.0, it is assumed the user is setting
-                                               the exact compression level for the algorithm
-                                               in use manually (this is for backwards
-                                               compatibility). Ignored if CPU compression is
-                                               not in use. [nargs=0..1] [default: -1]
-  --start-frame                                The start frame used in animations, counting
-                                               from zero. Ignored when creating console VTFs.
-                                               [nargs=0..1] [default: 0]
-  --bumpscale                                  The bumpmap scale. It can have a decimal
-                                               point. [nargs=0..1] [default: 1]
-  --invert-green                               Invert the green channel of the input image.
-                                               This converts OpenGL normal maps into DirectX
-                                               normal maps.
-  --opengl                                     Alias of --invert-green, added for vtex2
-                                               compatibility.
-  --hdri                                       Interpret the given image as an
-                                               equirectangular HDRI and create a cubemap or
-                                               skybox. [nargs=0..1] [default: "FLAT"]
-  --hdri-autodetect                            Automatically detects if given image is an
-                                               equirectangular HDRI and creates a cubemap or
-                                               skybox if it is. Ignored if --hdri is
-                                               specified. [nargs=0..1] [default: "FLAT"]
-  --hdri-no-filter                             When creating a cubemap from an input HDRI, do
-                                               not perform bilinear filtering.
-  --resize-method                              How to resize the texture's width and height
-                                               to match a power of 2. Overridden by
-                                               --width-resize-method and
-                                               --height-resize-method. [nargs=0..1]
-                                               [default: "NEAREST"]
-  --width-resize-method                        How to resize the texture's width to match a
-                                               power of 2. [nargs=0..1] [default: "NEAREST"]
-  --height-resize-method                       How to resize the texture's height to match a
-                                               power of 2. [nargs=0..1] [default: "NEAREST"]
-  --console-mip-scale                          On console platforms, expands the perceived
-                                               size of the texture when applied to map
-                                               geometry and models. For example, given a
-                                               256x256 texture, setting a mip scale of 1 will
-                                               cause it to be perceived as 512x512 without
-                                               actually increasing memory requirements.
-                                               Ignored on PC. [nargs=0..1] [default: 0]
-  --gamma-correct                              Perform gamma correction on the input image. 
-  --gamma-correct-amount                       The gamma to use in gamma correction. A value
-                                               of 1/2.2 is assumed by a good deal of code in
-                                               Source engine, change this if you know what
-                                               you're doing. [nargs=0..1] [default: 0.454545]
-  -D, --alpha-to-distance                      Transform the texture's alpha channel (or, if
-                                               the input image type is single-channel, its
-                                               only channel) into a distance map, downscaling
-                                               any color channels if present.
-  -R, --distance-reduce                        Factor by which to downscale when distance
-                                               mapping. Must be a power of 2. Overridden by
-                                               --distance-reduce-x and --distance-reduce-y.
-                                               [nargs=0..1] [default: 4]
-  --distance-reduce-x                          Factor by which to downscale width when
-                                               distance mapping. Must be a power of 2.
-                                               [nargs=0..1] [default: 0]
-  --distance-reduce-y                          Factor by which to downscale height when
-                                               distance mapping. Must be a power of 2.
-                                               [nargs=0..1] [default: 0]
-  --distance-no-valve-quirks                   Do not mimic vtex by forcing the edges of a
-                                               generated distance map to zero, nor warn when
-                                               this happens.
-  --distance-dither                            When distance mapping, and the output format
-                                               is not floating-point, run an experimental
-                                               gradient-aligned dither filter on the alpha
-                                               channel before it is quantized from the
-                                               floating-point representation used to compute
-                                               it. Effect may differ between releases until
-                                               this notice is removed.
-  --distance-spread                            Multiply the search radius when determining
-                                               distance. Large values are computationally
-                                               expensive. Must not result in a radius of zero
-                                               when multiplied by either reduction factor.
-                                               [nargs=0..1] [default: 1]
-  --distance-alpha-threshold                   Alpha value, expressed in the range 0..1,
-                                               below which alpha is considered zero when
-                                               distance mapping. [nargs=0..1] [default: 0.04]
-  --distance-aa                                When distance mapping, interpret the alpha
-                                               channel as antialiased. May reduce
-                                               second-order artifacts or worsen them
-                                               depending on the contents.
-  --distance-euclidean                         When distance mapping, accept distance hits
-                                               only in an ellipse governed by reduction and
-                                               spread, rather than in a rectangle as vtex
-                                               does.
-  --distance-sample-centered                   When distance mapping, sample from the center
-                                               of pixels in destination coordinate space,
-                                               rather than from the northwest corner as vtex
-                                               does. Can mitigate a perceived southeast shift
-                                               at extreme reductions.
-  --srgb                                       Adds PWL_CORRECTED flag before version 7.4,
-                                               adds SRGB flag otherwise.
-  --clamps                                     Alias of --flag CLAMP_S, added for vtex2
-                                               compatibility.
-  --clampt                                     Alias of --flag CLAMP_T, added for vtex2
-                                               compatibility.
-  --clampu                                     Alias of --flag CLAMP_U, added for vtex2
-                                               compatibility.
-  --pointsample                                Alias of --flag POINT_SAMPLE, added for vtex2
-                                               compatibility.
-  --trilinear                                  Alias of --flag TRILINEAR, added for vtex2
-                                               compatibility.
-  --aniso                                      Alias of --flag ANISOTROPIC, added for vtex2
-                                               compatibility.
-  --normal                                     Alias of --flag NORMAL, added for vtex2
-                                               compatibility.
-  --ssbump                                     Alias of --flag SSBUMP, added for vtex2
-                                               compatibility.
-  --particle-sheet-resource PATH               Set the particle sheet resource. Path should
-                                               point to a valid particle sheet file.
-  --crc-resource CRC                           Set the CRC resource.
-  --lod-resource U.V[.U360.V360]               Set the LOD resource. U and V values should be
-                                               separated by a period. U and V for console are
-                                               optional.
-  --ts0-resource COMBINED_FLAGS                Set the TS0 (extended flags) resource. You'll
-                                               have to do the math to combine the flags into
-                                               one integer yourself.
-  --kvd-resource PATH                          Set the nonstandard KVD (KeyValues Data)
-                                               resource. Path should point to a text file.
-  --ath-resource INFO                          Set the nonstandard ATH (Author Info) resource.
-  --hotspot-data-resource PATH                 Set the hotspot data resource. Path should
-                                               point to a valid HOT file.
-  --hotspot-rect                               Adds a rect to the hotspot data resource. The
-                                               4 input values are in pixel coordinates, and
-                                               should not have a decimal point or be less
-                                               than zero. Flags should be separated by a
-                                               comma with no spaces (or use NONE if no flags
-                                               are present). The resource is added and
-                                               initialized to default values if not present
-                                               beforehand. [nargs: 5] [may be repeated]
+  --watch                                       After creation is complete, watch the input
+                                                file or directory for any changes and re-TF
+                                                the VTF(s). --no is implied on the first
+                                                creation pass. --yes is implied after the
+                                                first creation pass.
+  -v, --version                                 Major and minor version, split by a period.
+                                                Ignored if platform is specified as anything
+                                                other than PC. Note that older branches of the
+                                                Source engine will not load VTF versions made
+                                                for newer branches. VTF v7.6 is only loadable
+                                                by games running on Strata Source.
+                                                [nargs=0..1] [default: "7.4"]
+  -f, --format                                  Output format. [nargs=0..1]
+                                                [default: "DEFAULT"]
+  -q, --quality                                 The quality of DXTn/BCn format compression,
+                                                between 0.0 and 1.0. Higher quality will take
+                                                significantly longer to create the texture. If
+                                                quality is below 0.0, default compression
+                                                values will be used (0.1 for BC7, BC6H, and
+                                                1.0 for all others). Ignored if output format
+                                                is uncompressed. [nargs=0..1] [default: -1]
+  -r, --filter                                  The resize filter used to generate mipmaps,
+                                                resize the base texture to match a power of 2
+                                                (if necessary), and downscale non-alpha
+                                                channels when distance mapping. [nargs=0..1]
+                                                [default: "NICE"]
+  -e, --edge                                    The edge policy used when distance mapping to
+                                                govern alpha sampling and downscale non-alpha
+                                                channels. [nargs=0..1] [default: "CLAMP"]
+  -s, --size SIZE                               Sets the width and height of the output
+                                                texture if nonzero.
+  --width WIDTH                                 Sets the width of the output texture if
+                                                nonzero.
+  --height HEIGHT                               Sets the height of the output texture if
+                                                nonzero.
+  --max-size SIZE                               Sets the maximum width and height of the
+                                                output texture if nonzero.
+  --max-width WIDTH                             Sets the maximum width of the output texture
+                                                if nonzero.
+  --max-height HEIGHT                           Sets the maximum height of the output texture
+                                                if nonzero.
+  --min-size SIZE                               Sets the minimum width and height of the
+                                                output texture if nonzero.
+  --min-width WIDTH                             Sets the minimum width of the output texture
+                                                if nonzero.
+  --min-height HEIGHT                           Sets the minimum height of the output texture
+                                                if nonzero.
+  --flag FLAG                                   Flags to add. ENVMAP, ONE_BIT_ALPHA,
+                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
+                                                automatically based on the VTF properties.
+                                                [may be repeated]
+  --flags-uint FLAGS                            Flags to add, specified as an unsigned
+                                                integer. ENVMAP, ONE_BIT_ALPHA,
+                                                MULTI_BIT_ALPHA, and NO_MIP flags are applied
+                                                automatically based on the VTF properties.
+                                                This is for advanced users.
+  --no-automatic-transparency-flags             Disable adding ONE_BIT_ALPHA and
+                                                MULTI_BIT_ALPHA flags by default depending on
+                                                the output image format.
+  --flag-extra FLAG_EXTRA                       Extra flags to add. [may be repeated]
+  --flags-extra-uint FLAGS_EXTRA                Extra flags to add, specified as an unsigned
+                                                integer. This is for advanced users.
+  --no-mips                                     Disable mipmap generation.
+  -a, --animated-frames                         If input texture filename ends in two or more
+                                                numbers, check for consecutive numbered files
+                                                and add as animation frames if found.
+  --no-thumbnail                                Disable thumbnail generation.
+  -p, --platform                                Set the platform (PC/console) to build for.
+                                                [nargs=0..1] [default: "PC"]
+  -m, --compression-method                      Set the CPU compression method. Deflate is
+                                                supported on all Strata Source games for VTF
+                                                v7.6. Zstd is supported on all Strata Source
+                                                games for VTF v7.6 besides Portal: Revolution.
+                                                LZMA is supported for console VTFs.
+                                                [nargs=0..1] [default: "ZSTD"]
+  -c, --compression-level                       The CPU compression level, between 0.0 and
+                                                1.0. Higher levels will take longer to create
+                                                the texture. If level is below 0.0, default
+                                                compression level will be used. If level is
+                                                above 1.0, it is assumed the user is setting
+                                                the exact compression level for the algorithm
+                                                in use manually (this is for backwards
+                                                compatibility). Ignored if CPU compression is
+                                                not in use. [nargs=0..1] [default: -1]
+  --start-frame                                 The start frame used in animations, counting
+                                                from zero. Ignored when creating console VTFs.
+                                                [nargs=0..1] [default: 0]
+  --bumpscale                                   The bumpmap scale. It can have a decimal
+                                                point. [nargs=0..1] [default: 1]
+  --invert-green                                Invert the green channel of the input image.
+                                                This converts OpenGL normal maps into DirectX
+                                                normal maps.
+  --opengl                                      Alias of --invert-green, added for vtex2
+                                                compatibility.
+  --hdri                                        Interpret the given image as an
+                                                equirectangular HDRI and create a cubemap or
+                                                skybox. [nargs=0..1] [default: "FLAT"]
+  --hdri-autodetect                             Automatically detects if given image is an
+                                                equirectangular HDRI and creates a cubemap or
+                                                skybox if it is. Ignored if --hdri is
+                                                specified. [nargs=0..1] [default: "FLAT"]
+  --hdri-no-filter                              When creating a cubemap from an input HDRI, do
+                                                not perform bilinear filtering.
+  --resize-method                               How to resize the texture's width and height
+                                                to match a power of 2. Overridden by
+                                                --width-resize-method and
+                                                --height-resize-method. [nargs=0..1]
+                                                [default: "NEAREST"]
+  --width-resize-method                         How to resize the texture's width to match a
+                                                power of 2. [nargs=0..1] [default: "NEAREST"]
+  --height-resize-method                        How to resize the texture's height to match a
+                                                power of 2. [nargs=0..1] [default: "NEAREST"]
+  --console-mip-scale                           On console platforms, expands the perceived
+                                                size of the texture when applied to map
+                                                geometry and models. For example, given a
+                                                256x256 texture, setting a mip scale of 1 will
+                                                cause it to be perceived as 512x512 without
+                                                actually increasing memory requirements.
+                                                Ignored on PC. [nargs=0..1] [default: 0]
+  --gamma-correct                               Perform gamma correction on the input image. 
+  --gamma-correct-amount                        The gamma to use in gamma correction. A value
+                                                of 1/2.2 is assumed by a good deal of code in
+                                                Source engine, change this if you know what
+                                                you're doing. [nargs=0..1] [default: 0.454545]
+  -D, --alpha-to-distance                       Transform the texture's alpha channel (or, if
+                                                the input image type is single-channel, its
+                                                only channel) into a distance map, downscaling
+                                                any color channels if present.
+  -R, --distance-reduce                         Factor by which to downscale when distance
+                                                mapping. Must be a power of 2. Overridden by
+                                                --distance-reduce-x and --distance-reduce-y.
+                                                [nargs=0..1] [default: 4]
+  --distance-reduce-x                           Factor by which to downscale width when
+                                                distance mapping. Must be a power of 2.
+                                                [nargs=0..1] [default: 0]
+  --distance-reduce-y                           Factor by which to downscale height when
+                                                distance mapping. Must be a power of 2.
+                                                [nargs=0..1] [default: 0]
+  --distance-no-valve-quirks                    Do not mimic vtex by forcing the edges of a
+                                                generated distance map to zero, nor warn when
+                                                this happens.
+  --distance-dither                             When distance mapping, and the output format
+                                                is not floating-point, run an experimental
+                                                gradient-aligned dither filter on the alpha
+                                                channel before it is quantized from the
+                                                floating-point representation used to compute
+                                                it. Effect may differ between releases until
+                                                this notice is removed.
+  --distance-spread                             Multiply the search radius when determining
+                                                distance. Large values are computationally
+                                                expensive. Must not result in a radius of zero
+                                                when multiplied by either reduction factor.
+                                                [nargs=0..1] [default: 1]
+  --distance-alpha-threshold                    Alpha value, expressed in the range 0..1,
+                                                below which alpha is considered zero when
+                                                distance mapping. [nargs=0..1] [default: 0.04]
+  --distance-aa                                 When distance mapping, interpret the alpha
+                                                channel as antialiased. May reduce
+                                                second-order artifacts or worsen them
+                                                depending on the contents.
+  --distance-euclidean                          When distance mapping, accept distance hits
+                                                only in an ellipse governed by reduction and
+                                                spread, rather than in a rectangle as vtex
+                                                does.
+  --distance-sample-centered                    When distance mapping, sample from the center
+                                                of pixels in destination coordinate space,
+                                                rather than from the northwest corner as vtex
+                                                does. Can mitigate a perceived southeast shift
+                                                at extreme reductions.
+  --srgb                                        Adds PWL_CORRECTED flag before version 7.4,
+                                                adds SRGB flag otherwise.
+  --clamps                                      Alias of --flag CLAMP_S, added for vtex2
+                                                compatibility.
+  --clampt                                      Alias of --flag CLAMP_T, added for vtex2
+                                                compatibility.
+  --clampu                                      Alias of --flag CLAMP_U, added for vtex2
+                                                compatibility.
+  --pointsample                                 Alias of --flag POINT_SAMPLE, added for vtex2
+                                                compatibility.
+  --trilinear                                   Alias of --flag TRILINEAR, added for vtex2
+                                                compatibility.
+  --aniso                                       Alias of --flag ANISOTROPIC, added for vtex2
+                                                compatibility.
+  --normal                                      Alias of --flag NORMAL, added for vtex2
+                                                compatibility.
+  --ssbump                                      Alias of --flag SSBUMP, added for vtex2
+                                                compatibility.
+  --particle-sheet-resource PATH                Set the particle sheet resource. Path should
+                                                point to a valid particle sheet file.
+  --parallax-corrected-cubemap-resource         Set the parallax-corrected cubemap resource.
+                                                [nargs: 20]
+  --crc-resource CRC                            Set the CRC resource.
+  --lod-resource U.V[.U360.V360]                Set the LOD resource. U and V values should be
+                                                separated by a period. U and V for console are
+                                                optional.
+  --ts0-resource COMBINED_FLAGS                 Set the TS0 (extended flags) resource. You'll
+                                                have to do the math to combine the flags into
+                                                one integer yourself.
+  --kvd-resource PATH                           Set the nonstandard KVD (KeyValues Data)
+                                                resource. Path should point to a text file.
+  --ath-resource INFO                           Set the nonstandard ATH (Author Info) resource.
+  --hotspot-data-resource PATH                  Set the hotspot data resource. Path should
+                                                point to a valid HOT file.
+  --hotspot-rect                                Adds a rect to the hotspot data resource. The
+                                                4 input values are in pixel coordinates, and
+                                                should not have a decimal point or be less
+                                                than zero. Flags should be separated by a
+                                                comma with no spaces (or use NONE if no flags
+                                                are present). The resource is added and
+                                                initialized to default values if not present
+                                                beforehand. [nargs: 5] [may be repeated]
 
 "edit" mode (detailed usage):
-  --set-version X.Y                            Set the version.
-  --set-format IMAGE_FORMAT                    Set the image format. Keep in mind converting
-                                               to a lossy format like DXTn means irreversibly
-                                               losing information. Recommended to pair this
-                                               with the recompute transparency flags
-                                               argument.
-  --set-size SIZE                              Set the largest mip's width and height.
-                                               Ignores power of two resize rule. Keep in mind
-                                               this operation will result in information
-                                               loss, especially if the texture is using a
-                                               lossy format. Recommended to pair this with
-                                               the recompute mips argument if the input
-                                               texture is using a lossless format.
-  --set-width WIDTH                            Set the largest mip's width. Ignores power of
-                                               two resize rule. Keep in mind this operation
-                                               will result in information loss, especially if
-                                               the texture is using a lossy format.
-                                               Recommended to pair this with the recompute
-                                               mips argument if the input texture is using a
-                                               lossless format.
-  --set-height HEIGHT                          Set the largest mip's height. Ignores power of
-                                               two resize rule. Keep in mind this operation
-                                               will result in information loss, especially if
-                                               the texture is using a lossy format.
-                                               Recommended to pair this with the recompute
-                                               mips argument if the input texture is using a
-                                               lossless format.
-  --edit-filter                                Use this resize filter for all resizing
-                                               operations that accept a filter parameter,
-                                               including mipmap generation. [nargs=0..1]
-                                               [default: "NICE"]
-  --add-flag FLAG                              Flags to add. ENVMAP and NO_MIP flags are
-                                               ignored. [may be repeated]
-  --add-flags-uint FLAGS                       Flags to add, specified as an unsigned
-                                               integer. ENVMAP and NO_MIP flags are ignored.
-                                               This is for advanced users.
-  --remove-flag FLAG                           Flags to remove. ENVMAP and NO_MIP flags are
-                                               ignored. [may be repeated]
-  --remove-flags-uint FLAGS                    Flags to remove, specified as an unsigned
-                                               integer. ENVMAP and NO_MIP flags are ignored.
-                                               This is for advanced users.
-  --recompute-transparency-flags               Recomputes transparency flags based on the
-                                               image format.
-  --add-flag-extra FLAG_EXTRA                  Extra flags to add. [may be repeated]
-  --add-flags-extra-uint FLAGS_EXTRA           Extra flags to add, specified as an unsigned
-                                               integer. This is for advanced users.
-  --remove-flag-extra FLAG_EXTRA               Extra flags to remove. [may be repeated]
-  --remove-flags-extra-uint FLAGS_EXTRA        Extra flags to remove, specified as an
-                                               unsigned integer. This is for advanced users.
-  --recompute-mips                             Recomputes mipmaps with the specified edit
-                                               resize filter.
-  --remove-mips                                Remove mipmaps. If recompute mips is
-                                               specified, this argument is ignored.
-  --recompute-thumbnail                        Recompute the thumbnail.
-  --remove-thumbnail                           Remove the thumbnail. If recompute thumbnail
-                                               is specified, this argument is ignored.
-  --recompute-reflectivity                     Recompute the reflectivity vector.
-  --set-platform PLATFORM                      Set the VTF platform.
-  --set-compression-method COMPRESSION_METHOD  Set the CPU compression method. Deflate is
-                                               supported on all Strata Source games for VTF
-                                               v7.6. Zstd is supported on all Strata Source
-                                               games for VTF v7.6 besides Portal: Revolution.
-                                               LZMA is supported for console VTFs.
-  --set-compression-level                      Set the CPU compression level, between 0.0 and
-                                               1.0. Higher levels will take longer to create
-                                               the texture. If level is below 0.0, default
-                                               compression level will be used. If level is
-                                               above 1.0, it is assumed the user is setting
-                                               the exact compression level for the algorithm
-                                               in use manually (this is for backwards
-                                               compatibility). Ignored if CPU compression is
-                                               not in use. [nargs=0..1] [default: -1]
-  --set-start-frame FRAME_INDEX                Set the start frame.
-  --set-bumpmap-scale SCALE                    Set the bumpmap scale. It can have a decimal
-                                               point.
-  --set-console-mip-scale                      Set the mip scale. Only has effect on console
-                                               platforms. See --console-mip-scale for more
-                                               information. [nargs=0..1] [default: 0]
-  --set-particle-sheet-resource PATH           Set the particle sheet resource. Path should
-                                               point to a valid particle sheet file.
-  --remove-particle-sheet-resource             Remove the particle sheet resource. If set
-                                               particle sheet resource is specified, this
-                                               argument is ignored.
-  --set-crc-resource CRC                       Set the CRC resource.
-  --remove-crc-resource                        Remove the CRC resource. If set CRC resource
-                                               is specified, this argument is ignored.
-  --set-lod-resource U.V[.U360.V360]           Set the LOD resource. U and V values should be
-                                               separated by a period. U and V for console are
-                                               optional.
-  --remove-lod-resource                        Remove the LOD resource. If set LOD resource
-                                               is specified, this argument is ignored.
-  --set-ts0-resource COMBINED_FLAGS            Set the TS0 (extended flags) resource. You'll
-                                               have to do the math to combine the flags into
-                                               one integer yourself.
-  --remove-ts0-resource                        Remove the TS0 (extended flags) resource. If
-                                               set TS0 resource is specified, this argument
-                                               is ignored.
-  --set-kvd-resource PATH                      Set the nonstandard KVD (KeyValues Data)
-                                               resource. Path should point to a text file.
-  --remove-kvd-resource                        Remove the nonstandard KVD (KeyValues Data)
-                                               resource. If set KVD resource is specified,
-                                               this argument is ignored.
-  --set-ath-resource INFO                      Set the nonstandard ATH (Author Info)
-                                               resource.
-  --remove-ath-resource                        Remove the nonstandard ATH (Author Info)
-                                               resource. If set ATH resource is specified,
-                                               this argument is ignored.
-  --set-hotspot-data-resource PATH             Set the hotspot data resource. Path should
-                                               point to a valid HOT file.
-  --remove-hotspot-data-resource               Remove the hotspot data resource. If set HOT
-                                               resource is specified, this argument is
-                                               ignored.
-  --add-hotspot-rect                           Adds a rect to the hotspot data resource. The
-                                               4 input values are in pixel coordinates, and
-                                               should not have a decimal point or be less
-                                               than zero. Flags should be separated by a
-                                               comma with no spaces (or use NONE if no flags
-                                               are present). The resource is added and
-                                               initialized to default values if not present
-                                               beforehand. [nargs: 5] [may be repeated]
+  --set-version X.Y                             Set the version.
+  --set-format IMAGE_FORMAT                     Set the image format. Keep in mind converting
+                                                to a lossy format like DXTn means irreversibly
+                                                losing information. Recommended to pair this
+                                                with the recompute transparency flags
+                                                argument.
+  --set-size SIZE                               Set the largest mip's width and height.
+                                                Ignores power of two resize rule. Keep in mind
+                                                this operation will result in information
+                                                loss, especially if the texture is using a
+                                                lossy format. Recommended to pair this with
+                                                the recompute mips argument if the input
+                                                texture is using a lossless format.
+  --set-width WIDTH                             Set the largest mip's width. Ignores power of
+                                                two resize rule. Keep in mind this operation
+                                                will result in information loss, especially if
+                                                the texture is using a lossy format.
+                                                Recommended to pair this with the recompute
+                                                mips argument if the input texture is using a
+                                                lossless format.
+  --set-height HEIGHT                           Set the largest mip's height. Ignores power of
+                                                two resize rule. Keep in mind this operation
+                                                will result in information loss, especially if
+                                                the texture is using a lossy format.
+                                                Recommended to pair this with the recompute
+                                                mips argument if the input texture is using a
+                                                lossless format.
+  --edit-filter                                 Use this resize filter for all resizing
+                                                operations that accept a filter parameter,
+                                                including mipmap generation. [nargs=0..1]
+                                                [default: "NICE"]
+  --add-flag FLAG                               Flags to add. ENVMAP and NO_MIP flags are
+                                                ignored. [may be repeated]
+  --add-flags-uint FLAGS                        Flags to add, specified as an unsigned
+                                                integer. ENVMAP and NO_MIP flags are ignored.
+                                                This is for advanced users.
+  --remove-flag FLAG                            Flags to remove. ENVMAP and NO_MIP flags are
+                                                ignored. [may be repeated]
+  --remove-flags-uint FLAGS                     Flags to remove, specified as an unsigned
+                                                integer. ENVMAP and NO_MIP flags are ignored.
+                                                This is for advanced users.
+  --recompute-transparency-flags                Recomputes transparency flags based on the
+                                                image format.
+  --add-flag-extra FLAG_EXTRA                   Extra flags to add. [may be repeated]
+  --add-flags-extra-uint FLAGS_EXTRA            Extra flags to add, specified as an unsigned
+                                                integer. This is for advanced users.
+  --remove-flag-extra FLAG_EXTRA                Extra flags to remove. [may be repeated]
+  --remove-flags-extra-uint FLAGS_EXTRA         Extra flags to remove, specified as an
+                                                unsigned integer. This is for advanced users.
+  --recompute-mips                              Recomputes mipmaps with the specified edit
+                                                resize filter.
+  --remove-mips                                 Remove mipmaps. If recompute mips is
+                                                specified, this argument is ignored.
+  --recompute-thumbnail                         Recompute the thumbnail.
+  --remove-thumbnail                            Remove the thumbnail. If recompute thumbnail
+                                                is specified, this argument is ignored.
+  --recompute-reflectivity                      Recompute the reflectivity vector.
+  --set-platform PLATFORM                       Set the VTF platform.
+  --set-compression-method COMPRESSION_METHOD   Set the CPU compression method. Deflate is
+                                                supported on all Strata Source games for VTF
+                                                v7.6. Zstd is supported on all Strata Source
+                                                games for VTF v7.6 besides Portal: Revolution.
+                                                LZMA is supported for console VTFs.
+  --set-compression-level                       Set the CPU compression level, between 0.0 and
+                                                1.0. Higher levels will take longer to create
+                                                the texture. If level is below 0.0, default
+                                                compression level will be used. If level is
+                                                above 1.0, it is assumed the user is setting
+                                                the exact compression level for the algorithm
+                                                in use manually (this is for backwards
+                                                compatibility). Ignored if CPU compression is
+                                                not in use. [nargs=0..1] [default: -1]
+  --set-start-frame FRAME_INDEX                 Set the start frame.
+  --set-bumpmap-scale SCALE                     Set the bumpmap scale. It can have a decimal
+                                                point.
+  --set-console-mip-scale                       Set the mip scale. Only has effect on console
+                                                platforms. See --console-mip-scale for more
+                                                information. [nargs=0..1] [default: 0]
+  --set-particle-sheet-resource PATH            Set the particle sheet resource. Path should
+                                                point to a valid particle sheet file.
+  --remove-particle-sheet-resource              Remove the particle sheet resource. If set
+                                                particle sheet resource is specified, this
+                                                argument is ignored.
+  --set-parallax-corrected-cubemap-resource     Set the parallax-corrected cubemap resource.
+                                                [nargs: 20]
+  --remove-parallax-corrected-cubemap-resource  Remove the parallax-corrected cubemap
+                                                resource. If set parallax-corrected cubemap
+                                                resource is specified, this argument is
+                                                ignored.
+  --set-crc-resource CRC                        Set the CRC resource.
+  --remove-crc-resource                         Remove the CRC resource. If set CRC resource
+                                                is specified, this argument is ignored.
+  --set-lod-resource U.V[.U360.V360]            Set the LOD resource. U and V values should be
+                                                separated by a period. U and V for console are
+                                                optional.
+  --remove-lod-resource                         Remove the LOD resource. If set LOD resource
+                                                is specified, this argument is ignored.
+  --set-ts0-resource COMBINED_FLAGS             Set the TS0 (extended flags) resource. You'll
+                                                have to do the math to combine the flags into
+                                                one integer yourself.
+  --remove-ts0-resource                         Remove the TS0 (extended flags) resource. If
+                                                set TS0 resource is specified, this argument
+                                                is ignored.
+  --set-kvd-resource PATH                       Set the nonstandard KVD (KeyValues Data)
+                                                resource. Path should point to a text file.
+  --remove-kvd-resource                         Remove the nonstandard KVD (KeyValues Data)
+                                                resource. If set KVD resource is specified,
+                                                this argument is ignored.
+  --set-ath-resource INFO                       Set the nonstandard ATH (Author Info)
+                                                resource.
+  --remove-ath-resource                         Remove the nonstandard ATH (Author Info)
+                                                resource. If set ATH resource is specified,
+                                                this argument is ignored.
+  --set-hotspot-data-resource PATH              Set the hotspot data resource. Path should
+                                                point to a valid HOT file.
+  --remove-hotspot-data-resource                Remove the hotspot data resource. If set HOT
+                                                resource is specified, this argument is
+                                                ignored.
+  --add-hotspot-rect                            Adds a rect to the hotspot data resource. The
+                                                4 input values are in pixel coordinates, and
+                                                should not have a decimal point or be less
+                                                than zero. Flags should be separated by a
+                                                comma with no spaces (or use NONE if no flags
+                                                are present). The resource is added and
+                                                initialized to default values if not present
+                                                beforehand. [nargs: 5] [may be repeated]
 
 "extract" mode (detailed usage):
-  --extract-skip-image                         Do not extract image data. Useful if a
-                                               different resource in the file is desired.
-  --extract-file-format                        Output file format. [nargs=0..1]
-                                               [default: "DEFAULT"]
-  --extract-image-format                       The image format to convert the texture data
-                                               to before extracting. [nargs=0..1]
-                                               [default: "UNCHANGED"]
-  --extract-alpha-channel                      If image has an alpha channel, extract the
-                                               alpha and convert to a black-and-white image,
-                                               where black is 0% alpha and white is 100%
-                                               alpha.
-  --extract-mip                                Set the mip to extract. Overridden by
-                                               --extract-all-mips. [nargs=0..1] [default: 0]
-  --extract-all-mips                           Extract all mips. Overridden by
-                                               --extract-all-images.
-  --extract-frame                              Set the frame to extract. Overridden by
-                                               --extract-all-frames. [nargs=0..1]
-                                               [default: 0]
-  --extract-all-frames                         Extract all frames. Overridden by
-                                               --extract-all-images.
-  --extract-face                               Set the face to extract. Overridden by
-                                               --extract-all-faces. [nargs=0..1] [default: 0]
-  --extract-all-faces                          Extract all faces. Overridden by
-                                               --extract-all-images.
-  --extract-slice                              Set the slice to extract. Overridden by
-                                               --extract-all-slices. [nargs=0..1]
-                                               [default: 0]
-  --extract-all-slices                         Extract all slices. Overridden by
-                                               --extract-all-images.
-  --extract-all-images                         Extract all mips, frames, faces, and slices.
-  --extract-thumbnail                          Extract thumbnail resource to disk if present.
-                                               Overridden by --extract-all-resources.
-  --extract-particle-sheet-resource            Extract particle sheet resource to disk if
-                                               present. Overridden by
-                                               --extract-all-resources.
-  --extract-kvd-resource                       Extract the nonstandard KVD (KeyValues Data)
-                                               resource to disk if present. Overridden by
-                                               --extract-all-resources.
-  --extract-ath-resource                       Extract the nonstandard ATH (Author Info)
-                                               resource to disk if present. Overridden by
-                                               --extract-all-resources.
-  --extract-hotspot-data-resource              Extract the hotspot data resource to disk if
-                                               present. Overridden by
-                                               --extract-all-resources.
-  --extract-all-resources                      Extract all resources to disk.
-  --extract-stdout                             When extracting an image or resource, print
-                                               the name and base64-encoded contents to
-                                               console instead of writing a file.
+  --extract-skip-image                          Do not extract image data. Useful if a
+                                                different resource in the file is desired.
+  --extract-file-format                         Output file format. [nargs=0..1]
+                                                [default: "DEFAULT"]
+  --extract-image-format                        The image format to convert the texture data
+                                                to before extracting. [nargs=0..1]
+                                                [default: "UNCHANGED"]
+  --extract-alpha-channel                       If image has an alpha channel, extract the
+                                                alpha and convert to a black-and-white image,
+                                                where black is 0% alpha and white is 100%
+                                                alpha.
+  --extract-mip                                 Set the mip to extract. Overridden by
+                                                --extract-all-mips. [nargs=0..1] [default: 0]
+  --extract-all-mips                            Extract all mips. Overridden by
+                                                --extract-all-images.
+  --extract-frame                               Set the frame to extract. Overridden by
+                                                --extract-all-frames. [nargs=0..1]
+                                                [default: 0]
+  --extract-all-frames                          Extract all frames. Overridden by
+                                                --extract-all-images.
+  --extract-face                                Set the face to extract. Overridden by
+                                                --extract-all-faces. [nargs=0..1] [default: 0]
+  --extract-all-faces                           Extract all faces. Overridden by
+                                                --extract-all-images.
+  --extract-slice                               Set the slice to extract. Overridden by
+                                                --extract-all-slices. [nargs=0..1]
+                                                [default: 0]
+  --extract-all-slices                          Extract all slices. Overridden by
+                                                --extract-all-images.
+  --extract-all-images                          Extract all mips, frames, faces, and slices.
+  --extract-thumbnail                           Extract thumbnail resource to disk if present.
+                                                Overridden by --extract-all-resources.
+  --extract-particle-sheet-resource             Extract particle sheet resource to disk if
+                                                present. Overridden by
+                                                --extract-all-resources.
+  --extract-kvd-resource                        Extract the nonstandard KVD (KeyValues Data)
+                                                resource to disk if present. Overridden by
+                                                --extract-all-resources.
+  --extract-ath-resource                        Extract the nonstandard ATH (Author Info)
+                                                resource to disk if present. Overridden by
+                                                --extract-all-resources.
+  --extract-hotspot-data-resource               Extract the hotspot data resource to disk if
+                                                present. Overridden by
+                                                --extract-all-resources.
+  --extract-all-resources                       Extract all resources to disk.
+  --extract-stdout                              When extracting an image or resource, print
+                                                the name and base64-encoded contents to
+                                                console instead of writing a file.
 
 "info" mode (detailed usage):
-  --info-output-mode                           The mode to output information in. Can be
-                                               "human" or "kv1". [nargs=0..1]
-                                               [default: "human"]
-  --info-skip-resources                        Do not print resource internals.
+  --info-output-mode                            The mode to output information in. Can be
+                                                "human" or "kv1". [nargs=0..1]
+                                                [default: "human"]
+  --info-skip-resources                         Do not print resource internals.
 
 Enumerations:
 
@@ -587,6 +595,8 @@ IMAGE_FORMAT
  • R8
  • BC7
  • BC6H
+ • BC5
+ • BC4
 
 FLAG
  • POINT_SAMPLE

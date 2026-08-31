@@ -897,6 +897,14 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.help("Set the particle sheet resource. Path should point to a valid particle sheet file.")
 		.store_into(particleSheetResource);
 
+	std::vector<std::string> parallaxCorrectedCubemapResource;
+	createCLI
+		.add_argument("--parallax-corrected-cubemap-resource")
+		.metavar("X Y Z W V00 V01 V02 V03 V10 V11 V12 V13 V20 V21 V22 V23 V30 V31 V32 V33")
+		.help("Set the parallax-corrected cubemap resource.")
+		.nargs(20)
+		.store_into(parallaxCorrectedCubemapResource);
+
 	unsigned int crcResource;
 	createCLI
 		.add_argument("--crc-resource")
@@ -1193,6 +1201,21 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.flag()
 		.store_into(removeParticleSheetResource);
 
+	std::vector<std::string> setParallaxCorrectedCubemapResource;
+	editCLI
+		.add_argument("--set-parallax-corrected-cubemap-resource")
+		.metavar("X Y Z W V00 V01 V02 V03 V10 V11 V12 V13 V20 V21 V22 V23 V30 V31 V32 V33")
+		.help("Set the parallax-corrected cubemap resource.")
+		.nargs(20)
+		.store_into(setParallaxCorrectedCubemapResource);
+
+	bool removeParallaxCorrectedCubemapResource;
+	editCLI
+		.add_argument("--remove-parallax-corrected-cubemap-resource")
+		.help("Remove the parallax-corrected cubemap resource. If set parallax-corrected cubemap resource is specified, this argument is ignored.")
+		.flag()
+		.store_into(removeParallaxCorrectedCubemapResource);
+
 	unsigned int setCRCResource;
 	editCLI
 		.add_argument("--set-crc-resource")
@@ -1473,7 +1496,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 	std::string enumInfo = "Enumerations:\n\n";
 	const auto addEnumInfo = [&enumInfo]<typename E>(std::string_view enumName) {
 		enumInfo += enumName;
-		enumInfo += "\n";
+		enumInfo += '\n';
 		for (auto name : not_magic_enum::enum_names<E>()) {
 			enumInfo += " • ";
 			enumInfo += name;
@@ -1643,6 +1666,23 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				}
 			} else if (editMode && removeParticleSheetResource) {
 				vtf.removeParticleSheetResource();
+			}
+
+			// Modify parallax-corrected cubemap resource
+			if ((editMode && cli.is_used("--set-parallax-corrected-cubemap-resource")) || (!editMode && cli.is_used("--parallax-corrected-cubemap-resource"))) {
+				vtfpp::Resource::PCC pcc{};
+				const auto& numbers = editMode ? setParallaxCorrectedCubemapResource : parallaxCorrectedCubemapResource;
+				for (int i = 0; i < 4; i++) {
+					sourcepp::string::toFloat(numbers[i], pcc.origin[i]);
+				}
+				for (int i = 0; i < 4; i++) {
+					for (int j = 0; j < 4; j++) {
+						sourcepp::string::toFloat(numbers[4 + i * 4 + j], pcc.inverseTransform[i][j]);
+					}
+				}
+				vtf.setParallaxCorrectedCubemapResource(pcc);
+			} else if (editMode && removeParallaxCorrectedCubemapResource) {
+				vtf.removeParallaxCorrectedCubemapResource();
 			}
 
 			// Modify CRC resource
@@ -3353,6 +3393,25 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 						tfout << BOLD << "Extended Flags: " << END << CYAN << std::format("{:#x}", ts0ResourcePtr->getDataAsFlags()) << END << tfendl;
 					}
 
+					if (const auto* pccResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARALLAX_CORRECTED_CUBEMAP)) {
+						const auto pcc = pccResourcePtr->getDataAsParallaxCorrectedCubemap();
+						tfout << BOLD << "PCC:            " << END << BOLD << "Origin: [" << END << CYAN << pcc.origin[0] << END << ", " << CYAN << pcc.origin[1] << END << ", " << CYAN << pcc.origin[2] << END << ", " << CYAN << pcc.origin[3] << END << "]" << " — " << BOLD << "Inverse Transform: " << END << "[";
+						for (int i = 0; i < 4; i++) {
+							tfout << "[";
+							for (int j = 0; j < 4; j++) {
+								tfout << CYAN << pcc.inverseTransform[i][j] << END;
+								if (j != 3) {
+									tfout << ", ";
+								}
+							}
+							tfout << "]";
+							if (i != 3) {
+								tfout << ", ";
+							}
+						}
+						tfout << "]" << tfendl;
+					}
+
 					if (const auto* crcResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_CRC)) {
 						tfout << BOLD << "CRC:            " << END << CYAN << std::format("{:#x}", crcResourcePtr->getDataAsCRC()) << END << tfendl;
 					}
@@ -3575,6 +3634,17 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							}
 						} else {
 							kv["resources"]["particle_sheet"]["malformed"] = true;
+						}
+					}
+					if (const auto* pccResourcePtr = vtf.getResource(vtfpp::Resource::TYPE_PARALLAX_CORRECTED_CUBEMAP)) {
+						const auto pcc = pccResourcePtr->getDataAsParallaxCorrectedCubemap();
+						for (int i = 0; i < 4; i++) {
+							kv["resources"]["pcc"]["origin"][std::format("{}", i)] = static_cast<float>(pcc.origin[i]);
+						}
+						for (int i = 0; i < 4; i++) {
+							for (int j = 0; j < 4; j++) {
+								kv["resources"]["pcc"]["inverse_transform"][std::format("{}", i)][std::format("{}", j)] = pcc.inverseTransform[i][j];
+							}
 						}
 					}
 					if (const auto* hotspotResource = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)) {
