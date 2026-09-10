@@ -57,6 +57,14 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 	extractFileFormatCombo->setCurrentIndex(0); // DEFAULT
 	extractImageDataLayout->addRow(tr("File Format"), extractFileFormatCombo);
 
+	// Quality
+	auto* extractQualitySpin = new QMareSpinBox{extractImageDataGroup};
+	extractQualitySpin->setRange(0, 100);
+	extractQualitySpin->setSingleStep(5);
+	extractQualitySpin->setSuffix("%");
+	extractQualitySpin->setValue(100);
+	extractImageDataLayout->addRow(tr("Quality"), extractQualitySpin);
+
 	// Image format
 	auto* extractImageFormatCombo = new QMareComboBox{extractImageDataGroup};
 	for (const auto& [format, formatName] : not_magic_enum::enum_entries<vtfpp::ImageFormat>(true)) {
@@ -257,6 +265,10 @@ QMareExtractFromTextureDialog::QMareExtractFromTextureDialog(const QStringList& 
 
 		if (extractImageDataCheck->isChecked()) {
 			cli->addEnum<vtfpp::ImageConversion::FileFormat>(extractFileFormatCombo, "--extract-file-format");
+
+			if (extractQualitySpin->value() != extractQualitySpin->maximum()) {
+				cli->addArgPair("--extract-quality", std::format("{}", static_cast<float>(extractQualitySpin->value()) / 100.f).data());
+			}
 
 			cli->addEnum<vtfpp::ImageFormat>(extractImageFormatCombo, "--extract-image-format");
 
