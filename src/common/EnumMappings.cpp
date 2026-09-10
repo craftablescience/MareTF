@@ -79,7 +79,8 @@ const std::vector<vtfpp::ImageFormat> IMAGE_FORMAT_E{
 	vtfpp::ImageFormat::TITANFALL_BC7,
 	vtfpp::ImageFormat::STRATA_R8,
 	vtfpp::ImageFormat::STRATA_BC7,
-	vtfpp::ImageFormat::STRATA_BC6H,
+	vtfpp::ImageFormat::STRATA_BC6H_SF,
+	vtfpp::ImageFormat::STRATA_BC6H_UF,
 	vtfpp::ImageFormat::STRATA_BC5,
 	vtfpp::ImageFormat::STRATA_BC4,
 };
@@ -144,7 +145,8 @@ const std::vector<std::string_view> IMAGE_FORMAT_S{
 	"TITANFALL_BC7",
 	"R8",
 	"BC7",
-	"BC6H",
+	"BC6H_SF",
+	"BC6H_UF",
 	"BC5",
 	"BC4",
 };
@@ -209,7 +211,8 @@ const std::vector<std::string_view> IMAGE_FORMAT_P{
 	"TITANFALL_BC7",
 	"R8",
 	"BC7",
-	"BC6H",
+	"BC6H_SF",
+	"BC6H_UF",
 	"BC5",
 	"BC4",
 };
