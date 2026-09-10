@@ -1338,6 +1338,15 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::FileFormat>, "FILE_FORMAT"))
 		.default_value(extractFileFormat).store_into(extractFileFormat);
 
+	float extractQuality = -1.f;
+	extractCLI
+		.add_argument("--extract-quality")
+		.metavar("QUALITY")
+		.help("The quality of the output image file, from 0.0 to 1.0. Negative values will activate lossless mode when"
+		      " supported by the output file format. If output file format is always lossless this parameter is ignored.")
+		.scan<'g', float>()
+		.default_value(extractQuality).store_into(extractQuality);
+
 	std::string extractImageFormat{not_magic_enum::enum_name(vtfpp::VTF::FORMAT_UNCHANGED)};
 	extractCLI
 		.add_argument("--extract-image-format")
@@ -3085,7 +3094,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 									}
 
 									// Extract image data to file
-									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); fileData.empty()) {
+									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat, extractQuality); fileData.empty()) {
 										extractionSuccessful.push_back(false);
 									} else if (extractStdOut) {
 										tfout << '"' << BOLD << outputPathFixupMip.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl;
@@ -3107,7 +3116,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 											switch (imageFormat) {
 												#define MARETF_EXTRACT_ALPHA_CASE(format, channel) \
 													case vtfpp::ImageFormat::format: \
-														fileData = vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat); \
+														fileData = vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat, extractQuality); \
 														if (extractStdOut) { \
 															tfout << '"' << BOLD << outputPathFixupAlpha.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl; \
 															extractionSuccessful.push_back(true); \
