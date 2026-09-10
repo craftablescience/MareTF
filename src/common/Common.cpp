@@ -50,7 +50,7 @@ using namespace sourcepp;
 }
 
 bool fileIsASupportedImageFileFormat(std::string_view extension) {
-	static constexpr std::array<std::string_view, 15> SUPPORTED_EXTENSIONS{
+	static constexpr std::array<std::string_view, 16> SUPPORTED_EXTENSIONS{
 		".apng",
 		".bmp",
 		".exr",
@@ -58,6 +58,7 @@ bool fileIsASupportedImageFileFormat(std::string_view extension) {
 		".hdr",
 		".jpeg",
 		".jpg",
+		".jxl",
 		".pic",
 		".png",
 		".pgm",
@@ -84,6 +85,7 @@ std::string_view supportedImageFileFormatExtension(vtfpp::ImageConversion::FileF
 		case QOI:  return ".qoi";
 		case HDR:  return ".hdr";
 		case EXR:  return ".exr";
+		case JXL:  return ".jxl";
 	}
 	return "";
 }
@@ -98,16 +100,17 @@ vtfpp::ImageConversion::FileFormat supportedImageFileFormatExtension(std::string
 	if (string::iequals(fileFormatExtension, ".qoi")) return QOI;
 	if (string::iequals(fileFormatExtension, ".hdr")) return HDR;
 	if (string::iequals(fileFormatExtension, ".exr")) return EXR;
+	if (string::iequals(fileFormatExtension, ".jxl")) return JXL;
 	// We should not be here!
 	return DEFAULT;
 }
 
 std::string_view supportedImageFileFormatsForLoad() {
-	return "Image Formats (*.apng *.bmp *.exr *.gif *.hdr *.jpg *.jpeg *.pic *.png *.pgm *.ppm *.psd *.qoi *.tga *.webp)";
+	return "Image Formats (*.apng *.bmp *.exr *.gif *.hdr *.jpg *.jpeg *.jxl *.pic *.png *.pgm *.ppm *.psd *.qoi *.tga *.webp)";
 }
 
 std::string_view supportedImageFileFormatsForSave() {
-	return "Image Formats (*.bmp *.exr *.hdr *.jpg *.jpeg *.png *.qoi *.tga *.webp)";
+	return "Image Formats (*.bmp *.exr *.hdr *.jpg *.jpeg *.jxl *.png *.qoi *.tga *.webp)";
 }
 
 std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform) {

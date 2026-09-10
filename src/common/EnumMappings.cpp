@@ -228,6 +228,7 @@ const std::vector<vtfpp::ImageConversion::FileFormat> IMAGE_CONVERSION_FILE_FORM
 	vtfpp::ImageConversion::FileFormat::QOI,
 	vtfpp::ImageConversion::FileFormat::HDR,
 	vtfpp::ImageConversion::FileFormat::EXR,
+	vtfpp::ImageConversion::FileFormat::JXL,
 };
 const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
 	"DEFAULT",
@@ -240,6 +241,7 @@ const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_S{
 	"QOI",
 	"HDR",
 	"EXR",
+	"JXL",
 };
 const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_P{
 	"Default",
@@ -252,6 +254,7 @@ const std::vector<std::string_view> IMAGE_CONVERSION_FILE_FORMAT_P{
 	"QOI",
 	"HDR",
 	"EXR",
+	"JXL",
 };
 
 const std::vector<vtfpp::ImageConversion::ResizeFilter> IMAGE_CONVERSION_RESIZE_FILTER_E{
