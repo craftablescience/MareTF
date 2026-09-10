@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <vtfpp/VTF.h>
 
+class QEvent;
 class QMouseEvent;
 class QPaintEvent;
 class QResizeEvent;
@@ -73,6 +74,8 @@ public:
 	explicit operator bool() const;
 
 protected:
+	bool event(QEvent* e) override;
+
 	void mouseMoveEvent(QMouseEvent* e) override;
 
 	void mousePressEvent(QMouseEvent* e) override;
@@ -91,6 +94,7 @@ protected:
 	QImage textureCurrent;
 	QPointF textureOffset;
 	float textureZoom = 1.f;
+	float previousDistance = 1.f;
 	uint8_t currentMip = 0;
 	uint8_t currentFace = 0;
 	uint16_t currentFrame = 0;
