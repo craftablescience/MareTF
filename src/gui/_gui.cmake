@@ -28,6 +28,8 @@ set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareFlagsWidget.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareMiddleClickTabWidget.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareMiddleClickTabWidget.h"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareScrollArea.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareScrollArea.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareSpinBox.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareSpinBox.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/QMareTextureWidget.cpp"

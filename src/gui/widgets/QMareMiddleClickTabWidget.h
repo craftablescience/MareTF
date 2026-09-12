@@ -5,6 +5,9 @@
 class QKeyEvent;
 class QMouseEvent;
 
+/**
+ * Fixes tab widget before Qt 6.11 so tabs close when they are middle-clicked.
+ */
 class QMareMiddleClickTabWidget : public QTabWidget {
 	Q_OBJECT;
 

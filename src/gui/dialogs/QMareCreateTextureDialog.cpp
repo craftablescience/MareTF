@@ -13,11 +13,11 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QScrollArea>
 #include <QStandardItemModel>
 #include <QTimer>
 
@@ -29,25 +29,40 @@
 #include "widgets/QMareComboBox.h"
 #include "widgets/QMareFilesystemBox.h"
 #include "widgets/QMareFlagsWidget.h"
+#include "widgets/QMareScrollArea.h"
 #include "widgets/QMareSpinBox.h"
 
 QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths, bool createFromDir, QWidget* parent) : QDialog{parent} {
 	this->setWindowTitle(createFromDir || inputPaths.size() > 1 ? tr("Create Textures") : tr("Create Texture"));
-	this->setMinimumWidth(500);
+	this->setMinimumWidth(600);
 
 	auto* layout = new QVBoxLayout{this};
 
-	auto* tabs = new QTabWidget{this};
+	auto* tabs = new QWidget{this};
+	auto* tabLayout = new QHBoxLayout{tabs};
+	tabLayout->setContentsMargins({});
 	layout->addWidget(tabs);
 
+	const auto addTab = [tabs, tabLayout](const QString& name, auto* widget, int stretch) {
+		auto* parent_ = new QWidget{tabs};
+		auto* parentLayout = new QVBoxLayout{parent_};
+		parentLayout->setContentsMargins({});
+
+		auto* label = new QLabel{name, tabs};
+		label->setAlignment(Qt::AlignHCenter);
+		parentLayout->addWidget(label);
+		parentLayout->addWidget(widget, stretch);
+		tabLayout->addWidget(parent_);
+	};
+
 	// General texture settings tab
-	auto* textureTabScroll = new QScrollArea{tabs};
+	auto* textureTabScroll = new QMareScrollArea{this};
 	auto* textureTab = new QWidget{textureTabScroll};
 	textureTabScroll->setWidgetResizable(true);
 	textureTabScroll->setWidget(textureTab);
 	auto* textureTabLayout = new QFormLayout{textureTab};
 	textureTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(textureTabScroll, tr("General"));
+	addTab(tr("General"), textureTabScroll, 2);
 
 	// Platform
 	auto* platformCombo = new QMareComboBox{textureTab};
@@ -281,14 +296,17 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(tr("CPU Compression"), textureCompressionGroup);
 
+	auto* flagsChecks = new QMareFlagsWidget{this};
+	addTab(tr("Flags"), flagsChecks, 1);
+
 	// Distance mapping tab
-	auto* distanceTabScroll = new QScrollArea{tabs};
+	auto* distanceTabScroll = new QMareScrollArea{this};
 	auto* distanceTab = new QWidget{distanceTabScroll};
 	distanceTabScroll->setWidgetResizable(true);
 	distanceTabScroll->setWidget(distanceTab);
 	auto* distanceTabLayout = new QFormLayout{distanceTab};
 	distanceTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(distanceTabScroll, tr("Distance Mapping"));
+	addTab(tr("Distance Mapping"), distanceTabScroll, 2);
 
 	auto* distanceReduceGroup = new QGroupBox{distanceTab};
 	auto* distanceReduceLayout = new QFormLayout{distanceReduceGroup};
@@ -344,18 +362,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	auto* distanceSampleCenteredCheck = new QCheckBox{distanceTab};
 	distanceTabLayout->addRow(tr("Sample Centered"), distanceSampleCenteredCheck);
 
-	// Flags tab
-	auto* flagsChecks = new QMareFlagsWidget{tabs};
-	tabs->addTab(flagsChecks, tr("Flags"));
-
 	// Resources tab
-	auto* resourcesTabScroll = new QScrollArea{tabs};
+	auto* resourcesTabScroll = new QMareScrollArea{this};
 	auto* resourcesTab = new QWidget{resourcesTabScroll};
 	resourcesTabScroll->setWidgetResizable(true);
 	resourcesTabScroll->setWidget(resourcesTab);
 	auto* resourcesTabLayout = new QFormLayout{resourcesTab};
 	resourcesTabLayout->setFormAlignment(Qt::AlignHCenter);
-	tabs->addTab(resourcesTabScroll, tr("Resources"));
+	addTab(tr("Resources"), resourcesTabScroll, 2);
 
 	// Thumbnail resource
 	auto* resourcesGenerateThumbnailCheck = new QCheckBox{resourcesTab};
@@ -569,13 +583,21 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	// Enable "Distance Mapping" tab when Distance Mapping is checked
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-	connect(textureUseDistanceMapping, &QCheckBox::checkStateChanged, this, [tabs](Qt::CheckState state) {
-		tabs->setTabVisible(1, state == Qt::Checked);
+	connect(textureUseDistanceMapping, &QCheckBox::checkStateChanged, this, [this, tabLayout](Qt::CheckState state) {
+		auto* parent_ = tabLayout->itemAt(2)->widget();
+		parent_->setVisible(state == Qt::Checked);
+		if (state == Qt::Checked) {
+			this->resize(this->sizeHint().width(), this->size().height());
+		}
 	});
 	textureUseDistanceMapping->checkStateChanged(textureUseDistanceMapping->checkState());
 #else
-	connect(textureUseDistanceMapping, &QCheckBox::stateChanged, this, [tabs](bool state) {
-		tabs->setTabVisible(1, state);
+	connect(textureUseDistanceMapping, &QCheckBox::stateChanged, this, [this, tabLayout](bool state) {
+		auto* parent_ = tabLayout->itemAt(2)->widget();
+		parent_->setVisible(state);
+		if (state) {
+			this->resize(this->sizeHint().width(), this->size().height());
+		}
 	});
 	textureUseDistanceMapping->stateChanged(textureUseDistanceMapping->isChecked());
 #endif
