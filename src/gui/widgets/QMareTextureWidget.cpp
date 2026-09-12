@@ -220,7 +220,14 @@ QIcon QMareTextureWidget::getIcon() const {
 	if (this->textureCurrent.isNull()) {
 		return {};
 	}
-	return {QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS) ? Qt::SmoothTransformation : Qt::FastTransformation)};
+	return {this->getPixmap()};
+}
+
+QPixmap QMareTextureWidget::getPixmap() const {
+	if (this->textureCurrent.isNull()) {
+		return {};
+	}
+	return QPixmap::fromImage(this->textureCurrent).scaled(64, 64, Qt::KeepAspectRatio, QMareOptions::get<bool>(QMareOptions::BOOL_HIGH_QUALITY_THUMBNAILS) ? Qt::SmoothTransformation : Qt::FastTransformation);
 }
 
 QString QMareTextureWidget::getPath() const {

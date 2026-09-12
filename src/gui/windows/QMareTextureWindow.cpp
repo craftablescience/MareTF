@@ -307,7 +307,10 @@ QMareTextureWindow::QMareTextureWindow() {
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::tabCloseRequested, this, [this](int index) {
 		// todo(edit)
 		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
-			switch (QMessageBox::warning(this, tr("Save Confirmation"), tr("The texture at \"%1\" has been modified. Would you like to save it?").arg(textureWidget->getPath()), QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel)) {
+			auto* saveMessageBox = new QMessageBox{QMessageBox::Icon::NoIcon, tr("Save Confirmation"), tr("The texture at \"%1\" has been modified. Would you like to save it?").arg(textureWidget->getPath()), QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, this};
+			saveMessageBox->setIconPixmap(textureWidget->getPixmap());
+			saveMessageBox->setAttribute(Qt::WA_DeleteOnClose);
+			switch (saveMessageBox->exec()) {
 				default:
 				case QMessageBox::Cancel:
 					return;

@@ -24,6 +24,8 @@ public:
 
 	[[nodiscard]] QIcon getIcon() const;
 
+	[[nodiscard]] QPixmap getPixmap() const;
+
 	[[nodiscard]] QString getPath() const;
 
 	[[nodiscard]] const vtfpp::VTF& getVTF() const;
