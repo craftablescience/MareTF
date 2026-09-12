@@ -51,7 +51,7 @@ QMareTextureWidget::QMareTextureWidget(QWidget* parent) : QWidget{parent} {
 		QApplication::clipboard()->setImage(this->textureCurrent, QClipboard::Clipboard);
 	});
 	contextMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton), tr("&Save Image As..."), [this] {
-		this->saveCurrentTexture();
+		this->extractCurrentTexture();
 	});
 
 	contextMenu->addSeparator();
@@ -189,7 +189,7 @@ void QMareTextureWidget::reloadCurrentTexture() {
 	}
 }
 
-void QMareTextureWidget::saveCurrentTexture() {
+void QMareTextureWidget::extractCurrentTexture() {
 	const std::filesystem::path savePath{reinterpret_cast<const char8_t*>(QFileDialog::getSaveFileName(this, tr("Save Image"), QString{}, ::supportedImageFileFormatsForSave().data()).toUtf8().constData())};
 	if (savePath.empty()) {
 		return;

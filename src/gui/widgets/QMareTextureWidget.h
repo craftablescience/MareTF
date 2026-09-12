@@ -18,7 +18,7 @@ public:
 
 	void reloadCurrentTexture();
 
-	void saveCurrentTexture();
+	void extractCurrentTexture();
 
 	[[nodiscard]] QIcon getIcon() const;
 
