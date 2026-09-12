@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 
+class QAction;
 class QCheckBox;
 class QDockWidget;
 class QGroupBox;
@@ -30,13 +31,21 @@ public:
 
 	void regenerateDetails();
 
+	bool saveTab(int index);
+
 signals:
 	void themeUpdated();
 
 protected:
+	void closeEvent(QCloseEvent* event) override;
+
 	void dragEnterEvent(QDragEnterEvent* event) override;
 
 	void dropEvent(QDropEvent* event) override;
+
+	// todo(edit)
+	QAction* saveAction;
+	// ---- end
 
 	QMareMiddleClickTabWidget* textureTabs;
 

@@ -111,6 +111,15 @@ QMareTextureWindow::QMareTextureWindow() {
 		}
 	});
 
+	// todo(edit)
+	fileMenu->addSeparator();
+
+	this->saveAction = fileMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton), tr("&Save"), Qt::CTRL | Qt::Key_S, [this] {
+		this->saveTab(this->textureTabs->currentIndex());
+	});
+	this->saveAction->setDisabled(true);
+	// ---- end
+
 	fileMenu->addSeparator();
 
 	fileMenu->addAction(QIcon{":/button_kofi.png"}, tr("&Donate"), [] {
@@ -296,7 +305,23 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::tabCloseRequested, this, [this](int index) {
-		// todo: save confirmation
+		// todo(edit)
+		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
+			switch (QMessageBox::warning(this, tr("Save Confirmation"), tr("The texture at \"%1\" has been modified. Would you like to save it?").arg(textureWidget->getPath()), QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel)) {
+				default:
+				case QMessageBox::Cancel:
+					return;
+				case QMessageBox::No:
+					break;
+				case QMessageBox::Yes:
+					if (!this->saveTab(index)) {
+						return;
+					}
+					break;
+			}
+		}
+		// ---- end
+
 		this->textureTabs->removeTab(index);
 	});
 
@@ -890,6 +915,19 @@ QMareTextureWindow::QMareTextureWindow() {
 	this->flagsDock->raise();
 	viewMenu->addAction(this->flagsDock->toggleViewAction());
 
+	// todo(edit)
+	connect(this->flagsChecks, &QMareFlagsWidget::itemChanged, this, [this](QListWidgetItem*) {
+		if (auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->currentWidget())) {
+			textureWidget->getVTF().setFlags(this->flagsChecks->getFlags());
+			if (!textureWidget->isTextureModified()) {
+				textureWidget->setTextureModified(true);
+				this->textureTabs->setTabText(this->textureTabs->currentIndex(), this->textureTabs->tabText(this->textureTabs->currentIndex()) + "*");
+				this->saveAction->setDisabled(false);
+			}
+		}
+	});
+	// ---- end
+
 	// Final setup ----------------------------------------
 
 	this->regenerateDetails();
@@ -1036,6 +1074,10 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resSourcePPFlagsGroup->setVisible(false);
 		this->resSourcePPFlagsList->clear();
 
+		// todo(edit)
+		this->saveAction->setDisabled(true);
+		// ---- end
+
 		return;
 	}
 
@@ -1139,7 +1181,13 @@ void QMareTextureWindow::regenerateDetails() {
 	searchAndSetCombo(this->detailsCompressionMethod, static_cast<int>(vtf.getCompressionMethod()), vtf.getCompressionLevel() > 0 || vtf.getCompressionMethod() == vtfpp::CompressionMethod::CONSOLE_LZMA);
 	this->detailsCompressionLevel->setValue(vtf.getCompressionLevel());
 
+	// todo(edit)
+	this->flagsChecks->blockSignals(true);
+	// ---- end
 	this->flagsChecks->repopulateFlagList(vtf.getFlags(), vtf.getPlatform(), vtf.getVersion());
+	// todo(edit)
+	this->flagsChecks->blockSignals(false);
+	// ---- end
 
 	if (vtf.hasThumbnailData()) {
 		this->resThumbnailGroup->setVisible(true);
@@ -1296,6 +1344,10 @@ void QMareTextureWindow::regenerateDetails() {
 		this->resSourcePPFlagsList->clear();
 	}
 
+	// todo(edit)
+	this->saveAction->setDisabled(!activeTexture->isTextureModified());
+	// ---- end
+
 	// Delay a tick to allow everything to be laid out
 	QTimer::singleShot(0, this, [this] {
 		this->resizeDocks({
@@ -1304,6 +1356,41 @@ void QMareTextureWindow::regenerateDetails() {
 			this->previewDock->minimumSizeHint().height(),
 		}, Qt::Vertical);
 	});
+}
+
+bool QMareTextureWindow::saveTab(int index) {
+	if (index < 0) {
+		return false;
+	}
+
+	// todo(edit)
+	if (auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
+		if (!textureWidget->saveCurrentTexture()) {
+			QMessageBox::critical(this, tr("Save Failure"), tr("Failed to save texture at \"%1\".").arg(textureWidget->getPath()));
+			return false;
+		}
+		if (const auto text = this->textureTabs->tabText(index); text.endsWith('*')) {
+			this->textureTabs->setTabText(index, text.sliced(0, text.length() - 1));
+		}
+		this->saveAction->setDisabled(true);
+	}
+	// ---- end
+
+	return true;
+}
+
+void QMareTextureWindow::closeEvent(QCloseEvent* event) {
+	// todo(edit)
+	for (int i = this->textureTabs->count() - 1; i >= 0; i--) {
+		this->textureTabs->tabCloseRequested(i);
+	}
+	if (this->textureTabs->count() > 0) {
+		event->ignore();
+		return;
+	}
+	// ---- end
+
+	QMainWindow::closeEvent(event);
 }
 
 void QMareTextureWindow::dragEnterEvent(QDragEnterEvent* event) {

@@ -20,6 +20,8 @@ public:
 
 	void extractCurrentTexture();
 
+	[[nodiscard]] bool saveCurrentTexture();
+
 	[[nodiscard]] QIcon getIcon() const;
 
 	[[nodiscard]] QString getPath() const;
@@ -70,6 +72,12 @@ public:
 
 	void setCurrentCubemapMode(int mode);
 
+	// todo(edit)
+	[[nodiscard]] bool isTextureModified() const;
+
+	void setTextureModified(bool textureModified_);
+	// ---- end
+
 	explicit operator bool() const;
 
 protected:
@@ -104,4 +112,8 @@ protected:
 	int cubemapMode = 0;
 
 	QPointF mousePressPosition;
+
+	// todo(edit)
+	bool textureModified = false;
+	// ---- end
 };

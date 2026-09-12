@@ -208,6 +208,14 @@ void QMareTextureWidget::extractCurrentTexture() {
 	QMessageBox::warning(this, tr("Error"), tr("Failed to save image."));
 }
 
+bool QMareTextureWidget::saveCurrentTexture() {
+	if (!this->vtf.bake(this->path.toUtf8().data())) {
+		return false;
+	}
+	this->textureModified = false;
+	return true;
+}
+
 QIcon QMareTextureWidget::getIcon() const {
 	if (this->textureCurrent.isNull()) {
 		return {};
@@ -323,6 +331,16 @@ void QMareTextureWidget::setCurrentCubemapMode(int mode) {
 	this->cubemapMode = mode;
 	this->reloadCurrentTexture();
 }
+
+// todo(edit)
+bool QMareTextureWidget::isTextureModified() const {
+	return this->textureModified;
+}
+
+void QMareTextureWidget::setTextureModified(bool textureModified_) {
+	this->textureModified = textureModified_;
+}
+// ---- end
 
 QMareTextureWidget::operator bool() const {
 	return !this->path.isEmpty() && !this->textureCurrent.isNull();
