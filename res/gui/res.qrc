@@ -10,6 +10,5 @@
         <file>button_load.png</file>
         <file>button_new.png</file>
         <file>button_new_multi.png</file>
-        <file>splash.png</file>
     </qresource>
 </RCC>
