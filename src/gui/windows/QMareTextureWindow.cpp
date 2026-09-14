@@ -213,6 +213,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		{"", ""}, // Separator
 		{u8"English", "en"},
 		{u8"日本語",   "ja"},
+		{u8"Polski",  "pl"},
 		{u8"Русский", "ru_RU"},
 		{u8"Español", "es"},
 	};
