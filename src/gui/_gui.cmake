@@ -1,6 +1,8 @@
 set(${PROJECT_NAME}_gui_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/attribution.qrc"
         "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/res.qrc"
+        "$<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/res/gui/splash_dbg.qrc>"
+        "${CMAKE_CURRENT_SOURCE_DIR}/res/gui/splash_rel.qrc"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/cli/MareTF.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/common/Common.cpp"

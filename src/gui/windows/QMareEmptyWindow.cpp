@@ -156,9 +156,31 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 	QPainter painter{this};
 
-	static const QPixmap SPLASH_IMAGE{":/splash.png"};
-	const QPixmap splashImageScaled = SPLASH_IMAGE.scaled(this->width(), this->height() - this->toolbar->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	painter.drawPixmap(0, this->toolbar->height(), splashImageScaled.width(), splashImageScaled.height(), splashImageScaled);
+	static QPixmap splashPixmap;
+	if (splashPixmap.isNull()) {
+		QFile file{
+#ifdef DEBUG
+			":/splash.png"
+#else
+			":/splash.jxl"
+#endif
+		};
+		if (!file.open(QIODevice::ReadOnly)) {
+			return;
+		}
+		const auto splashImageFileData = file.readAll();
+
+		vtfpp::ImageFormat format;
+		int width, height, frameCount;
+		const auto splashImageData = vtfpp::ImageConversion::convertFileToImageData({reinterpret_cast<const std::byte*>(splashImageFileData.data()), static_cast<std::span<const std::byte>::size_type>(splashImageFileData.size())}, format, width, height, frameCount);
+		if (frameCount != 1 || format != vtfpp::ImageFormat::RGB888) {
+			return;
+		}
+		splashPixmap = QPixmap::fromImage({reinterpret_cast<const uchar*>(splashImageData.data()), width, height, QImage::Format_RGB888});
+	}
+
+	const auto splashPixmapScaled = splashPixmap.scaled(this->width(), this->height() - this->toolbar->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	painter.drawPixmap(0, this->toolbar->height(), splashPixmapScaled.width(), splashPixmapScaled.height(), splashPixmapScaled);
 }
 
 void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
