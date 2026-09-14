@@ -6,50 +6,50 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Stwórz Tekstury</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Stwórz Teksturę</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="65"/>
         <source>General</source>
-        <translation type="unfinished"></translation>
+        <translation>Ogólne</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="72"/>
         <source>Platform</source>
-        <translation type="unfinished"></translation>
+        <translation>Platforma</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="84"/>
         <source>Version</source>
-        <translation type="unfinished"></translation>
+        <translation>Wersja</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="95"/>
         <source>Format</source>
-        <translation type="unfinished"></translation>
+        <translation>Format</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="99"/>
         <source>Compression Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Jakość Kompresji</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="121"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="166"/>
         <source>Resize</source>
-        <translation type="unfinished"></translation>
+        <translation>Zmień Rozmiar</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="125"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="170"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="278"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Żaden</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="126"/>
@@ -57,87 +57,87 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="171"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="180"/>
         <source>Exact</source>
-        <translation type="unfinished"></translation>
+        <translation>Dokładnie</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="127"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="172"/>
         <source>Bounds</source>
-        <translation type="unfinished"></translation>
+        <translation>Granic</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="129"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="174"/>
         <source>Clamp</source>
-        <translation type="unfinished"></translation>
+        <translation>Zćiśnij</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="143"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="187"/>
         <source>Minimum</source>
-        <translation type="unfinished"></translation>
+        <translation>Minimum</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="151"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="195"/>
         <source>Maximum</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksimum</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="154"/>
         <source>Width</source>
-        <translation type="unfinished"></translation>
+        <translation>Szerokość</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="198"/>
         <source>Height</source>
-        <translation type="unfinished"></translation>
+        <translation>Wysokość</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="201"/>
         <source>Mipmaps</source>
-        <translation type="unfinished"></translation>
+        <translation>Mipmapy</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="214"/>
         <source>Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtr</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="218"/>
         <source>Scale (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>Skala (Konsola)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="224"/>
         <source>Animate Numbered Sequences</source>
-        <translation type="unfinished"></translation>
+        <translation>Animuj Sekwencje Ponumerowane</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="235"/>
         <source>Convert to</source>
-        <translation type="unfinished"></translation>
+        <translation>Konwertuj do</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="239"/>
         <source>Bilinear Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtr Dwuliniowy</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="241"/>
         <source>HDRI</source>
-        <translation type="unfinished"></translation>
+        <translation>HDRI</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="244"/>
         <source>Gamma Correction</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Korekcja Gamma</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="256"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="309"/>
         <source>Distance Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Mapowanie Odległośći</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="260"/>
