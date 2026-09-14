@@ -115,6 +115,7 @@ QMareCreditsDialog::QMareCreditsDialog(QWidget* parent) : QDialog{parent} {
 	}
 
 	auto* licenseTabs = new QTabWidget{tabs};
+	licenseTabs->setDocumentMode(true);
 	licenseTabs->setTabPosition(QTabWidget::TabPosition::West);
 	licenseTabs->tabBar()->setStyle(new QMareLicenseTabStyle);
 	for (const auto& [name, content] : ::getLicenseTexts()) {
