@@ -54,6 +54,7 @@ endif()
 target_link_libraries(${PROJECT_NAME}_gui PRIVATE argparse::argparse discord-rpc efsw-static indicators::indicators sourcepp::kvpp sourcepp::vtfpp)
 
 file(GLOB ${PROJECT_NAME}_gui_I18N_TS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/i18n/${PROJECT_NAME}_*.ts")
+list(APPEND ${PROJECT_NAME}_gui_I18N_TS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/i18n/base/${PROJECT_NAME}_en.ts")
 qt_add_translations(${PROJECT_NAME}_gui
         TS_FILES ${${PROJECT_NAME}_gui_I18N_TS_FILES}
         RESOURCE_PREFIX "/i18n"
