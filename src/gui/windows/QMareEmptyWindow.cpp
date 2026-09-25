@@ -173,8 +173,8 @@ void QMareEmptyWindow::paintEvent(QPaintEvent*) {
 		splashPixmap = QPixmap::fromImage({reinterpret_cast<const uchar*>(splashImageData.data()), width, height, QImage::Format_RGB888});
 	}
 
-	const auto splashPixmapScaled = splashPixmap.scaled(this->width(), this->height() - this->toolbar->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	painter.drawPixmap(0, this->toolbar->height(), splashPixmapScaled.width(), splashPixmapScaled.height(), splashPixmapScaled);
+	const auto splashPixmapScaled = splashPixmap.scaled(static_cast<int>(this->width() * this->devicePixelRatioF()), static_cast<int>((this->height() - this->toolbar->height()) * this->devicePixelRatioF()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	painter.drawPixmap(0, this->toolbar->height(), this->width(), this->height() - this->toolbar->height(), splashPixmapScaled);
 }
 
 void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
