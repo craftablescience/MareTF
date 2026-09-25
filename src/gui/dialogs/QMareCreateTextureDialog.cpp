@@ -113,6 +113,8 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	auto* textureResizeImageLayout = new QFormLayout{textureResizeImageGroup};
 	textureResizeImageLayout->setFormAlignment(Qt::AlignHCenter);
 
+	static constexpr auto MAX_SELECTABLE_IMAGE_DIM = 0x4000;
+
 	// Width
 	auto* textureWidthGroup = new QGroupBox{textureTab};
 	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
@@ -134,27 +136,51 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureWidthLayout->addRow(tr("Clamp"), textureWidthClampModeCombo);
 
 	auto* textureWidthExactSizeSpin = new QMareSpinBox{textureWidthGroup};
-	textureWidthExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureWidthExactSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
 	textureWidthExactSizeSpin->setValue(1024);
-	textureWidthExactSizeSpin->setSuffix("px");
+	textureWidthExactSizeSpin->setSuffix(tr("px"));
 	textureWidthLayout->addRow(tr("Exact"), textureWidthExactSizeSpin);
 	textureWidthLayout->setRowVisible(2, false);
 
-	auto* textureWidthMinimumSizeSpin = new QMareSpinBox{textureWidthGroup};
-	textureWidthMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
-	textureWidthMinimumSizeSpin->setValue(512);
-	textureWidthMinimumSizeSpin->setSuffix("px");
-	textureWidthMinimumSizeSpin->setVisible(false);
-	textureWidthLayout->addRow(tr("Minimum"), textureWidthMinimumSizeSpin);
+	auto* textureWidthExactSizeCombo = new QMareComboBox{textureWidthGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureWidthExactSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureWidthExactSizeCombo->setCurrentIndex(4); // 1024px
+	textureWidthLayout->addRow(tr("Exact"), textureWidthExactSizeCombo);
 	textureWidthLayout->setRowVisible(3, false);
 
+	auto* textureWidthMinimumSizeSpin = new QMareSpinBox{textureWidthGroup};
+	textureWidthMinimumSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
+	textureWidthMinimumSizeSpin->setValue(512);
+	textureWidthMinimumSizeSpin->setSuffix(tr("px"));
+	textureWidthMinimumSizeSpin->setVisible(false);
+	textureWidthLayout->addRow(tr("Minimum"), textureWidthMinimumSizeSpin);
+	textureWidthLayout->setRowVisible(4, false);
+
+	auto* textureWidthMinimumSizeCombo = new QMareComboBox{textureWidthGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureWidthMinimumSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureWidthMinimumSizeCombo->setCurrentIndex(5); // 512px
+	textureWidthLayout->addRow(tr("Minimum"), textureWidthMinimumSizeCombo);
+	textureWidthLayout->setRowVisible(5, false);
+
 	auto* textureWidthMaximumSizeSpin = new QMareSpinBox{textureWidthGroup};
-	textureWidthMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureWidthMaximumSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
 	textureWidthMaximumSizeSpin->setValue(2048);
-	textureWidthMaximumSizeSpin->setSuffix("px");
+	textureWidthMaximumSizeSpin->setSuffix(tr("px"));
 	textureWidthMinimumSizeSpin->setVisible(false);
 	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeSpin);
-	textureWidthLayout->setRowVisible(4, false);
+	textureWidthLayout->setRowVisible(6, false);
+
+	auto* textureWidthMaximumSizeCombo = new QMareComboBox{textureWidthGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureWidthMaximumSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureWidthMaximumSizeCombo->setCurrentIndex(3); // 2048px
+	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeCombo);
+	textureWidthLayout->setRowVisible(7, false);
 
 	textureResizeImageLayout->addRow(tr("Width"), textureWidthGroup);
 
@@ -179,26 +205,50 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHeightLayout->addRow(tr("Clamp"), textureHeightClampModeCombo);
 
 	auto* textureHeightExactSizeSpin = new QMareSpinBox{textureHeightGroup};
-	textureHeightExactSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureHeightExactSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
 	textureHeightExactSizeSpin->setValue(1024);
-	textureHeightExactSizeSpin->setSuffix("px");
+	textureHeightExactSizeSpin->setSuffix(tr("px"));
 	textureHeightLayout->addRow(tr("Exact"), textureHeightExactSizeSpin);
 	textureHeightLayout->setRowVisible(2, false);
 
-	auto* textureHeightMinimumSizeSpin = new QMareSpinBox{textureHeightGroup};
-	textureHeightMinimumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
-	textureHeightMinimumSizeSpin->setValue(512);
-	textureHeightMinimumSizeSpin->setSuffix("px");
-	textureHeightLayout->addRow(tr("Minimum"), textureHeightMinimumSizeSpin);
+	auto* textureHeightExactSizeCombo = new QMareComboBox{textureHeightGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureHeightExactSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureHeightExactSizeCombo->setCurrentIndex(4); // 1024px
+	textureHeightLayout->addRow(tr("Exact"), textureHeightExactSizeCombo);
 	textureHeightLayout->setRowVisible(3, false);
 
+	auto* textureHeightMinimumSizeSpin = new QMareSpinBox{textureHeightGroup};
+	textureHeightMinimumSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
+	textureHeightMinimumSizeSpin->setValue(512);
+	textureHeightMinimumSizeSpin->setSuffix(tr("px"));
+	textureHeightLayout->addRow(tr("Minimum"), textureHeightMinimumSizeSpin);
+	textureHeightLayout->setRowVisible(4, false);
+
+	auto* textureHeightMinimumSizeCombo = new QMareComboBox{textureHeightGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureHeightMinimumSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureHeightMinimumSizeCombo->setCurrentIndex(5); // 512px
+	textureHeightLayout->addRow(tr("Minimum"), textureHeightMinimumSizeCombo);
+	textureHeightLayout->setRowVisible(5, false);
+
 	auto* textureHeightMaximumSizeSpin = new QMareSpinBox{textureHeightGroup};
-	textureHeightMaximumSizeSpin->setRange(1, std::numeric_limits<uint16_t>::max());
+	textureHeightMaximumSizeSpin->setRange(1, MAX_SELECTABLE_IMAGE_DIM);
 	textureHeightMaximumSizeSpin->setValue(2048);
-	textureHeightMaximumSizeSpin->setSuffix("px");
+	textureHeightMaximumSizeSpin->setSuffix(tr("px"));
 	textureHeightExactSizeSpin->setVisible(false);
 	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeSpin);
-	textureHeightLayout->setRowVisible(4, false);
+	textureHeightLayout->setRowVisible(6, false);
+
+	auto* textureHeightMaximumSizeCombo = new QMareComboBox{textureHeightGroup};
+	for (int i = MAX_SELECTABLE_IMAGE_DIM; i > 0; i /= 2) {
+		textureHeightMaximumSizeCombo->addItem(tr("%1px").arg(i), i);
+	}
+	textureHeightMaximumSizeCombo->setCurrentIndex(3); // 2048px
+	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeCombo);
+	textureHeightLayout->setRowVisible(7, false);
 
 	textureResizeImageLayout->addRow(tr("Height"), textureHeightGroup);
 
@@ -520,22 +570,34 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Change visibility of items in "Width" depending on mode
 
+	connect(textureWidthResizeMethodCombo, &QComboBox::currentIndexChanged, this, [=](int) {
+		textureWidthClampModeCombo->currentIndexChanged(textureWidthClampModeCombo->currentIndex());
+	});
 	connect(textureWidthClampModeCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		switch (index) {
 			case 0:
 				textureWidthLayout->setRowVisible(2, false);
 				textureWidthLayout->setRowVisible(3, false);
 				textureWidthLayout->setRowVisible(4, false);
+				textureWidthLayout->setRowVisible(5, false);
+				textureWidthLayout->setRowVisible(6, false);
+				textureWidthLayout->setRowVisible(7, false);
 				break;
 			case 1:
-				textureWidthLayout->setRowVisible(2, true);
-				textureWidthLayout->setRowVisible(3, false);
+				textureWidthLayout->setRowVisible(2, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureWidthLayout->setRowVisible(3, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
 				textureWidthLayout->setRowVisible(4, false);
+				textureWidthLayout->setRowVisible(5, false);
+				textureWidthLayout->setRowVisible(6, false);
+				textureWidthLayout->setRowVisible(7, false);
 				break;
 			case 2:
 				textureWidthLayout->setRowVisible(2, false);
-				textureWidthLayout->setRowVisible(3, true);
-				textureWidthLayout->setRowVisible(4, true);
+				textureWidthLayout->setRowVisible(3, false);
+				textureWidthLayout->setRowVisible(4, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureWidthLayout->setRowVisible(5, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureWidthLayout->setRowVisible(6, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureWidthLayout->setRowVisible(7, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
 				break;
 			default:
 				break;
@@ -544,22 +606,34 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	// Change visibility of items in "Height" depending on mode
 
+	connect(textureHeightResizeMethodCombo, &QComboBox::currentIndexChanged, this, [=](int) {
+		textureHeightClampModeCombo->currentIndexChanged(textureHeightClampModeCombo->currentIndex());
+	});
 	connect(textureHeightClampModeCombo, &QMareComboBox::currentIndexChanged, this, [=](int index) {
 		switch (index) {
 			case 0:
 				textureHeightLayout->setRowVisible(2, false);
 				textureHeightLayout->setRowVisible(3, false);
 				textureHeightLayout->setRowVisible(4, false);
+				textureHeightLayout->setRowVisible(5, false);
+				textureHeightLayout->setRowVisible(6, false);
+				textureHeightLayout->setRowVisible(7, false);
 				break;
-			case 1:
-				textureHeightLayout->setRowVisible(2, true);
-				textureHeightLayout->setRowVisible(3, false);
+		case 1:
+				textureHeightLayout->setRowVisible(2, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureHeightLayout->setRowVisible(3, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
 				textureHeightLayout->setRowVisible(4, false);
+				textureHeightLayout->setRowVisible(5, false);
+				textureHeightLayout->setRowVisible(6, false);
+				textureHeightLayout->setRowVisible(7, false);
 				break;
 			case 2:
 				textureHeightLayout->setRowVisible(2, false);
-				textureHeightLayout->setRowVisible(3, true);
-				textureHeightLayout->setRowVisible(4, true);
+				textureHeightLayout->setRowVisible(3, false);
+				textureHeightLayout->setRowVisible(4, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureHeightLayout->setRowVisible(5, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureHeightLayout->setRowVisible(6, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE);
+				textureHeightLayout->setRowVisible(7, static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeMethod::NONE);
 				break;
 			default:
 				break;
@@ -846,11 +920,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			case 0:
 				break;
 			case 1:
-				cli->addInt(textureWidthExactSizeSpin, "--width");
+				if (static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE) {
+					cli->addInt(textureWidthExactSizeSpin, "--width");
+				} else {
+					cli->addArgPair("--width", std::format("{}", textureWidthExactSizeCombo->currentData().toInt()).data());
+				}
 				break;
 			case 2:
-				cli->addInt(textureWidthMinimumSizeSpin, "--min-width");
-				cli->addInt(textureWidthMaximumSizeSpin, "--max-width");
+				if (static_cast<vtfpp::ImageConversion::ResizeMethod>(textureWidthResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE) {
+					cli->addInt(textureWidthMinimumSizeSpin, "--min-width");
+					cli->addInt(textureWidthMaximumSizeSpin, "--max-width");
+				} else {
+					cli->addArgPair("--min-width", std::format("{}", textureWidthMinimumSizeCombo->currentData().toInt()).data());
+					cli->addArgPair("--max-width", std::format("{}", textureWidthMaximumSizeCombo->currentData().toInt()).data());
+				}
 				break;
 		}
 
@@ -859,11 +942,20 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			case 0:
 				break;
 			case 1:
-				cli->addInt(textureHeightExactSizeSpin, "--height");
+				if (static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE) {
+					cli->addInt(textureHeightExactSizeSpin, "--height");
+				} else {
+					cli->addArgPair("--height", std::format("{}", textureHeightExactSizeCombo->currentData().toInt()).data());
+				}
 				break;
 			case 2:
-				cli->addInt(textureHeightMinimumSizeSpin, "--min-height");
-				cli->addInt(textureHeightMaximumSizeSpin, "--max-height");
+				if (static_cast<vtfpp::ImageConversion::ResizeMethod>(textureHeightResizeMethodCombo->currentData().toInt()) == vtfpp::ImageConversion::ResizeMethod::NONE) {
+					cli->addInt(textureHeightMinimumSizeSpin, "--min-height");
+					cli->addInt(textureHeightMaximumSizeSpin, "--max-height");
+				} else {
+					cli->addArgPair("--min-height", std::format("{}", textureHeightMinimumSizeCombo->currentData().toInt()).data());
+					cli->addArgPair("--max-height", std::format("{}", textureHeightMaximumSizeCombo->currentData().toInt()).data());
+				}
 				break;
 		}
 
