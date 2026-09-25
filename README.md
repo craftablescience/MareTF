@@ -21,7 +21,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Directly convert a wide range of input image formats
     - Animated images (APNG/GIF)
     - Floating point images (EXR/HDR)
-    - Standard images (PNG/JPG/TGA/WebP)
+    - Standard images (PNG/JPG/JXL/TGA/WebP)
     - Esoteric images (QOI/PSD/PGM/PPM/PIC/BMP)
   - Create non-power of two textures
   - Create cubemaps from HDRIs
@@ -41,7 +41,7 @@ A utility to create, edit, and display every type of VTF file ever made.
   - Add, overwrite, or remove resources
 - Extract
   - Save the image data contained within VTFs as image files
-    - Save as PNG/JPEG/BMP/TGA/WebP/QOI/HDR/EXR
+    - Save as PNG/JPEG/JXL/BMP/TGA/WebP/QOI/HDR/EXR
     - Defaults to PNG or EXR based on the image format
 - Info
   - Print out all VTF metadata and non-image resource data
@@ -188,6 +188,12 @@ Optional arguments:
                                                 if nonzero.
   --min-height HEIGHT                           Sets the minimum height of the output texture
                                                 if nonzero.
+  --resize-filter                               The resize filter used when modifying the
+                                                dimensions of the input image. [nargs=0..1]
+                                                [default: "DEFAULT"]
+  --resize-edge                                 The edge policy used when modifying the
+                                                dimensions of the input image. [nargs=0..1]
+                                                [default: "CLAMP"]
   --flag FLAG                                   Flags to add. ENVMAP, ONE_BIT_ALPHA,
                                                 MULTI_BIT_ALPHA, and NO_MIP flags are applied
                                                 automatically based on the VTF properties.
@@ -486,6 +492,12 @@ Optional arguments:
                                                 different resource in the file is desired.
   --extract-file-format                         Output file format. [nargs=0..1]
                                                 [default: "DEFAULT"]
+  --extract-quality                             The quality of the output image file, from 0.0
+                                                to 1.0. Negative values will activate lossless
+                                                mode when supported by the output file format.
+                                                If output file format is always lossless this
+                                                parameter is ignored. [nargs=0..1]
+                                                [default: -1]
   --extract-image-format                        The image format to convert the texture data
                                                 to before extracting. [nargs=0..1]
                                                 [default: "UNCHANGED"]
@@ -600,7 +612,8 @@ IMAGE_FORMAT
  • TITANFALL_BC7
  • R8
  • BC7
- • BC6H
+ • BC6H_SF
+ • BC6H_UF
  • BC5
  • BC4
 
@@ -676,6 +689,7 @@ FILE_FORMAT
  • QOI
  • HDR
  • EXR
+ • JXL
 
 RESIZE_FILTER
  • DEFAULT
