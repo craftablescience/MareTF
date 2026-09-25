@@ -23,7 +23,7 @@ jobs:
         shell: cmd
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -55,7 +55,7 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t maretf_thumbnailer -- -j%NUMBER_OF_PROCESSORS%
 
       - name: Upload Standalone
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Windows-Standalone-msvc-${{matrix.build_type}}'
           path: |
@@ -74,7 +74,7 @@ jobs:
         run: cpack
 
       - name: Upload Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Windows-Installer-msvc-${{matrix.build_type}}'
           path: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload Standalone Compatibility [build_type:Release]
         if: ${{matrix.build_type == 'Release'}}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Windows-Standalone-Compatibility-msvc-${{matrix.build_type}}'
           path: |
@@ -127,7 +127,7 @@ jobs:
 
       - name: Upload Compatibility Installer [build_type:Release]
         if: ${{matrix.build_type == 'Release'}}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Windows-Installer-Compatibility-msvc-${{matrix.build_type}}'
           path: |
@@ -135,7 +135,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Standalone PDBs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Windows-PDBs-msvc-${{matrix.build_type}}'
           path: |
@@ -155,7 +155,7 @@ jobs:
         shell: cmd
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -181,7 +181,7 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j%NUMBER_OF_PROCESSORS%
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'StrataSource-Windows-Binaries-msvc-${{matrix.build_type}}'
           path: |
@@ -190,7 +190,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Binary PDBs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'StrataSource-Windows-PDBs-msvc-${{matrix.build_type}}'
           path: |
@@ -214,7 +214,7 @@ jobs:
       APPIMAGE_EXTRACT_AND_RUN: 1
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -258,7 +258,7 @@ jobs:
         run: cpack
 
       - name: Upload Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'MareTF-Linux-${{matrix.cpack_generator}}-gcc-${{matrix.build_type}}'
           path: |
@@ -273,7 +273,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -302,7 +302,7 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t maretf_gui -- -j$(nproc)
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'StrataSource-Linux-Binaries-gcc-${{matrix.build_type}}'
           path: |
