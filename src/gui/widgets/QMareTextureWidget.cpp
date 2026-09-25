@@ -424,9 +424,9 @@ void QMareTextureWidget::paintEvent(QPaintEvent*) {
 			for (int x = backgroundRect.left() / SQUARE_SIZE * SQUARE_SIZE; x < backgroundRect.right(); x += SQUARE_SIZE) {
 				for (int y = backgroundRect.top() / SQUARE_SIZE * SQUARE_SIZE; y < backgroundRect.bottom(); y += SQUARE_SIZE) {
 					if ((x / SQUARE_SIZE + y / SQUARE_SIZE) % 2 == 0) {
-						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {214, 214, 214});
+						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x + 1), qMin(SQUARE_SIZE, backgroundRect.bottom() - y + 1), {0xd6, 0xd6, 0xd6});
 					} else {
-						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x), qMin(SQUARE_SIZE, backgroundRect.bottom() - y), {242, 242, 242});
+						painter.fillRect(qMax(x, backgroundRect.left()), qMax(y, backgroundRect.top()), qMin(SQUARE_SIZE, backgroundRect.right() - x + 1), qMin(SQUARE_SIZE, backgroundRect.bottom() - y + 1), {0xf2, 0xf2, 0xf2});
 					}
 				}
 			}
