@@ -450,7 +450,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 	createCLI
 		.add_argument("-r", "--filter")
 		.metavar("RESIZE_FILTER")
-		.help("The resize filter used to generate mipmaps, resize the base texture to match a power of 2"
+		.help("The resize filter used to generate mipmaps."
 		      " (if necessary), and downscale non-alpha channels when distance mapping.")
 		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
 		.default_value(filter).store_into(filter);
@@ -534,6 +534,22 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.help("Sets the minimum height of the output texture if nonzero.")
 		.scan<'d', int>()
 		.store_into(minSizeHeight);
+
+	std::string resizeFilter{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeFilter::DEFAULT)};
+	createCLI
+		.add_argument("--resize-filter")
+		.metavar("RESIZE_FILTER")
+		.help("The resize filter used when modifying the dimensions of the input image.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeFilter>, "RESIZE_FILTER"))
+		.default_value(resizeFilter).store_into(resizeFilter);
+
+	std::string resizeEdge{not_magic_enum::enum_name(vtfpp::ImageConversion::ResizeEdge::CLAMP)};
+	createCLI
+		.add_argument("--resize-edge")
+		.metavar("RESIZE_EDGE")
+		.help("The edge policy used when modifying the dimensions of the input image.")
+		.action(std::bind_front(&::enumValueValidityCheck<vtfpp::ImageConversion::ResizeEdge>, "RESIZE_EDGE"))
+		.default_value(resizeEdge).store_into(resizeEdge);
 
 	std::vector<std::string> flags;
 	createCLI
@@ -1960,6 +1976,10 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				if (minSize || minSizeHeight) {
 					options.resizeBounds.resizeMinHeight = minSizeHeight ? minSizeHeight : minSize;
 				}
+
+				// Set resize filter and edge policy
+				options.resizeBounds.resizeFilter = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeFilter>(resizeFilter);
+				options.resizeBounds.resizeEdge = *not_magic_enum::enum_cast<vtfpp::ImageConversion::ResizeEdge>(resizeEdge);
 
 				// Set mipmap generation
 				options.computeMips = !noMips;

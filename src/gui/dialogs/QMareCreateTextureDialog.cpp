@@ -108,6 +108,11 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 
 	textureTabLayout->addRow(textureCompressionQualityEnableCheck, textureCompressionQualitySpin);
 
+	// Resize image
+	auto* textureResizeImageGroup = new QGroupBox{textureTab};
+	auto* textureResizeImageLayout = new QFormLayout{textureResizeImageGroup};
+	textureResizeImageLayout->setFormAlignment(Qt::AlignHCenter);
+
 	// Width
 	auto* textureWidthGroup = new QGroupBox{textureTab};
 	auto* textureWidthLayout = new QFormLayout{textureWidthGroup};
@@ -151,7 +156,7 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureWidthLayout->addRow(tr("Maximum"), textureWidthMaximumSizeSpin);
 	textureWidthLayout->setRowVisible(4, false);
 
-	textureTabLayout->addRow(tr("Width"), textureWidthGroup);
+	textureResizeImageLayout->addRow(tr("Width"), textureWidthGroup);
 
 	// Height
 	auto* textureHeightGroup = new QGroupBox{textureTab};
@@ -195,7 +200,25 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	textureHeightLayout->addRow(tr("Maximum"), textureHeightMaximumSizeSpin);
 	textureHeightLayout->setRowVisible(4, false);
 
-	textureTabLayout->addRow(tr("Height"), textureHeightGroup);
+	textureResizeImageLayout->addRow(tr("Height"), textureHeightGroup);
+
+	// Filter
+	auto* textureResizeFilterCombo = new QMareComboBox{textureResizeImageGroup};
+	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeFilter>(true)) {
+		textureResizeFilterCombo->addItem(methodName.data(), static_cast<int>(method));
+	}
+	textureResizeFilterCombo->setCurrentIndex(0); // Default
+	textureResizeImageLayout->addRow(tr("Filter"), textureResizeFilterCombo);
+
+	// Edge
+	auto* textureResizeEdgeCombo = new QMareComboBox{textureResizeImageGroup};
+	for (const auto& [method, methodName] : not_magic_enum::enum_entries<vtfpp::ImageConversion::ResizeEdge>(true)) {
+		textureResizeEdgeCombo->addItem(methodName.data(), static_cast<int>(method));
+	}
+	textureResizeEdgeCombo->setCurrentIndex(0); // Clamp
+	textureResizeImageLayout->addRow(tr("Edge"), textureResizeEdgeCombo);
+
+	textureTabLayout->addRow(tr("Resize Image"), textureResizeImageGroup);
 
 	// Mipmaps
 	auto* textureMipmapsGenerateCheck = new QCheckBox{tr("Mipmaps"), textureTab};
@@ -842,6 +865,14 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 				cli->addInt(textureHeightMinimumSizeSpin, "--min-height");
 				cli->addInt(textureHeightMaximumSizeSpin, "--max-height");
 				break;
+		}
+
+		if (static_cast<vtfpp::ImageConversion::ResizeFilter>(textureResizeFilterCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeFilter::DEFAULT) {
+			cli->addEnum<vtfpp::ImageConversion::ResizeFilter>(textureResizeFilterCombo, "--resize-filter");
+		}
+
+		if (static_cast<vtfpp::ImageConversion::ResizeEdge>(textureResizeEdgeCombo->currentData().toInt()) != vtfpp::ImageConversion::ResizeEdge::CLAMP) {
+			cli->addEnum<vtfpp::ImageConversion::ResizeEdge>(textureResizeEdgeCombo, "--resize-edge");
 		}
 
 		cli->addFlag(textureMipmapsGenerateCheck, "--no-mips", true);
