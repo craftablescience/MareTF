@@ -2311,6 +2311,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							// Now compute mips after frames exist
 							if (!noMips) {
 								vtf.computeMips(options.filter);
+								vtf.removeFlags(vtfpp::VTF::FLAG_V0_NO_LOD);
 							}
 
 							// And now convert to output format
@@ -2319,6 +2320,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 							}
+							vtf.computeTransparencyFlags();
 
 							// Set resources
 							handleSettingResourcesForVTF(vtf, false);
@@ -2385,6 +2387,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							// Now compute mips after faces exist
 							if (!noMips) {
 								vtf.computeMips(options.filter);
+								vtf.removeFlags(vtfpp::VTF::FLAG_V0_NO_LOD);
 							}
 
 							// And now convert to output format
@@ -2393,6 +2396,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 							}
+							vtf.computeTransparencyFlags();
 
 							// Set resources
 							handleSettingResourcesForVTF(vtf, false);
@@ -2475,6 +2479,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 								// Now compute mips after faces exist
 								if (!noMips) {
 									vtf.computeMips(options.filter);
+									vtf.removeFlags(vtfpp::VTF::FLAG_V0_NO_LOD);
 								}
 
 								// And now convert to output format
@@ -2483,6 +2488,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 								} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 									vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 								}
+								vtf.computeTransparencyFlags();
 
 								// Set resources
 								handleSettingResourcesForVTF(vtf, false);
@@ -2550,6 +2556,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							// Now compute mips after faces exist
 							if (!noMips) {
 								vtf.computeMips(options.filter);
+								vtf.removeFlags(vtfpp::VTF::FLAG_V0_NO_LOD);
 							}
 
 							// And now convert to output format
@@ -2558,6 +2565,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							} else if (outputFormatBackup != vtfpp::VTF::FORMAT_UNCHANGED) {
 								vtf.setFormat(outputFormatBackup, vtfpp::ImageConversion::ResizeFilter::DEFAULT, compressedFormatQuality);
 							}
+							vtf.computeTransparencyFlags();
 
 							// Set resources
 							handleSettingResourcesForVTF(vtf, false);
