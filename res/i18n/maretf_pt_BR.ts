@@ -6,50 +6,50 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Criar texturas</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Criar textura</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="65"/>
         <source>General</source>
-        <translation type="unfinished"></translation>
+        <translation>Geral</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="72"/>
         <source>Platform</source>
-        <translation type="unfinished"></translation>
+        <translation>Plataforma</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="84"/>
         <source>Version</source>
-        <translation type="unfinished"></translation>
+        <translation>Versão</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="95"/>
         <source>Format</source>
-        <translation type="unfinished"></translation>
+        <translation>Formato</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="99"/>
         <source>Compression Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Qualidade de compressão</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="121"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="166"/>
         <source>Resize</source>
-        <translation type="unfinished"></translation>
+        <translation>Redimencionar</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="125"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="170"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="278"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Nenhum</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="126"/>
@@ -57,7 +57,7 @@
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="171"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="180"/>
         <source>Exact</source>
-        <translation type="unfinished"></translation>
+        <translation>Exato</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="127"/>
@@ -75,23 +75,23 @@
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="143"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="187"/>
         <source>Minimum</source>
-        <translation type="unfinished"></translation>
+        <translation>Mínimo</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="151"/>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="195"/>
         <source>Maximum</source>
-        <translation type="unfinished"></translation>
+        <translation>Máximo</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="154"/>
         <source>Width</source>
-        <translation type="unfinished"></translation>
+        <translation>Largura</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="198"/>
         <source>Height</source>
-        <translation type="unfinished"></translation>
+        <translation>Altura</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="201"/>
@@ -101,12 +101,12 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="214"/>
         <source>Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtro</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="218"/>
         <source>Scale (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>Escala (Console)</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="224"/>
@@ -116,12 +116,12 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="235"/>
         <source>Convert to</source>
-        <translation type="unfinished"></translation>
+        <translation>Converter para</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="239"/>
         <source>Bilinear Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Filtro bilinear</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="241"/>
@@ -131,7 +131,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="244"/>
         <source>Gamma Correction</source>
-        <translation type="unfinished"></translation>
+        <translation>Correção Gama</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="256"/>
@@ -202,7 +202,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="337"/>
         <source>Reduce</source>
-        <translation type="unfinished"></translation>
+        <translation>Reduzir</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="340"/>
@@ -217,7 +217,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="348"/>
         <source>Search Radius</source>
-        <translation type="unfinished"></translation>
+        <translation>Raio de pesquisa</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="354"/>
@@ -257,7 +257,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="384"/>
         <source>Author</source>
-        <translation type="unfinished"></translation>
+        <translation>Autor</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="387"/>
@@ -352,7 +352,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreditsDialog.cpp" line="83"/>
         <source>Credits</source>
-        <translation type="unfinished"></translation>
+        <translation>Créditos</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareCreditsDialog.cpp" line="133"/>
@@ -365,7 +365,7 @@
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="38"/>
         <source>&amp;Create</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Criar</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="57"/>
@@ -375,22 +375,22 @@
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="77"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Abrir</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="78"/>
         <source>Open Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir texturas</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="78"/>
         <source>All Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Todos os arquivos</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="91"/>
         <source>&amp;Extract</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Extrair</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="100"/>
@@ -400,17 +400,17 @@
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="122"/>
         <source>&amp;Donate</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Doar</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="126"/>
         <source>Credi&amp;ts</source>
-        <translation type="unfinished"></translation>
+        <translation>Crédi&amp;tos</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareEmptyWindow.cpp" line="142"/>
         <source>&amp;Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Sair</translation>
     </message>
 </context>
 <context>
@@ -428,7 +428,7 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="37"/>
         <source>Extract</source>
-        <translation type="unfinished"></translation>
+        <translation>Extrair</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="41"/>
@@ -438,12 +438,12 @@
     <message>
         <location filename="../../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="58"/>
         <source>File Format</source>
-        <translation type="unfinished"></translation>
+        <translation>Formato de arquivo</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="66"/>
         <source>Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Qualidade</translation>
     </message>
     <message>
         <location filename="../../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="77"/>
@@ -1125,7 +1125,7 @@
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="834"/>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="844"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valor</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="838"/>
@@ -1180,7 +1180,7 @@
     <message>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="958"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erro</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="958"/>
@@ -1191,7 +1191,7 @@
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="994"/>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="1135"/>
         <source>File Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamanho do arquivo</translation>
     </message>
     <message>
         <location filename="../../../src/gui/windows/QMareTextureWindow.cpp" line="995"/>
