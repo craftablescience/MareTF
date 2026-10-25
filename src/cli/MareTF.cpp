@@ -830,8 +830,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 	bool distanceEuclidean = false;
 	createCLI
 		.add_argument("--distance-euclidean")
-		.help("When distance mapping, accept distance hits only in an ellipse governed by reduction and spread, rather than"
-		      " in a rectangle as vtex does.")
+		.help("Never did anything. Preserved for backward compatibility.")
 		.flag()
 		.store_into(distanceEuclidean);
 
