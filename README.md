@@ -307,8 +307,6 @@ Optional arguments:
                                                 channel as antialiased. May reduce
                                                 second-order artifacts or worsen them
                                                 depending on the contents.
-  --distance-euclidean                          Never did anything. Preserved for backward
-                                                compatibility.
   --distance-sample-centered                    When distance mapping, sample from the center
                                                 of pixels in destination coordinate space,
                                                 rather than from the northwest corner as vtex
