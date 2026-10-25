@@ -429,9 +429,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 	auto* distanceAntialiasingCheck = new QCheckBox{distanceTab};
 	distanceTabLayout->addRow(tr("Antialiased Alpha"), distanceAntialiasingCheck);
 
-	auto* distanceEuclideanCheck = new QCheckBox{distanceTab};
-	distanceTabLayout->addRow(tr("Euclidean"), distanceEuclideanCheck);
-
 	auto* distanceSampleCenteredCheck = new QCheckBox{distanceTab};
 	distanceTabLayout->addRow(tr("Sample Centered"), distanceSampleCenteredCheck);
 
@@ -1021,8 +1018,6 @@ QMareCreateTextureDialog::QMareCreateTextureDialog(const QStringList& inputPaths
 			}
 
 			cli->addFlag(distanceAntialiasingCheck, "--distance-aa");
-
-			cli->addFlag(distanceEuclideanCheck, "--distance-euclidean");
 
 			cli->addFlag(distanceSampleCenteredCheck, "--distance-sample-centered");
 		}
