@@ -827,13 +827,6 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.flag()
 		.store_into(distanceAA);
 
-	bool distanceEuclidean = false;
-	createCLI
-		.add_argument("--distance-euclidean")
-		.help("Never did anything. Preserved for backward compatibility.")
-		.flag()
-		.store_into(distanceEuclidean);
-
 	bool distanceSampleCentered = false;
 	createCLI
 		.add_argument("--distance-sample-centered")
@@ -2024,9 +2017,6 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				auto distanceFlags = vtfpp::DistanceMapping::Flags::NONE;
 				if (distanceAA) {
 					distanceFlags |= vtfpp::DistanceMapping::Flags::DISTANCEAA;
-				}
-				if (distanceEuclidean) {
-					distanceFlags |= vtfpp::DistanceMapping::Flags::EUCLIDEAN;
 				}
 				if (distanceSampleCentered) {
 					distanceFlags |= vtfpp::DistanceMapping::Flags::SAMPLECENTERED;
