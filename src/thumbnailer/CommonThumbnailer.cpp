@@ -61,9 +61,15 @@ std::pair<std::vector<std::byte>, vtfpp::ImageFormat> createThumbnail(const vtfp
 			data = ::drawCubemapNetCentered(width, height, xp, xn, yp, yn, zp, zn, sm);
 			format = vtfpp::ImageFormat::BGRA8888;
 		} else {
-			// Regular texture
-			data = vtf.getImageDataAsRGBA8888();
-			format = vtfpp::ImageFormat::RGBA8888;
+			if (vtf.getFlags() & vtfpp::VTF::FLAG_V0_NORMAL || (vtf.getVersion() >= 3 && vtf.getFlags() & vtfpp::VTF::FLAG_V3_SSBUMP)) {
+				// Regular texture where alpha is mask
+				data = vtf.getImageDataAs(vtfpp::ImageFormat::RGB888);
+				format = vtfpp::ImageFormat::RGB888;
+			} else {
+				// Regular texture where alpha is alpha
+				data = vtf.getImageDataAsRGBA8888();
+				format = vtfpp::ImageFormat::RGBA8888;
+			}
 		}
 
 		if ((targetWidth > 0 && width != targetWidth) || (targetHeight > 0 && height != targetHeight)) {

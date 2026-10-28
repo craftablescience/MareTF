@@ -4,7 +4,9 @@
 
 #include "CommonThumbnailer.h"
 
-int createThumbnail(const std::string& in, const std::string& out, int targetWidth, int targetHeight) {
+namespace {
+
+int createThumbnailFile(const std::string& in, const std::string& out, int targetWidth, int targetHeight) {
 	const auto [data, format] = ::createThumbnail(in, targetWidth, targetHeight);
 	if (data.empty() || format == vtfpp::ImageFormat::EMPTY) {
 		return 2;
@@ -21,6 +23,8 @@ int createThumbnail(const std::string& in, const std::string& out, int targetWid
 	return 3;
 }
 
+} // namespace
+
 int main(int argc, const char* argv[]) {
 	argparse::ArgumentParser cli{PROJECT_NAME_PRETTY " Thumbnailer", PROJECT_VERSION_PRETTY, argparse::default_arguments::help};
 	cli.add_argument("-i").help("Input file");
@@ -32,5 +36,5 @@ int main(int argc, const char* argv[]) {
 		return 4;
 	}
 	const auto size = cli.is_used("-s") ? std::stoi(cli.get("-s")) : -1;
-	return ::createThumbnail(cli.get("-i"), cli.get("-o"), size, size);
+	return ::createThumbnailFile(cli.get("-i"), cli.get("-o"), size, size);
 }
