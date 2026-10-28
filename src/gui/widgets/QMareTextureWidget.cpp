@@ -1,3 +1,5 @@
+// ReSharper disable CppUnusedIncludeDirective
+
 #include "QMareTextureWidget.h"
 
 #include <cmath>
@@ -110,7 +112,11 @@ void QMareTextureWidget::loadTexture(const QString& path_) {
 #endif
 		this->path = path_;
 		this->vtf = std::move(tmpVTF);
-		if (this->vtf.getFaceCount() >= 6) {
+		if (
+			this->vtf.getFaceCount() >= 6 ||
+			this->vtf.getFlags() & vtfpp::VTF::FLAG_V0_NORMAL ||
+			(this->vtf.getVersion() >= 3 && this->vtf.getFlags() & vtfpp::VTF::FLAG_V3_SSBUMP)
+		) {
 			this->a = false;
 		}
 		this->reloadCurrentTexture();
@@ -379,7 +385,7 @@ void QMareTextureWidget::mousePressEvent(QMouseEvent* e) {
 	this->setCursor({Qt::CursorShape::ClosedHandCursor});
 }
 
-void QMareTextureWidget::mouseReleaseEvent(QMouseEvent* e) {
+void QMareTextureWidget::mouseReleaseEvent(QMouseEvent*) {
 	this->setCursor({Qt::CursorShape::ArrowCursor});
 }
 
