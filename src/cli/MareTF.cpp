@@ -199,6 +199,27 @@ struct tfout_t {
 #endif
 } tfout;
 
+struct tfout_override_t {
+#ifdef MARETF_CLI
+	tfout_override_t& operator<<(const auto& x) {
+		std::cout << x;
+		return *this;
+	}
+#else
+	tfout_override_t& operator<<(const auto& x) {
+		if (tfout_t::OUT_STRING) {
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(x)>, std::filesystem::path>) {
+				// C++26 fixes this
+				*tfout_t::OUT_STRING += x.string();
+			} else {
+				*tfout_t::OUT_STRING += std::format("{}", x);
+			}
+		}
+		return *this;
+	}
+#endif
+} tfout_override;
+
 struct tferr_t {
 	static inline bool QUIET = false;
 #ifdef MARETF_CLI
@@ -230,6 +251,16 @@ template<> tfout_t& tfout_t::operator<<<tfendl_t>(const tfendl_t&) {
 	if (!QUIET) std::cout << std::endl;
 #else
 	if (!QUIET && OUT_STRING) OUT_STRING->append("\n");
+#endif
+	return *this;
+}
+
+// ReSharper disable once CppDeclaratorNeverUsed
+template<> tfout_override_t& tfout_override_t::operator<<<tfendl_t>(const tfendl_t&) {
+#ifdef MARETF_CLI
+	std::cout << std::endl;
+#else
+	if (tfout_t::OUT_STRING) tfout_t::OUT_STRING->append("\n");
 #endif
 	return *this;
 }
@@ -3114,7 +3145,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 									if (auto fileData = vtfpp::ImageConversion::convertImageDataToFile(currentData, imageFormat, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat, extractQuality); fileData.empty()) {
 										extractionSuccessful.push_back(false);
 									} else if (extractStdOut) {
-										tfout << '"' << BOLD << outputPathFixupMip.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl;
+										tfout_override << '"' << BOLD << outputPathFixupMip.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl;
 										extractionSuccessful.push_back(true);
 									} else {
 										extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupMip.string(), fileData));
@@ -3135,7 +3166,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 													case vtfpp::ImageFormat::format: \
 														fileData = vtfpp::ImageConversion::convertImageDataToFile(vtfpp::ImagePixel::extractChannelFromImageData(currentData, &vtfpp::ImagePixel::format::channel), vtfpp::ImageFormat::I8, vtf.getWidth(mip), vtf.getHeight(mip), fileFormat, extractQuality); \
 														if (extractStdOut) { \
-															tfout << '"' << BOLD << outputPathFixupAlpha.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl; \
+															tfout_override << '"' << BOLD << outputPathFixupAlpha.filename().string() << END << '"' << ' ' << ::encodeBase64(fileData) << tfendl; \
 															extractionSuccessful.push_back(true); \
 														} else { \
 															extractionSuccessful.push_back(sourcepp::fs::writeFileBuffer(outputPathFixupAlpha, fileData)); \
@@ -3178,7 +3209,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				if (extractThumbnail && vtf.hasThumbnailData()) {
 					std::filesystem::path outputPathFixupThumb = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_thumb" + outputPathFixupBase.extension().string());
 					if (extractStdOut) {
-						tfout << '"' << BOLD << outputPathFixupThumb.filename().string() << END << '"' << ' ' << ::encodeBase64(vtfpp::ImageConversion::convertImageDataToFile(vtf.getThumbnailDataRaw(), vtf.getThumbnailFormat(), vtf.getThumbnailWidth(), vtf.getThumbnailHeight(), fileFormat)) << tfendl;
+						tfout_override << '"' << BOLD << outputPathFixupThumb.filename().string() << END << '"' << ' ' << ::encodeBase64(vtfpp::ImageConversion::convertImageDataToFile(vtf.getThumbnailDataRaw(), vtf.getThumbnailFormat(), vtf.getThumbnailWidth(), vtf.getThumbnailHeight(), fileFormat)) << tfendl;
 						extractionSuccessful.push_back(true);
 					} else {
 						bool shouldContinue;
@@ -3193,7 +3224,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_PARTICLE_SHEET_DATA)))) {
 					std::filesystem::path outputPathFixupSheet = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".sht");
 					if (extractStdOut) {
-						tfout << '"' << BOLD << outputPathFixupSheet.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsParticleSheet().bake()) << tfendl;
+						tfout_override << '"' << BOLD << outputPathFixupSheet.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsParticleSheet().bake()) << tfendl;
 						extractionSuccessful.push_back(true);
 					} else {
 						bool shouldContinue;
@@ -3209,7 +3240,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 					std::filesystem::path outputPathFixupKeyValues = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".vdf");
 					const auto kvd = rsrc->getDataAsKeyValuesData();
 					if (extractStdOut) {
-						tfout << '"' << BOLD << outputPathFixupKeyValues.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(kvd.data()), kvd.size()}) << tfendl;
+						tfout_override << '"' << BOLD << outputPathFixupKeyValues.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(kvd.data()), kvd.size()}) << tfendl;
 						extractionSuccessful.push_back(true);
 					} else {
 						bool shouldContinue;
@@ -3225,7 +3256,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 					std::filesystem::path outputPathFixupAuthor = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + "_author.txt");
 					const auto authorInfo = rsrc->getDataAsAuthorInfo();
 					if (extractStdOut) {
-						tfout << '"' << BOLD << outputPathFixupAuthor.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(authorInfo.data()), authorInfo.size()}) << tfendl;
+						tfout_override << '"' << BOLD << outputPathFixupAuthor.filename().string() << END << '"' << ' ' << ::encodeBase64({reinterpret_cast<const std::byte*>(authorInfo.data()), authorInfo.size()}) << tfendl;
 						extractionSuccessful.push_back(true);
 					} else {
 						bool shouldContinue;
@@ -3240,7 +3271,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				if (const vtfpp::Resource* rsrc; extractHotspotDataResource && ((rsrc = vtf.getResource(vtfpp::Resource::TYPE_HOTSPOT_DATA)))) {
 					std::filesystem::path outputPathFixupHotspot = outputPathFixupBase.parent_path() / (outputPathFixupBase.stem().string() + ".hot");
 					if (extractStdOut) {
-						tfout << '"' << BOLD << outputPathFixupHotspot.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsHotspotData().bake()) << tfendl;
+						tfout_override << '"' << BOLD << outputPathFixupHotspot.filename().string() << END << '"' << ' ' << ::encodeBase64(rsrc->getDataAsHotspotData().bake()) << tfendl;
 						extractionSuccessful.push_back(true);
 					} else {
 						bool shouldContinue;
@@ -3632,7 +3663,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 
 					// Bail here if requested
 					if (infoSkipResources) {
-						tfout << kv.bake();
+						tfout_override << kv.bake();
 						return EXIT_SUCCESS;
 					}
 
@@ -3715,7 +3746,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 					}
 
 					// ...and print it all out
-					tfout << kv.bake();
+					tfout_override << kv.bake();
 				} else {
 					throw std::runtime_error{"Invalid info output mode specified!"};
 				}
@@ -3725,7 +3756,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 			// Hack: if the input path is "version", show program version and exit
 			// This is for Stefan and other tool devs
 			if (inputPaths.size() == 1 && inputPaths[0] == "version") {
-				std::cout << PROJECT_VERSION << std::endl;
+				tfout_override << PROJECT_VERSION << tfendl;
 				MARETF_RETURN(EXIT_SUCCESS);
 			}
 
@@ -3737,7 +3768,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 				const auto p = *not_magic_enum::enum_cast<vtfpp::VTF::Platform>(platform);
 				const auto prettyFlagNames = ::getPrettyFlagNamesFor(v, p);
 				for (uint32_t i = 0; i < prettyFlagNames.size(); i++) {
-					std::cout << std::format("{}", 1u << i) << ',' << prettyFlagNames[i] << std::endl;
+					tfout_override << std::format("{}", 1u << i) << ',' << prettyFlagNames[i] << tfendl;
 				}
 				MARETF_RETURN(EXIT_SUCCESS);
 			}
@@ -3769,13 +3800,13 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 							if (sourcepp::string::toLower(dirEntry.path().extension().string()) == ".vtf" || sourcepp::string::toLower(dirEntry.path().extension().string()) == ".xtf") {
 								outputPath = "";
 								if (infoOutputMode == "kv1") {
-									tfout << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;
+									tfout_override << '\"' << dirEntry.path().string() << "\"\n{" << tfendl;
 								}
 								out = out || info(dirEntry.path().string());
 								if (infoOutputMode == "human") {
 									tfout << tfendl;
 								} else if (infoOutputMode == "kv1") {
-									tfout << '}' << tfendl;
+									tfout_override << '}' << tfendl;
 								}
 							}
 						}
