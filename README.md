@@ -1,4 +1,5 @@
 <div>
+  <!--suppress HtmlDeprecatedAttribute -->
   <img align="left" width="40px" src="https://github.com/craftablescience/MareTF/blob/mane/res/logo.png?raw=true" alt="MareTF Logo" />
   <h1>MareTF</h1>
 </div>
@@ -139,6 +140,10 @@ Optional arguments:
   --no-pretty-formatting                        Disables printing ANSI color codes and emojis.
                                                 Pretty formatting is disabled by default if no
                                                 TTY is detected.
+  --no-tty                                      Override TTY detection if the automatic
+                                                detection does not work, or for developer
+                                                testing. Analogous to
+                                                "--yes --quiet --no-pretty-formatting".
 
 "create" mode (detailed usage):
   --watch                                       After creation is complete, watch the input

@@ -56,9 +56,7 @@ using namespace std::literals;
 namespace {
 
 [[nodiscard]] bool runningInTTY() {
-#if !defined(MARETF_CLI)
-	static constexpr bool check = true;
-#elif defined(_WIN32)
+#if defined(_WIN32)
 	static const bool check = _isatty(_fileno(stdout)) && _isatty(_fileno(stderr));
 #elif defined(__unix__) || defined(__APPLE__)
 	static const bool check = isatty(STDOUT_FILENO) && isatty(STDERR_FILENO);
@@ -418,15 +416,23 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 		.store_into(noRecurse);
 
 	bool noPrettyFormatting;
-#ifdef MARETF_CLI
 	cli
 		.add_argument("--no-pretty-formatting")
 		.help("Disables printing ANSI color codes and emojis. Pretty formatting is disabled by default"
 		      " if no TTY is detected.")
 		.flag()
 		.store_into(noPrettyFormatting);
+
+	bool noTTY;
+#ifdef MARETF_CLI
+	cli
+		.add_argument("--no-tty")
+		.help("Override TTY detection if the automatic detection does not work, or for developer testing."
+		      " Analogous to \"--yes --quiet --no-pretty-formatting\".")
+		.flag()
+		.store_into(noTTY);
 #else
-	noPrettyFormatting = true;
+	noTTY = true;
 #endif
 
 	//endregion
@@ -1582,7 +1588,7 @@ std::tuple<int, std::string, std::vector<std::filesystem::path>> maretf_cli(int 
 	try {
 		cli.parse_args(argc, argv);
 
-		if (!::runningInTTY()) {
+		if (noTTY || !::runningInTTY()) {
 			overwrite = true;
 			quiet = true;
 			noPrettyFormatting = true;
