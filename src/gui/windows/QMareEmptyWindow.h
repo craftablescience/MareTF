@@ -7,11 +7,16 @@ class QDropEvent;
 class QPaintEvent;
 class QToolBar;
 
+class QMareTextureWindow;
+
 class QMareEmptyWindow : public QMainWindow {
 	Q_OBJECT;
 
 public:
-	QMareEmptyWindow();
+	explicit QMareEmptyWindow(QMareTextureWindow*& textureWindow_, QWidget* parent = nullptr);
+
+signals:
+	void showManeWindow(const QStringList& files);
 
 protected:
 	void paintEvent(QPaintEvent*) override;
@@ -21,4 +26,5 @@ protected:
 	void dropEvent(QDropEvent* event) override;
 
 	QToolBar* toolbar;
+	QMareTextureWindow*& textureWindow;
 };

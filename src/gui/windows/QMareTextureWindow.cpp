@@ -41,8 +41,6 @@
 #include "widgets/QMareSpinBox.h"
 #include "widgets/QMareTextureWidget.h"
 
-QMareTextureWindow* g_ManeWindow = nullptr;
-
 QMareTextureWindow::QMareTextureWindow() {
 	// Window setup ---------------------------------------
 

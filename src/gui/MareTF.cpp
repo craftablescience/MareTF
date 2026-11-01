@@ -23,29 +23,31 @@ int main(int argc, char* argv[]) {
 	const auto options = std::make_unique<QSettings>();
 	QMareOptions::setupOptions(*options);
 
+	QMareTextureWindow* maneWindow = nullptr;
 	QMareEmptyWindow* emptyWindow = nullptr;
-	const auto closeAllWindows = [&emptyWindow] {
+	const auto closeAllWindows = [&maneWindow, &emptyWindow] {
+		if (maneWindow) {
+			maneWindow->close();
+			maneWindow = nullptr;
+		}
 		if (emptyWindow) {
 			emptyWindow->close();
 			emptyWindow = nullptr;
 		}
-		if (g_ManeWindow) {
-			g_ManeWindow->close();
-			g_ManeWindow = nullptr;
-		}
 	};
-	const auto showEmptyWindow = [&emptyWindow, &closeAllWindows] {
+	const auto showManeWindow = [&maneWindow, &closeAllWindows](const QStringList& files) {
 		closeAllWindows();
-		emptyWindow = new QMareEmptyWindow;
+		maneWindow = new QMareTextureWindow;
+		for (const auto& file : files) {
+			maneWindow->loadTexture(file);
+		}
+		maneWindow->show();
+	};
+	const auto showEmptyWindow = [&maneWindow, &emptyWindow, &closeAllWindows, &showManeWindow] {
+		closeAllWindows();
+		emptyWindow = new QMareEmptyWindow{maneWindow};
 		emptyWindow->show();
-	};
-	const auto showManeWindow = [&closeAllWindows](const QStringList& args) {
-		closeAllWindows();
-		g_ManeWindow = new QMareTextureWindow;
-		for (int i = 1; i < args.size(); i++) {
-			g_ManeWindow->loadTexture(args[i]);
-		}
-		g_ManeWindow->show();
+		QObject::connect(emptyWindow, &QMareEmptyWindow::showManeWindow, showManeWindow);
 	};
 
 #if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
@@ -64,17 +66,17 @@ int main(int argc, char* argv[]) {
 		}
 
 		QLocalServer::removeServer(serverName);
-		QObject::connect(&server, &QLocalServer::newConnection, [showManeWindow, &server] {
+		QObject::connect(&server, &QLocalServer::newConnection, [maneWindow, showManeWindow, &server] {
 			auto* client = server.nextPendingConnection();
-			QObject::connect(client, &QLocalSocket::readyRead, [showManeWindow, client] {
+			QObject::connect(client, &QLocalSocket::readyRead, [maneWindow, showManeWindow, client] {
 				const QByteArray data = client->readAll();
 				QDataStream stream{data};
 				QStringList args;
 				stream >> args;
 
-				if (g_ManeWindow) {
+				if (maneWindow) {
 					for (int i = 1; i < args.size(); i++) {
-						g_ManeWindow->loadTexture(args[i]);
+						maneWindow->loadTexture(args[i]);
 					}
 
 					if (QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE))
@@ -89,9 +91,9 @@ int main(int argc, char* argv[]) {
 #endif
 					{
 						// Yes we need all of these
-						g_ManeWindow->show();
-						g_ManeWindow->raise();
-						g_ManeWindow->activateWindow();
+						maneWindow->show();
+						maneWindow->raise();
+						maneWindow->activateWindow();
 					}
 				} else {
 					showManeWindow(args);

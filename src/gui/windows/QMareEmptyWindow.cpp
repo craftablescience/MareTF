@@ -22,7 +22,7 @@
 #include "utility/QMareOptions.h"
 #include "QMareTextureWindow.h"
 
-QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
+QMareEmptyWindow::QMareEmptyWindow(QMareTextureWindow*& textureWindow_, QWidget* parent) : QMainWindow{parent}, textureWindow{textureWindow_} {
 	this->setWindowTitle(PROJECT_TITLE);
 	this->setWindowIcon(QIcon{":/logo.png"});
 
@@ -40,13 +40,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	connect(toolbarCreateAction, &QAction::triggered, this, [this] {
 		if (auto* createTextureDialog = QMareCreateTextureDialog::fromImages(this)) {
 			connect(createTextureDialog, &QMareCreateTextureDialog::createdTextures, this, [this](const QStringList& paths) {
-				if (!g_ManeWindow) {
-					g_ManeWindow = new QMareTextureWindow;
-				}
-				for (const auto& path : paths) {
-					g_ManeWindow->loadTexture(path);
-				}
-				g_ManeWindow->show();
+				emit this->showManeWindow(paths);
 				this->close();
 			});
 			createTextureDialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -77,13 +71,7 @@ QMareEmptyWindow::QMareEmptyWindow() : QMainWindow{nullptr} {
 	this->toolbar->addAction(QIcon{":/button_load.png"}, tr("&Open"), Qt::CTRL | Qt::Key_O, [this] {
 		if (const auto files = QFileDialog::getOpenFileNames(this, tr("Open Textures"), QMareOptions::get<QString>(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR), QString{"Valve Texture Format (*.vtf *.xtf);;"} + tr("All Files") + " (*)"); !files.empty()) {
 			QMareOptions::set(QMareOptions::STR_DEFAULT_OPEN_OR_SAVE_DIALOG_DIR, QFileInfo{files.last()}.canonicalPath());
-			if (!g_ManeWindow) {
-				g_ManeWindow = new QMareTextureWindow;
-			}
-			for (const auto& file : files) {
-				g_ManeWindow->loadTexture(file);
-			}
-			g_ManeWindow->show();
+			emit this->showManeWindow(files);
 			this->close();
 		}
 	});
@@ -194,8 +182,8 @@ void QMareEmptyWindow::dragEnterEvent(QDragEnterEvent* event) {
 }
 
 void QMareEmptyWindow::dropEvent(QDropEvent* event) {
-	g_ManeWindow = new QMareTextureWindow;
-	g_ManeWindow->show();
-	g_ManeWindow->dropEvent(event);
+	this->textureWindow = new QMareTextureWindow;
+	this->textureWindow->show();
+	this->textureWindow->dropEvent(event);
 	this->close();
 }
