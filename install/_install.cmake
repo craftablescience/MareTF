@@ -61,11 +61,6 @@ elseif(UNIX)
     if(MARETF_BUILD_CLI)
         if(MARETF_SYSTEM_INSTALL)
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-        elseif(CPACK_GENERATOR STREQUAL "AppImage")
-            # Workaround because AppImage is making a "maretf" symlink to the licenses folder(???)
-            install(PROGRAMS "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
-                    DESTINATION .
-                    RENAME "maretf_cli")
         else()
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
         endif()
@@ -92,16 +87,9 @@ elseif(UNIX)
                 DESTINATION "share/applications")
 
         # Program icon
-        if(CPACK_GENERATOR STREQUAL "AppImage")
-            # Another AppImage hack hooray
-            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                    DESTINATION .
-                    RENAME "${PROJECT_NAME}.png")
-        else()
-            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
-                    DESTINATION "share/icons/hicolor/512x512/apps"
-                    RENAME "${PROJECT_NAME}.png")
-        endif()
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.png"
+                DESTINATION "share/icons/hicolor/512x512/apps"
+                RENAME "${PROJECT_NAME}.png")
 
         # AppRun
         if(CPACK_GENERATOR STREQUAL "AppImage")
@@ -200,7 +188,7 @@ elseif(APPLE)
     message(FATAL_ERROR "${PROJECT_NAME_PRETTY} macOS install script does not exist.")
 else()
     if(CPACK_GENERATOR STREQUAL "AppImage")
-        set(CPACK_PACKAGE_ICON "${PROJECT_NAME}")
+        set(CPACK_PACKAGE_ICON "${PROJECT_NAME}.png")
     elseif(CPACK_GENERATOR STREQUAL "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR} <${CPACK_PACKAGE_CONTACT}>")
         if(MARETF_BUILD_GUI)
