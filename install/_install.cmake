@@ -60,31 +60,22 @@ elseif(UNIX)
 
     if(MARETF_BUILD_CLI)
         if(MARETF_SYSTEM_INSTALL)
-            install(TARGETS ${PROJECT_NAME}
-                    RUNTIME DESTINATION "bin"
-                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
         elseif(CPACK_GENERATOR STREQUAL "AppImage")
             # Workaround because AppImage is making a "maretf" symlink to the licenses folder(???)
             install(PROGRAMS "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
                     DESTINATION .
-                    RENAME "maretf_cli"
-                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+                    RENAME "maretf_cli")
         else()
-            install(TARGETS ${PROJECT_NAME}
-                    RUNTIME DESTINATION .
-                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
         endif()
     endif()
 
     if(MARETF_BUILD_GUI)
         if(MARETF_SYSTEM_INSTALL)
-            install(TARGETS ${PROJECT_NAME}_gui
-                    RUNTIME DESTINATION "bin"
-                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION "bin")
         else()
-            install(TARGETS ${PROJECT_NAME}_gui
-                    RUNTIME DESTINATION .
-                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME}_gui RUNTIME DESTINATION .)
         endif()
 
         # Desktop file
@@ -115,9 +106,9 @@ elseif(UNIX)
 
     if(MARETF_BUILD_THUMBNAILER)
         if(MARETF_SYSTEM_INSTALL)
-            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION "bin" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION "bin")
         else()
-            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION . PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            install(TARGETS ${PROJECT_NAME}_thumbnailer RUNTIME DESTINATION .)
         endif()
 
         # Thumbnailer file
