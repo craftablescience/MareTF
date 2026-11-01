@@ -23,6 +23,31 @@ int main(int argc, char* argv[]) {
 	const auto options = std::make_unique<QSettings>();
 	QMareOptions::setupOptions(*options);
 
+	QMareEmptyWindow* emptyWindow = nullptr;
+	const auto closeAllWindows = [&emptyWindow] {
+		if (emptyWindow) {
+			emptyWindow->close();
+			emptyWindow = nullptr;
+		}
+		if (g_ManeWindow) {
+			g_ManeWindow->close();
+			g_ManeWindow = nullptr;
+		}
+	};
+	const auto showEmptyWindow = [&emptyWindow, &closeAllWindows] {
+		closeAllWindows();
+		emptyWindow = new QMareEmptyWindow;
+		emptyWindow->show();
+	};
+	const auto showManeWindow = [&closeAllWindows](const QStringList& args) {
+		closeAllWindows();
+		g_ManeWindow = new QMareTextureWindow;
+		for (int i = 1; i < args.size(); i++) {
+			g_ManeWindow->loadTexture(args[i]);
+		}
+		g_ManeWindow->show();
+	};
+
 #if !defined(Q_OS_WASM) && !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 	QLocalServer server;
 	if (!QMareOptions::get<bool>(QMareOptions::BOOL_ALLOW_MULTIPLE_APP_INSTANCES)) {
@@ -39,14 +64,15 @@ int main(int argc, char* argv[]) {
 		}
 
 		QLocalServer::removeServer(serverName);
-		QObject::connect(&server, &QLocalServer::newConnection, [&server] {
+		QObject::connect(&server, &QLocalServer::newConnection, [showManeWindow, &server] {
 			auto* client = server.nextPendingConnection();
-			QObject::connect(client, &QLocalSocket::readyRead, [client] {
+			QObject::connect(client, &QLocalSocket::readyRead, [showManeWindow, client] {
+				const QByteArray data = client->readAll();
+				QDataStream stream{data};
+				QStringList args;
+				stream >> args;
+
 				if (g_ManeWindow) {
-					const QByteArray data = client->readAll();
-					QDataStream stream{data};
-					QStringList args;
-					stream >> args;
 					for (int i = 1; i < args.size(); i++) {
 						g_ManeWindow->loadTexture(args[i]);
 					}
@@ -67,6 +93,8 @@ int main(int argc, char* argv[]) {
 						g_ManeWindow->raise();
 						g_ManeWindow->activateWindow();
 					}
+				} else {
+					showManeWindow(args);
 				}
 				client->deleteLater();
 			});
@@ -96,14 +124,13 @@ int main(int argc, char* argv[]) {
 
 	// Show a window
 	if (argc > 1) {
-		g_ManeWindow = new QMareTextureWindow;
+		QStringList args;
 		for (int i = 1; i < argc; i++) {
-			g_ManeWindow->loadTexture(argv[i]);
+			args << argv[i];
 		}
-		g_ManeWindow->show();
+		showManeWindow(args);
 	} else {
-		auto* emptyWindow = new QMareEmptyWindow;
-		emptyWindow->show();
+		showEmptyWindow();
 	}
 
 	return QApplication::exec();
