@@ -236,11 +236,12 @@ QMareTextureWindow::QMareTextureWindow() {
 	const QVector<QPair<QString, QString>> languageToLocaleMapping{
 		{tr("System Language"), ""},
 		{"", ""}, // Separator
-		{u8"English", "en"},
-		{u8"日本語",   "ja"},
-		{u8"Polski",  "pl"},
-		{u8"Русский", "ru_RU"},
-		{u8"Español", "es"},
+		{u8"English",             "en"},
+		{u8"日本語",               "ja"},
+		{u8"Polski",              "pl"},
+		{u8"Português (Brasil)",  "pt_BR"},
+		{u8"Русский",             "ru_RU"},
+		{u8"Español",             "es"},
 	};
 	for (const auto& [language, locale] : languageToLocaleMapping) {
 		if (language.isEmpty() && locale.isEmpty()) {
