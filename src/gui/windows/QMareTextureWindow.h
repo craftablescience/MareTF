@@ -31,7 +31,11 @@ public:
 
 	void regenerateDetails();
 
+	void markTab(int index, bool dirty, bool ignoreExistingState = false);
+
 	bool saveTab(int index);
+
+	bool recomputeFlagsForTab(int index);
 
 signals:
 	void themeUpdated();
@@ -45,6 +49,9 @@ protected:
 
 	// todo(edit)
 	QAction* saveAction;
+	QAction* saveAllAction;
+	QAction* recomputeFlagsAction;
+	QAction* recomputeFlagsAllAction;
 	// ---- end
 
 	QMareMiddleClickTabWidget* textureTabs;
