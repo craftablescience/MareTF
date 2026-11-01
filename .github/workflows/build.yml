@@ -222,7 +222,7 @@ jobs:
         if: matrix.cpack_generator == 'AppImage'
         run: |
           wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
-          chmod +x appimagetool
+          chmod a+x appimagetool
           echo "$PWD" >> "$GITHUB_PATH"
 
       - name: Install Latest CMake
