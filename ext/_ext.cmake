@@ -46,7 +46,7 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
     # CMake has an odd policy that links a special link lib for Qt on newer versions of CMake
     cmake_policy(SET CMP0020 NEW)
 
-    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network LinguistTools)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network OpenGL OpenGLWidgets LinguistTools)
 
     get_target_property(QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
     execute_process(COMMAND "${QT_QMAKE_EXECUTABLE}" -query QT_VERSION              OUTPUT_VARIABLE QT_VERSION          OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -59,8 +59,8 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
 
     function(target_use_qt TARGET)
         set_target_properties(${TARGET} PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
-        target_link_libraries(${TARGET} PRIVATE Qt::Core Qt::Gui Qt::Widgets Qt::Network)
-        target_include_directories(${TARGET} PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets" "${QT_INCLUDE}/QtNetwork")
+        target_link_libraries(${TARGET} PRIVATE Qt::Core Qt::Gui Qt::Widgets Qt::Network Qt::OpenGL Qt::OpenGLWidgets)
+        target_include_directories(${TARGET} PRIVATE "${QT_INCLUDE}" "${QT_INCLUDE}/QtCore" "${QT_INCLUDE}/QtGui" "${QT_INCLUDE}/QtWidgets" "${QT_INCLUDE}/QtNetwork" "${QT_INCLUDE}/QtOpenGL" "${QT_INCLUDE}/QtOpenGLWidgets")
         qt_add_resources(${TARGET} "${TARGET}_qt_translations" BASE "${QT_TRANSLATIONS_DIR}" PREFIX "/i18n" FILES ${QT_I18N_QM_FILES})
         if(EMSCRIPTEN)
             # todo: -gN and -gsource-map should be debug only
@@ -91,7 +91,7 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
     # Copy these in
     list(APPEND QT_REQUIRED_ROOT_LIBS
             # Core
-            "Core" "Gui" "Widgets" "Network"
+            "Core" "Gui" "Widgets" "Network" "OpenGL" "OpenGLWidgets"
             # Needed by plugins
             "DBus" "EglFSDeviceIntegration" "EglFsKmsSupport" "EglFsKmsGbmSupport" "WaylandClient" "WaylandEglClientHwIntegration" "WlShellIntegration" "XcbQpa")
     list(APPEND QT_REQUIRED_PLUGIN_DIRS
@@ -99,6 +99,9 @@ if(MARETF_BUILD_GUI OR MARETF_BUILD_THUMBNAILER)
             "wayland-decoration-client" "wayland-graphics-integration-client" "wayland-shell-integration" "xcbglintegrations")
 
     if(WIN32)
+        # This is a standalone DLL separate from the rest of the Qt stuff
+        configure_file("${QT_BASEDIR}/bin/opengl32sw.dll" "${CMAKE_BINARY_DIR}/opengl32sw.dll" COPYONLY)
+
         set(QT_LIB_SUFFIX_DEBUG "d")
         set(QT_LIB_SUFFIX_RELEASE "")
         if(CMAKE_BUILD_TYPE MATCHES Debug)

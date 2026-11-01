@@ -94,6 +94,8 @@ jobs:
           xcopy /y __qt__\Qt6Core.dll                       Qt6Core.dll
           xcopy /y __qt__\Qt6Gui.dll                        Qt6Gui.dll
           xcopy /y __qt__\Qt6Network.dll                    Qt6Network.dll
+          xcopy /y __qt__\Qt6OpenGL.dll                     Qt6OpenGL.dll
+          xcopy /y __qt__\Qt6OpenGLWidgets.dll              Qt6OpenGLWidgets.dll
           xcopy /y __qt__\Qt6Widgets.dll                    Qt6Widgets.dll
           REM Overwrite the source of the binaries for installer version
           xcopy /y __qt__\platforms\qwindows.dll            "${{env.QT_ROOT_DIR}}\plugins\platforms\qwindows.dll"
@@ -102,6 +104,8 @@ jobs:
           xcopy /y __qt__\Qt6Core.dll                       "${{env.QT_ROOT_DIR}}\bin\Qt6Core.dll"
           xcopy /y __qt__\Qt6Gui.dll                        "${{env.QT_ROOT_DIR}}\bin\Qt6Gui.dll"
           xcopy /y __qt__\Qt6Network.dll                    "${{env.QT_ROOT_DIR}}\bin\Qt6Network.dll"
+          xcopy /y __qt__\Qt6OpenGL.dll                     "${{env.QT_ROOT_DIR}}\bin\Qt6OpenGL.dll"
+          xcopy /y __qt__\Qt6OpenGLWidgets.dll              "${{env.QT_ROOT_DIR}}\bin\Qt6OpenGLWidgets.dll"
           xcopy /y __qt__\Qt6Widgets.dll                    "${{env.QT_ROOT_DIR}}\bin\Qt6Widgets.dll"
 
       - name: Upload Standalone Compatibility [build_type:Release]
