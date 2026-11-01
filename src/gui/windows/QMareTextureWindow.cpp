@@ -307,7 +307,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::currentChanged, this, &QMareTextureWindow::regenerateDetails);
 	connect(this->textureTabs, &QMareMiddleClickTabWidget::tabCloseRequested, this, [this](int index) {
 		// todo(edit)
-		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
+		if (const auto* textureWidget = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
 			auto* saveMessageBox = new QMessageBox{QMessageBox::Icon::NoIcon, tr("Save Confirmation"), tr("The texture at \"%1\" has been modified. Would you like to save it?").arg(textureWidget->getPath()), QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, this};
 			saveMessageBox->setIconPixmap(textureWidget->getPixmap());
 			saveMessageBox->setAttribute(Qt::WA_DeleteOnClose);
@@ -359,7 +359,7 @@ QMareTextureWindow::QMareTextureWindow() {
 			this->previewG->setChecked(enableOthers);
 			this->previewB->setChecked(enableOthers);
 		}
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
@@ -376,7 +376,7 @@ QMareTextureWindow::QMareTextureWindow() {
 			this->previewG->setChecked(true);
 			this->previewB->setChecked(enableOthers);
 		}
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
@@ -393,7 +393,7 @@ QMareTextureWindow::QMareTextureWindow() {
 			this->previewG->setChecked(enableOthers);
 			this->previewB->setChecked(true);
 		}
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setRGB(this->previewR->isChecked(), this->previewG->isChecked(), this->previewB->isChecked());
 		}
 	});
@@ -404,7 +404,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change alpha
 	connect(this->previewA, &QPushButton::clicked, this, [this](bool checked) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			if (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) {
 				const bool enableOthers = !checked && !this->previewR->isChecked() && !this->previewG->isChecked() && !this->previewB->isChecked();
 				this->previewR->setChecked(enableOthers);
@@ -425,7 +425,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change background
 	connect(this->previewAMask, &QPushButton::clicked, this, [this](bool checked) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setAMask(checked);
 		}
 	});
@@ -436,7 +436,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change tiled
 	connect(this->previewTiled, &QPushButton::clicked, this, [this](bool checked) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setTiled(checked);
 		}
 	});
@@ -448,7 +448,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change the current mip
 	connect(this->previewCurrentMip, &QMareSpinBox::valueChanged, this, [this](int value) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentMip(value);
 		}
 	});
@@ -464,7 +464,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change the current frame
 	connect(this->previewCurrentFrame, &QMareSpinBox::valueChanged, this, [this](int value) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentFrame(value);
 		}
 	});
@@ -492,7 +492,7 @@ QMareTextureWindow::QMareTextureWindow() {
 		if (!this->previewAnimate->isChecked()) {
 			return;
 		}
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			if (this->previewCurrentFrame->value() + 1 == activeTexture->getVTF().getFrameCount()) {
 				this->previewCurrentFrame->setValue(0);
 			} else {
@@ -514,7 +514,7 @@ QMareTextureWindow::QMareTextureWindow() {
 	// Change cubemap preview mode
 	connect(this->previewCubemapMode, &QMareComboBox::currentIndexChanged, this, [this](int index) {
 		this->previewCurrentFace->setDisabled(index != 1);
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentCubemapMode(index);
 		}
 	});
@@ -525,7 +525,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change the current face
 	connect(this->previewCurrentFace, &QMareSpinBox::valueChanged, this, [this](int value) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentFace(value);
 		}
 	});
@@ -541,7 +541,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// Change the current depth
 	connect(this->previewCurrentDepth, &QMareSpinBox::valueChanged, this, [this](int value) {
-		if (auto* activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
+		if (auto* activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(this->textureTabs->currentIndex()))) {
 			activeTexture->setCurrentDepth(value);
 		}
 	});
@@ -921,7 +921,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 	// todo(edit)
 	connect(this->flagsChecks, &QMareFlagsWidget::itemChanged, this, [this](QListWidgetItem*) {
-		if (auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->currentWidget())) {
+		if (auto* textureWidget = qobject_cast<QMareTextureWidget*>(this->textureTabs->currentWidget())) {
 			textureWidget->getVTF().setFlags(this->flagsChecks->getFlags());
 			if (!textureWidget->isTextureModified()) {
 				textureWidget->setTextureModified(true);
@@ -941,7 +941,7 @@ QMareTextureWindow::QMareTextureWindow() {
 
 void QMareTextureWindow::loadTexture(const QString& path) {
 	for (int i = 0; i < this->textureTabs->count(); i++) {
-		if (const auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(i)); textureWidget && QDir{textureWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
+		if (const auto* textureWidget = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(i)); textureWidget && QDir{textureWidget->getPath()}.absolutePath() == QDir{path}.absolutePath()) {
 			this->textureTabs->setCurrentIndex(i);
 			return;
 		}
@@ -963,7 +963,7 @@ void QMareTextureWindow::regenerateDetails() {
 	const auto activeIndex = this->textureTabs->currentIndex();
 	QMareTextureWidget* activeTexture = nullptr;
 	if (activeIndex >= 0) {
-		activeTexture = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(activeIndex));
+		activeTexture = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(activeIndex));
 	}
 	if (!activeTexture) {
 		this->setWindowTitle(PROJECT_TITLE);
@@ -1368,7 +1368,7 @@ bool QMareTextureWindow::saveTab(int index) {
 	}
 
 	// todo(edit)
-	if (auto* textureWidget = dynamic_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
+	if (auto* textureWidget = qobject_cast<QMareTextureWidget*>(this->textureTabs->widget(index)); textureWidget && textureWidget->isTextureModified()) {
 		if (!textureWidget->saveCurrentTexture()) {
 			QMessageBox::critical(this, tr("Save Failure"), tr("Failed to save texture at \"%1\".").arg(textureWidget->getPath()));
 			return false;
