@@ -102,6 +102,16 @@ elseif(UNIX)
                     DESTINATION "share/icons/hicolor/512x512/apps"
                     RENAME "${PROJECT_NAME}.png")
         endif()
+
+        # AppRun
+        if(CPACK_GENERATOR STREQUAL "AppImage")
+            configure_file(
+                    "${CMAKE_CURRENT_LIST_DIR}/linux/AppRun.in"
+                    "${CMAKE_CURRENT_LIST_DIR}/linux/generated/AppRun")
+            install(FILES "${CMAKE_CURRENT_LIST_DIR}/linux/generated/AppRun"
+                    DESTINATION .
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        endif()
     endif()
 
     if(MARETF_BUILD_THUMBNAILER)
