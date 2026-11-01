@@ -632,47 +632,47 @@
 <context>
     <name>QMareTextureWidget</name>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="50"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="52"/>
         <source>&amp;Copy Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="53"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="55"/>
         <source>&amp;Save Image As...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="59"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="61"/>
         <source>Zoom &amp;In</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="64"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="66"/>
         <source>Zoom &amp;Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="69"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="71"/>
         <source>Reset &amp;Zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="74"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="76"/>
         <source>Reset &amp;Pan</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="193"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="199"/>
         <source>Save Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="208"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="214"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="208"/>
+        <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="214"/>
         <source>Failed to save image.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -735,520 +735,540 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="125"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="122"/>
+        <source>S&amp;ave All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="132"/>
         <source>&amp;Donate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="130"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="137"/>
         <source>&amp;Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="137"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="144"/>
+        <source>&amp;Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="147"/>
+        <source>Recompute &amp;Flags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="152"/>
+        <source>Recompute Flags for &amp;All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="162"/>
         <source>&amp;View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="141"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="166"/>
         <source>&amp;Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="144"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="169"/>
         <source>&amp;General</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="146"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="171"/>
         <source>Raise When Opening New File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="150"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="175"/>
         <source>Allow Multiple Application Instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="158"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="183"/>
         <source>Trypanophobia Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="165"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="190"/>
         <source>&amp;Workspace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="167"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="192"/>
         <source>Show Tab Bar for Single File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="174"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="199"/>
         <source>High Quality File Thumbnails</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="178"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="203"/>
         <source>High Quality Minimap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="187"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="212"/>
         <source>&amp;Minimap Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="191"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="216"/>
         <source>Disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="192"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="217"/>
         <source>Small</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="193"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="218"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="194"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="219"/>
         <source>Large</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="208"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="233"/>
         <source>&amp;Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="212"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="237"/>
         <source>System Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="234"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="259"/>
         <source>&amp;Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="260"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="285"/>
         <source>Enable Rich Presence</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="281"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="306"/>
         <source>&amp;Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="283"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="308"/>
         <source>Credi&amp;ts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="289"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="314"/>
         <source>Report an &amp;Issue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="293"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="318"/>
         <source>Request a &amp;Feature</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="311"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="336"/>
         <source>Save Confirmation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="311"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="336"/>
         <source>The texture at &quot;%1&quot; has been modified. Would you like to save it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="336"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="729"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="748"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="361"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="754"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="773"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="342"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="367"/>
         <source>General</source>
         <translation type="unfinished">Ogólne</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="367"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="655"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="392"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="680"/>
         <source>G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="384"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="657"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="409"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="682"/>
         <source>B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="401"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="426"/>
         <source>Alpha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="422"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="447"/>
         <source>Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="433"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="458"/>
         <source>Tile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="444"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="469"/>
         <source>Channels</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="447"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="472"/>
         <source>Current Mip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="458"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="483"/>
         <source>Animation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="463"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="488"/>
         <source>Current Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="475"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="500"/>
         <source>Animation FPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="478"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="503"/>
         <source>Animate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="506"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="629"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="531"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="654"/>
         <source>Cubemap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="511"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="536"/>
         <source>Net</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="511"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="536"/>
         <source>Single Face</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="512"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="537"/>
         <source>Preview Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="524"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="549"/>
         <source>Current Face</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="535"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="617"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="560"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="642"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="540"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="565"/>
         <source>Current Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="559"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="584"/>
         <source>Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="567"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="592"/>
         <source>File Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="572"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="597"/>
         <source>PC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="573"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="598"/>
         <source>Xbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="574"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="599"/>
         <source>Xbox 360</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="575"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="600"/>
         <source>PS3 (Orange Box)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="576"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="601"/>
         <source>PS3 (P2, CS:GO)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="577"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="602"/>
         <source>Platform</source>
         <translation type="unfinished">Platforma</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="583"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="608"/>
         <source>Version</source>
         <translation type="unfinished">Wersja</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="597"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="622"/>
         <source>Format</source>
         <translation type="unfinished">Format</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="607"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="632"/>
         <source>Dimensions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="613"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="734"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="763"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="638"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="759"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="788"/>
         <source>Width</source>
         <translation type="unfinished">Szerokość</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="615"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="739"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="768"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="640"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="764"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="793"/>
         <source>Height</source>
         <translation type="unfinished">Wysokość</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="619"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="644"/>
         <source>Frames</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="621"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="646"/>
         <source>Start Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="631"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="656"/>
         <source>Mipmaps</source>
         <translation type="unfinished">Mipmapy</translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="634"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="659"/>
         <source>Mip Scale (Console)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="638"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="663"/>
         <source>Miscellaneous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="646"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="671"/>
         <source>Bumpmap Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="653"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="678"/>
         <source>R</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="659"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="684"/>
         <source>Reflectivity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="663"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="688"/>
         <source>CPU Compression</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="672"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="697"/>
         <source>Method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="675"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="700"/>
         <source>Level</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="716"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="741"/>
         <source>Resources</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="724"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="749"/>
         <source>Thumbnail</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="743"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="768"/>
         <source>Palette</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="752"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="777"/>
         <source>Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="756"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="781"/>
         <source>Fallback</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="772"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="797"/>
         <source>Mips</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="776"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="801"/>
         <source>Parallax-corrected Cubemap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="780"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="805"/>
         <source>Origin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="796"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="821"/>
         <source>Inverse Transform</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="828"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="853"/>
         <source>CRC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="834"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="844"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="859"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="869"/>
         <source>Value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="838"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="863"/>
         <source>TS0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="848"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="873"/>
         <source>LOD Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="854"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="879"/>
         <source>U</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="858"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="883"/>
         <source>V</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="862"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="887"/>
         <source>U (Console)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="866"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="891"/>
         <source>V (Console)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="870"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="895"/>
         <source>KeyValues</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="879"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="904"/>
         <source>Author Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="888"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="913"/>
         <source>MareTF Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="913"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="938"/>
         <source>Flags</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="958"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="979"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="958"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="979"/>
         <source>Failed to load texture at location: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="994"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1135"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1015"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1159"/>
         <source>File Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="995"/>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1139"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1016"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1163"/>
         <source>b</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1137"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1161"/>
         <source>Est. File Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1142"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1166"/>
         <source>kb</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1146"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1170"/>
         <source>mb</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1373"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1432"/>
         <source>Save Failure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1373"/>
+        <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1432"/>
         <source>Failed to save texture at &quot;%1&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1256,28 +1276,28 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="1622"/>
+        <location filename="../../src/cli/MareTF.cpp" line="1659"/>
         <source>Overwrite File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="1622"/>
+        <location filename="../../src/cli/MareTF.cpp" line="1659"/>
         <source>Output file at %1 already exists.
 Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="2792"/>
+        <location filename="../../src/cli/MareTF.cpp" line="2829"/>
         <source>Watching for any changes...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="2792"/>
+        <location filename="../../src/cli/MareTF.cpp" line="2829"/>
         <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/cli/MareTF.cpp" line="2793"/>
+        <location filename="../../src/cli/MareTF.cpp" line="2830"/>
         <source>Watch</source>
         <translation type="unfinished"></translation>
     </message>
