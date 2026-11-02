@@ -82,10 +82,10 @@ int main(int argc, char* argv[]) {
 					if (QMareOptions::get<bool>(QMareOptions::BOOL_RAISE_TO_TOP_OPENING_FILE))
 #ifdef Q_OS_WIN
 					{
-						const auto flags = g_ManeWindow->windowFlags();
-						g_ManeWindow->setWindowFlags(flags | Qt::WindowStaysOnTopHint);
-						g_ManeWindow->show();
-						g_ManeWindow->setWindowFlags(flags);
+						const auto flags = maneWindow->windowFlags();
+						maneWindow->setWindowFlags(flags | Qt::WindowStaysOnTopHint);
+						maneWindow->show();
+						maneWindow->setWindowFlags(flags);
 					}
 					// Will simply flash in taskbar if above code didn't run
 #endif
