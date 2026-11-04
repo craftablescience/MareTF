@@ -6,12 +6,12 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="36"/>
         <source>Create Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать текстуру</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="84"/>
@@ -21,7 +21,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="72"/>
         <source>Platform</source>
-        <translation type="unfinished"></translation>
+        <translation>Платформа</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="95"/>
@@ -31,7 +31,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="99"/>
         <source>Compression Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Качество сжатия</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="133"/>
@@ -68,58 +68,58 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="185"/>
         <source>Width</source>
-        <translation type="unfinished"></translation>
+        <translation>Ширина</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="253"/>
         <source>Height</source>
-        <translation type="unfinished"></translation>
+        <translation>Высота</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="261"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="287"/>
         <source>Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Фильтр</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="291"/>
         <source>Scale (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер (консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="274"/>
         <source>Mipmaps</source>
-        <translation type="unfinished"></translation>
+        <translation>Mipmap&apos;ы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="308"/>
         <source>Convert to</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать в</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="312"/>
         <source>Bilinear Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Билинейный фильтр</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="314"/>
         <source>HDRI</source>
-        <translation type="unfinished"></translation>
+        <translation>HDRI</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="317"/>
         <source>Gamma Correction</source>
-        <translation type="unfinished"></translation>
+        <translation>Коррекция гаммы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="337"/>
         <source>Invert Green Channel</source>
-        <translation type="unfinished"></translation>
+        <translation>Инвертировать канал зелёного цвета</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="343"/>
         <source>Bumpmap Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер Bumpmap</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="132"/>
@@ -131,19 +131,19 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="65"/>
         <source>General</source>
-        <translation type="unfinished">Общие</translation>
+        <translation>Общее</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="128"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="197"/>
         <source>Resize</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить размер</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="134"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="203"/>
         <source>Bounds</source>
-        <translation type="unfinished"></translation>
+        <translation>Границы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="141"/>
@@ -153,7 +153,7 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="225"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="240"/>
         <source>px</source>
-        <translation type="unfinished"></translation>
+        <translation>px</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="147"/>
@@ -163,48 +163,48 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="231"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="247"/>
         <source>%1px</source>
-        <translation type="unfinished"></translation>
+        <translation>%1px</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="271"/>
         <source>Resize Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить размер изображения</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="297"/>
         <source>Animate Numbered Sequences</source>
-        <translation type="unfinished"></translation>
+        <translation>Анимировать пронумерованные последовательности</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="329"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="382"/>
         <source>Distance Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Distance Mapping</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="333"/>
         <source>Treat Alpha As Mask (Premultiplied)</source>
-        <translation type="unfinished"></translation>
+        <translation>Рассматривать альфа-канал (прозрачность) как маску (с предварительным умножением)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="356"/>
         <source>Method</source>
-        <translation type="unfinished"></translation>
+        <translation>Метод</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="358"/>
         <source>Level</source>
-        <translation type="unfinished"></translation>
+        <translation>Уровень</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="370"/>
         <source>CPU Compression</source>
-        <translation type="unfinished"></translation>
+        <translation>Сжатие процессором</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="373"/>
         <source>Flags</source>
-        <translation type="unfinished"></translation>
+        <translation>Опции</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="389"/>
@@ -214,53 +214,53 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="393"/>
         <source>Factor</source>
-        <translation type="unfinished"></translation>
+        <translation>Фактор</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="397"/>
         <source>Factor (X)</source>
-        <translation type="unfinished"></translation>
+        <translation>Фактор (X)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="401"/>
         <source>Factor (Y)</source>
-        <translation type="unfinished"></translation>
+        <translation>Фактор (Y)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="269"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="408"/>
         <source>Edge</source>
-        <translation type="unfinished"></translation>
+        <translation>Край</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="410"/>
         <source>Reduce</source>
-        <translation type="unfinished"></translation>
+        <translation>Уменьшить</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="413"/>
         <source>No Valve Quirks</source>
-        <translation type="unfinished"></translation>
+        <translation>Без изменений, связаных в Valve</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="416"/>
         <source>(Experimental) Gradient-Aligned Dither Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>(Экспериментально) фильтр дизеринга, выровненный по градиенту</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="421"/>
         <source>Search Radius</source>
-        <translation type="unfinished"></translation>
+        <translation>Радиус поиска</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="427"/>
         <source>Alpha Threshold</source>
-        <translation type="unfinished"></translation>
+        <translation>Порог прозрачности</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="430"/>
         <source>Antialiased Alpha</source>
-        <translation type="unfinished"></translation>
+        <translation>Сглаженный Alpha-канал</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="433"/>
@@ -270,68 +270,68 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="442"/>
         <source>Resources</source>
-        <translation type="unfinished"></translation>
+        <translation>Ресурсы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="447"/>
         <source>Used to recolor impact particle SFX.</source>
-        <translation type="unfinished"></translation>
+        <translation>Используется для перекрашивания частиц визуальных эффектов (SFX) при столкновении.</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="448"/>
         <source>Compute Thumbnail</source>
-        <translation type="unfinished"></translation>
+        <translation>Сгенерировать превью</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="522"/>
         <source>KeyValues Data Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к данным KeyValues</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="868"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="1137"/>
         <source>Open Images</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть изображения</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="1100"/>
         <source>Error Creating Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка при создании текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="485"/>
         <source>CRC32</source>
-        <translation type="unfinished"></translation>
+        <translation>CRC32</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="466"/>
         <source>U</source>
-        <translation type="unfinished"></translation>
+        <translation>U</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="454"/>
         <source>Author</source>
-        <translation type="unfinished"></translation>
+        <translation>Автор</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="470"/>
         <source>V</source>
-        <translation type="unfinished"></translation>
+        <translation>V</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="474"/>
         <source>U (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>U (Консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="478"/>
         <source>V (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>V (Консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="457"/>
         <source>LOD Control Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройка LOD</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="501"/>
@@ -341,12 +341,12 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="506"/>
         <source>Extended Flags</source>
-        <translation type="unfinished"></translation>
+        <translation>Расширенные опции</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="536"/>
         <source>Copy Command</source>
-        <translation type="unfinished"></translation>
+        <translation>Скопировать команду</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="825"/>
@@ -367,12 +367,12 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="881"/>
         <source>Save Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить текстуру</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="882"/>
         <source>Save to Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить в папку</translation>
     </message>
 </context>
 <context>
@@ -380,7 +380,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreditsDialog.cpp" line="83"/>
         <source>Credits</source>
-        <translation type="unfinished"></translation>
+        <translation>Авторы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreditsDialog.cpp" line="133"/>
@@ -403,27 +403,27 @@
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="77"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="78"/>
         <source>All Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Все файлы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="78"/>
         <source>Open Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="91"/>
         <source>&amp;Extract</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="100"/>
         <source>E&amp;xtract from Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из папки</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="122"/>
@@ -433,12 +433,12 @@
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="126"/>
         <source>Credi&amp;ts</source>
-        <translation type="unfinished"></translation>
+        <translation>Авторы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareEmptyWindow.cpp" line="142"/>
         <source>&amp;Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Выйти</translation>
     </message>
 </context>
 <context>
@@ -446,57 +446,57 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="23"/>
         <source>Extract From Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из текстур</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="23"/>
         <source>Extract From Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="37"/>
         <source>Extract</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="41"/>
         <source>Image Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Информация об изображении</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="58"/>
         <source>File Format</source>
-        <translation type="unfinished"></translation>
+        <translation>Формат файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="66"/>
         <source>Quality</source>
-        <translation type="unfinished"></translation>
+        <translation>Качество</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="77"/>
         <source>Pre-extraction Conversion</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертация до извлечения</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="81"/>
         <source>Alpha to Separate Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить Alpha-канал в отдельное изображение</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="89"/>
         <source>Every Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Каждое изображение</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="92"/>
         <source>Every Mip</source>
-        <translation type="unfinished"></translation>
+        <translation>Каджый Mip</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="95"/>
         <source>Every Frame</source>
-        <translation type="unfinished"></translation>
+        <translation>Каждый кадр</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="98"/>
@@ -511,17 +511,17 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="111"/>
         <source>Resources</source>
-        <translation type="unfinished"></translation>
+        <translation>Ресурсы</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="120"/>
         <source>Every Resource</source>
-        <translation type="unfinished"></translation>
+        <translation>Каждый ресурс</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="124"/>
         <source>Thumbnail</source>
-        <translation type="unfinished"></translation>
+        <translation>Превью</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="128"/>
@@ -531,12 +531,12 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="132"/>
         <source>KeyValues Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Данные KeyValues</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="136"/>
         <source>Author Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Информация об авторе</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="140"/>
@@ -546,34 +546,34 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="158"/>
         <source>Copy Command</source>
-        <translation type="unfinished"></translation>
+        <translation>Скопировать команду</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="238"/>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="343"/>
         <source>Open Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="239"/>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="354"/>
         <source>Open Folder</source>
-        <translation type="unfinished">Открыть папку</translation>
+        <translation>Открыть папку</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="251"/>
         <source>Save Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить изображение</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="252"/>
         <source>Save to Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить в папку</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="330"/>
         <source>Error Extracting From Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка при извлечении из текстуры</translation>
     </message>
 </context>
 <context>
@@ -581,52 +581,52 @@
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="14"/>
         <source>Filesystem</source>
-        <translation type="unfinished"></translation>
+        <translation>Файловвая система</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="35"/>
         <source>Input Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к открываемому файлу</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="45"/>
         <source>Leave empty for default</source>
-        <translation type="unfinished"></translation>
+        <translation>Оставить пустым по умолчанию</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="54"/>
         <source>Output Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к сохраняемому файлу</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="66"/>
         <source>Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>Да</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="70"/>
         <source>Ask</source>
-        <translation type="unfinished"></translation>
+        <translation>Спрашивать</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="74"/>
         <source>No</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="80"/>
         <source>Overwrite</source>
-        <translation type="unfinished"></translation>
+        <translation>Перезаписать</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="87"/>
         <source>Enter Subfolders</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите подпапки</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareFilesystemBox.cpp" line="94"/>
         <source>Watch For Changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Показывать изменения</translation>
     </message>
 </context>
 <context>
@@ -639,22 +639,22 @@
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="55"/>
         <source>&amp;Save Image As...</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить изображение как...</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="61"/>
         <source>Zoom &amp;In</source>
-        <translation type="unfinished"></translation>
+        <translation>Приблизить</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="66"/>
         <source>Zoom &amp;Out</source>
-        <translation type="unfinished"></translation>
+        <translation>Отдалить</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="71"/>
         <source>Reset &amp;Zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить приближение</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="76"/>
@@ -664,7 +664,7 @@
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="199"/>
         <source>Save Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить изображение</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="214"/>
@@ -674,7 +674,7 @@
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="214"/>
         <source>Failed to save image.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сохранить изображение.</translation>
     </message>
 </context>
 <context>
@@ -697,12 +697,12 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="68"/>
         <source>&amp;Create</source>
-        <translation type="unfinished">Создать</translation>
+        <translation>Создать</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="90"/>
         <source>All Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Все файлы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="132"/>
@@ -712,12 +712,12 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="162"/>
         <source>&amp;View</source>
-        <translation type="unfinished"></translation>
+        <translation>Просмотр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="166"/>
         <source>&amp;Options</source>
-        <translation>Опции</translation>
+        <translation>Параметры</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="237"/>
@@ -737,160 +737,160 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="315"/>
         <source>Report an &amp;Issue</source>
-        <translation type="unfinished"></translation>
+        <translation>Сообщить о проблеме</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="319"/>
         <source>Request a &amp;Feature</source>
-        <translation type="unfinished"></translation>
+        <translation>Предложить изменения</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="362"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="755"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="774"/>
         <source>Preview</source>
-        <translation type="unfinished"></translation>
+        <translation>Предпросмотр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="368"/>
         <source>General</source>
-        <translation>Общие</translation>
+        <translation>Общее</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="427"/>
         <source>Alpha</source>
-        <translation type="unfinished"></translation>
+        <translation>Alpha (прозрачность)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="448"/>
         <source>Mask</source>
-        <translation type="unfinished"></translation>
+        <translation>Маска</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="459"/>
         <source>Tile</source>
-        <translation type="unfinished"></translation>
+        <translation>Плитка</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="660"/>
         <source>Mip Scale (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер Mip (Консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="679"/>
         <source>R</source>
-        <translation type="unfinished"></translation>
+        <translation>R</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="393"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="681"/>
         <source>G</source>
-        <translation type="unfinished"></translation>
+        <translation>G</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="80"/>
         <source>C&amp;reate from Folder</source>
-        <translation type="unfinished">Создать из папки</translation>
+        <translation>Создать из папки</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="89"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="90"/>
         <source>Open Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть текстуры</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="100"/>
         <source>&amp;Extract</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="107"/>
         <source>E&amp;xtract from Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из папки</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="117"/>
         <source>&amp;Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="122"/>
         <source>S&amp;ave All</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить все</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="137"/>
         <source>&amp;Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Выйти</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="144"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="147"/>
         <source>Recompute &amp;Flags</source>
-        <translation type="unfinished"></translation>
+        <translation>Перепросчитать опции</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="152"/>
         <source>Recompute Flags for &amp;All</source>
-        <translation type="unfinished"></translation>
+        <translation>Перепросчитать опции для всех</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="169"/>
         <source>&amp;General</source>
-        <translation type="unfinished"></translation>
+        <translation>Общее</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="171"/>
         <source>Raise When Opening New File</source>
-        <translation type="unfinished"></translation>
+        <translation>Поднять, при открытии нового файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="175"/>
         <source>Allow Multiple Application Instances</source>
-        <translation type="unfinished"></translation>
+        <translation>Разрешить запуск нескольких экземпляров приложения</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="183"/>
         <source>Trypanophobia Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Режим трипанофобии</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="190"/>
         <source>&amp;Workspace</source>
-        <translation type="unfinished"></translation>
+        <translation>Рабочее пространство</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="192"/>
         <source>Show Tab Bar for Single File</source>
-        <translation type="unfinished"></translation>
+        <translation>Показывать панель действий для одного файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="199"/>
         <source>High Quality File Thumbnails</source>
-        <translation type="unfinished"></translation>
+        <translation>Высокое качество для превью файлов</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="203"/>
         <source>High Quality Minimap</source>
-        <translation type="unfinished"></translation>
+        <translation>Minimap высокого качества</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="212"/>
         <source>&amp;Minimap Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер Minimap</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="216"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Отключено</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="217"/>
@@ -920,64 +920,64 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="309"/>
         <source>Credi&amp;ts</source>
-        <translation type="unfinished"></translation>
+        <translation>Авторы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="337"/>
         <source>Save Confirmation</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвержение сохранения</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="337"/>
         <source>The texture at &quot;%1&quot; has been modified. Would you like to save it?</source>
-        <translation type="unfinished"></translation>
+        <translation>Текстура &quot;%1&quot; была изменена. Сохранить эту текстуру?</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="410"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="683"/>
         <source>B</source>
-        <translation type="unfinished"></translation>
+        <translation>B</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="470"/>
         <source>Channels</source>
-        <translation type="unfinished"></translation>
+        <translation>Каналы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="473"/>
         <source>Current Mip</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущий Mip</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="484"/>
         <source>Animation</source>
-        <translation type="unfinished"></translation>
+        <translation>Анимация</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="489"/>
         <source>Current Frame</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущий кадр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="501"/>
         <source>Animation FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>FPS Анимации</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="504"/>
         <source>Animate</source>
-        <translation type="unfinished"></translation>
+        <translation>Анимировать</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="532"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="655"/>
         <source>Cubemap</source>
-        <translation type="unfinished"></translation>
+        <translation>Cubemap</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="537"/>
         <source>Net</source>
-        <translation type="unfinished"></translation>
+        <translation>Net</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="537"/>
@@ -987,7 +987,7 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="538"/>
         <source>Preview Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Прежим предпросмотра</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="550"/>
@@ -998,52 +998,52 @@
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="561"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="643"/>
         <source>Depth</source>
-        <translation type="unfinished"></translation>
+        <translation>Глубина</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="566"/>
         <source>Current Depth</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущая глубина</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="585"/>
         <source>Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Детализация</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="593"/>
         <source>File Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Тип файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="598"/>
         <source>PC</source>
-        <translation type="unfinished"></translation>
+        <translation>ПК</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="599"/>
         <source>Xbox</source>
-        <translation type="unfinished"></translation>
+        <translation>Xbox</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="600"/>
         <source>Xbox 360</source>
-        <translation type="unfinished"></translation>
+        <translation>Xbox 360</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="601"/>
         <source>PS3 (Orange Box)</source>
-        <translation type="unfinished"></translation>
+        <translation>PS3 (Orange Box)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="602"/>
         <source>PS3 (P2, CS:GO)</source>
-        <translation type="unfinished"></translation>
+        <translation>PS3 (P2, CS:GO)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="603"/>
         <source>Platform</source>
-        <translation type="unfinished"></translation>
+        <translation>Платформа</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="609"/>
@@ -1058,148 +1058,148 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="633"/>
         <source>Dimensions</source>
-        <translation type="unfinished"></translation>
+        <translation>Размерность</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="639"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="760"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="789"/>
         <source>Width</source>
-        <translation type="unfinished"></translation>
+        <translation>Ширина</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="641"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="765"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="794"/>
         <source>Height</source>
-        <translation type="unfinished"></translation>
+        <translation>Высота</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="645"/>
         <source>Frames</source>
-        <translation type="unfinished"></translation>
+        <translation>Кадры</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="647"/>
         <source>Start Frame</source>
-        <translation type="unfinished"></translation>
+        <translation>Начальный кадр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="657"/>
         <source>Mipmaps</source>
-        <translation type="unfinished"></translation>
+        <translation>Mipmap&apos;ы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="905"/>
         <source>Author Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Информация об авторе</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="914"/>
         <source>MareTF Flags</source>
-        <translation type="unfinished"></translation>
+        <translation>Опции MareTF</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1016"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1160"/>
         <source>File Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1017"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1164"/>
         <source>b</source>
-        <translation type="unfinished"></translation>
+        <translation>б</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1162"/>
         <source>Est. File Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Расчётный размер файла</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1167"/>
         <source>kb</source>
-        <translation type="unfinished"></translation>
+        <translation>кб</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1171"/>
         <source>mb</source>
-        <translation type="unfinished"></translation>
+        <translation>мб</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1433"/>
         <source>Save Failure</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка сохранения</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="1433"/>
         <source>Failed to save texture at &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка при сохранении текстуры &quot;%1&quot;.</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="664"/>
         <source>Miscellaneous</source>
-        <translation type="unfinished"></translation>
+        <translation>Прочие настройки</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="672"/>
         <source>Bumpmap Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер Bumpmap</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="685"/>
         <source>Reflectivity</source>
-        <translation type="unfinished"></translation>
+        <translation>Коэффициент отражения</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="689"/>
         <source>CPU Compression</source>
-        <translation type="unfinished"></translation>
+        <translation>Сжатие процессором</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="698"/>
         <source>Method</source>
-        <translation type="unfinished"></translation>
+        <translation>Метод</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="701"/>
         <source>Level</source>
-        <translation type="unfinished"></translation>
+        <translation>Уровень</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="742"/>
         <source>Resources</source>
-        <translation type="unfinished"></translation>
+        <translation>Ресурсы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="750"/>
         <source>Thumbnail</source>
-        <translation type="unfinished"></translation>
+        <translation>Превью</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="769"/>
         <source>Palette</source>
-        <translation type="unfinished"></translation>
+        <translation>Палитра</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="778"/>
         <source>Frame</source>
-        <translation type="unfinished"></translation>
+        <translation>Кадр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="782"/>
         <source>Fallback</source>
-        <translation type="unfinished"></translation>
+        <translation>Резервный вариант</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="798"/>
         <source>Mips</source>
-        <translation type="unfinished"></translation>
+        <translation>Mip&apos;ы</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="802"/>
         <source>Parallax-corrected Cubemap</source>
-        <translation type="unfinished"></translation>
+        <translation>Cubemap с коррекцией паралакса</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="806"/>
@@ -1214,53 +1214,53 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="854"/>
         <source>CRC</source>
-        <translation type="unfinished"></translation>
+        <translation>CRC</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="860"/>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="870"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Значение</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="864"/>
         <source>TS0</source>
-        <translation type="unfinished"></translation>
+        <translation>TS0</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="874"/>
         <source>LOD Control</source>
-        <translation type="unfinished"></translation>
+        <translation>Управление LOD</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="880"/>
         <source>U</source>
-        <translation type="unfinished"></translation>
+        <translation>U</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="884"/>
         <source>V</source>
-        <translation type="unfinished"></translation>
+        <translation>V</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="888"/>
         <source>U (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>U (Консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="892"/>
         <source>V (Console)</source>
-        <translation type="unfinished"></translation>
+        <translation>V (Консоль)</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="896"/>
         <source>KeyValues</source>
-        <translation type="unfinished"></translation>
+        <translation>KeyValues</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="939"/>
         <source>Flags</source>
-        <translation type="unfinished"></translation>
+        <translation>Опции</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="980"/>
@@ -1270,7 +1270,7 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="980"/>
         <source>Failed to load texture at location: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка при загрузки текстуры на %1</translation>
     </message>
 </context>
 <context>
@@ -1278,28 +1278,29 @@
     <message>
         <location filename="../../src/cli/MareTF.cpp" line="1659"/>
         <source>Overwrite File</source>
-        <translation type="unfinished"></translation>
+        <translation>Презаписать файл</translation>
     </message>
     <message>
         <location filename="../../src/cli/MareTF.cpp" line="1659"/>
         <source>Output file at %1 already exists.
 Overwrite?</source>
-        <translation type="unfinished"></translation>
+        <translation>Выходной файл &quot;%1&quot; уже существует.
+Перезаписать?</translation>
     </message>
     <message>
         <location filename="../../src/cli/MareTF.cpp" line="2829"/>
         <source>Watching for any changes...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ищем изменения...</translation>
     </message>
     <message>
         <location filename="../../src/cli/MareTF.cpp" line="2829"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Стоп</translation>
     </message>
     <message>
         <location filename="../../src/cli/MareTF.cpp" line="2830"/>
         <source>Watch</source>
-        <translation type="unfinished"></translation>
+        <translation>Отслеживать</translation>
     </message>
 </context>
 </TS>
