@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 						maneWindow->activateWindow();
 					}
 				} else {
-					showManeWindow(args);
+					showManeWindow(args.sliced(1));
 				}
 				client->deleteLater();
 			});
