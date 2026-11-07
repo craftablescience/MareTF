@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QSurfaceFormat>
 #include <QTranslator>
 
 #include "Config.h"
@@ -10,6 +11,16 @@
 #include "windows/QMareTextureWindow.h"
 
 int main(int argc, char* argv[]) {
+	QSurfaceFormat format;
+#ifdef DEBUG
+	format.setOption(QSurfaceFormat::DebugContext);
+#endif
+	format.setVersion(3, 3);
+	format.setProfile(QSurfaceFormat::CoreProfile);
+	format.setDepthBufferSize(24);
+	format.setSamples(4);
+	QSurfaceFormat::setDefaultFormat(format);
+
 	QApplication app{argc, argv};
 
 	QCoreApplication::setOrganizationName(PROJECT_ORGANIZATION_NAME);
