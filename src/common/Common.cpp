@@ -110,7 +110,7 @@ std::string_view supportedImageFileFormatsForLoad() {
 }
 
 std::string_view supportedImageFileFormatsForSave() {
-	return "Image Formats (*.bmp *.exr *.hdr *.jpg *.jpeg *.jxl *.png *.qoi *.tga *.webp)";
+	return "Image Formats (*.png *.exr *.bmp *.hdr *.jpg *.jpeg *.jxl *.qoi *.tga *.webp)";
 }
 
 std::array<std::string_view, 32> getPrettyFlagNamesFor(uint16_t minorVersion, vtfpp::VTF::Platform platform) {
