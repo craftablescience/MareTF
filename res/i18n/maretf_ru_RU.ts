@@ -41,13 +41,13 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="211"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="219"/>
         <source>Exact</source>
-        <translation type="unfinished"></translation>
+        <translation>Изначальное</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="136"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="205"/>
         <source>Clamp</source>
-        <translation type="unfinished"></translation>
+        <translation>Свести до</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="158"/>
@@ -55,7 +55,7 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="226"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="234"/>
         <source>Minimum</source>
-        <translation type="unfinished"></translation>
+        <translation>Мин. степень 2</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="174"/>
@@ -63,7 +63,7 @@
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="242"/>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="250"/>
         <source>Maximum</source>
-        <translation type="unfinished"></translation>
+        <translation>Макс. степень 2</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="185"/>
@@ -119,7 +119,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="343"/>
         <source>Bumpmap Scale</source>
-        <translation>Размер Bumpmap</translation>
+        <translation>Размер карты нормалей</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="132"/>
@@ -245,7 +245,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="416"/>
         <source>(Experimental) Gradient-Aligned Dither Filter</source>
-        <translation>(Экспериментально) фильтр дизеринга, выровненный по градиенту</translation>
+        <translation>(Экспериментально) Фильтр дизеринга, выровненный по градиенту</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="421"/>
@@ -336,7 +336,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="501"/>
         <source>Particle Sheet Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к списку партиклов</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="506"/>
@@ -351,12 +351,12 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="825"/>
         <source>Open Particle Sheet</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть список партиклов</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="858"/>
         <source>Open KeyValues File</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть файл с KeyValues</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareCreateTextureDialog.cpp" line="869"/>
@@ -501,7 +501,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="98"/>
         <source>Every Face</source>
-        <translation type="unfinished"></translation>
+        <translation>Каждая сторона</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="101"/>
@@ -526,7 +526,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="128"/>
         <source>Particle Sheet</source>
-        <translation type="unfinished"></translation>
+        <translation>Список партиклов</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="132"/>
@@ -541,7 +541,7 @@
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="140"/>
         <source>Hotspot Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Данные о хотспоте</translation>
     </message>
     <message>
         <location filename="../../src/gui/dialogs/QMareExtractFromTextureDialog.cpp" line="158"/>
@@ -659,7 +659,7 @@
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="76"/>
         <source>Reset &amp;Pan</source>
-        <translation type="unfinished"></translation>
+        <translation>Сброс</translation>
     </message>
     <message>
         <location filename="../../src/gui/widgets/QMareTextureWidget.cpp" line="199"/>
@@ -895,17 +895,17 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="217"/>
         <source>Small</source>
-        <translation type="unfinished"></translation>
+        <translation>Маленький</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="218"/>
         <source>Medium</source>
-        <translation type="unfinished"></translation>
+        <translation>Средний</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="219"/>
         <source>Large</source>
-        <translation type="unfinished"></translation>
+        <translation>Большой</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="233"/>
@@ -982,7 +982,7 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="537"/>
         <source>Single Face</source>
-        <translation type="unfinished"></translation>
+        <translation>Одно лицо</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="538"/>
@@ -992,7 +992,7 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="550"/>
         <source>Current Face</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущее лицо</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="561"/>
@@ -1204,12 +1204,12 @@
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="806"/>
         <source>Origin</source>
-        <translation type="unfinished"></translation>
+        <translation>Центр</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="822"/>
         <source>Inverse Transform</source>
-        <translation type="unfinished"></translation>
+        <translation>Инвертировать трансформации</translation>
     </message>
     <message>
         <location filename="../../src/gui/windows/QMareTextureWindow.cpp" line="854"/>
